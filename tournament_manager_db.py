@@ -14,7 +14,7 @@ from tournament_ratings_db import TournamentRatingSystemDB
 
 
 class TournamentManagerDB:
-    def __init__(self, db_file: str = "tournament_data.db", use_db: bool = False):
+    def __init__(self, db_file: str = "tournament_data.db", use_db: bool = True):
         """
         Initialize the tournament manager.
         
@@ -28,6 +28,23 @@ class TournamentManagerDB:
         """Add a new player to the system."""
         self.rating_system.add_player(name, rating)
         self.rating_system.save_data()
+
+    def add_players(self, file: str) -> None:
+        try:
+            with open(file, 'r') as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    parts = line.split(",")
+                    if len(parts) != 2:
+                        continue
+                    self.rating_system.add_player(parts[0], 1300 if parts[1].lower() == 'a' else 1000)
+            self.rating_system.save_data()
+        except FileNotFoundError:
+            print(f"File not found: {results_file}")
+        except ValueError as e:
+            print(f"Error: {e}")
         
     def list_players(self) -> None:
         """List all players and their ratings."""
@@ -346,7 +363,8 @@ def parse_args():
     
     # Add player command
     add_parser = subparsers.add_parser("add", help="Add a new player")
-    add_parser.add_argument("name", help="Player name")
+    add_parser.add_argument("--name", default="", help="Player name")
+    add_parser.add_argument("--file", help="File containing players and their skill class (A/B)")
     add_parser.add_argument("--rating", type=int, default=1000, help="Initial rating (default: 1000)")
     
     # List players command
@@ -398,7 +416,10 @@ def main():
     )
     
     if args.command == "add":
-        manager.add_player(args.name, args.rating)
+        if args.file:
+            manager.add_players(args.file)
+        else:
+            manager.add_player(args.name, args.rating)
     elif args.command == "list":
         manager.list_players()
     elif args.command == "record":
