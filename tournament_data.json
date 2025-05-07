@@ -1,0 +1,1281 @@
+{
+  "players": {
+    "Aaron Read": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Abel Avalos": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Adam Temple": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Adrian Herrera": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Adriano Rothschild": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "AJ Garcia": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Alex Marozick": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Allen Castillo": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Angel Martinez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Anthony Brewer": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Anthony O'Malley": {
+      "rating": 1318.2716049382716,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1318.2716049382716,
+          "change": 18.271604938271594,
+          "position": 4,
+          "expected_position": 8.11111111111111,
+          "score": 53,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Arturo Rosette": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Austyn Burns": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Beth Aubuchon": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Bill Ma": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Billy lai": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Brandon Vazquez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Brett Cave": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Brian Earle": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Brian Shaer": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Brianna Ralston": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Carlos Garcia": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Casanova Garcia": {
+      "rating": 1031.6049382716049,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1031.6049382716049,
+          "change": 31.60493827160485,
+          "position": 1,
+          "expected_position": 8.11111111111111,
+          "score": 51,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Chad Kotil": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Doty": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Hughes": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Lindsey": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Lobdell": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Risner": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Colby Roberts": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Cole Jimison": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Collin Ferchau": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Cougar Karson": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Craig Baker": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Daniel Rodriguez": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Dave Lipscomb": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Dave Walton": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Daviar Afraimi": {
+      "rating": 1300.4938271604938,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1300.4938271604938,
+          "change": 0.4938271604937654,
+          "position": 8,
+          "expected_position": 8.11111111111111,
+          "score": 59,
+          "with_ghost": false
+        }
+      ]
+    },
+    "David Gunther": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "David Herman": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "David Lipscomb": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "David Ralston": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "David Risner": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "David Walton": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Derek Chessik": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Derek Kirmil": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Dom Herrick": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Dominc Herrick": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Dominic Herrick": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Don Savella": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Eric Sullivan": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Evan Anderson": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Evan Boucher": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Feliciano Yacap": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Frank Messenger": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Freddy Rodriguez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Gabriel Penunuri": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "George Peters": {
+      "rating": 1313.8271604938273,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1313.8271604938273,
+          "change": 13.82716049382725,
+          "position": 5,
+          "expected_position": 8.11111111111111,
+          "score": 56,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Greg Lubben": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Greg Munson": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Hal Kurz": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Heath Allison": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Henry Garcia": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Isai Martinez": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Isaiah Oliver": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Isiaha Yacap": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jake Heindel": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "James Anderson": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "James Barkes": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "James Rootski": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Bakarootski": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Grillo": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Hilbert": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Lane": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "JC Quiambao": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jeff Aldinger": {
+      "rating": 996.0493827160494,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 996.0493827160494,
+          "change": -3.950617283950578,
+          "position": 9,
+          "expected_position": 8.11111111111111,
+          "score": 60,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Jennifer Hailton": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jennifer Hamilton": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jesus Cuevas": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jin Lee": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Joe Aiello": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Joel Hyland": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Joey Crumbles": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "John Lubushkin": {
+      "rating": 1022.716049382716,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1022.716049382716,
+          "change": 22.71604938271605,
+          "position": 3,
+          "expected_position": 8.11111111111111,
+          "score": 53,
+          "with_ghost": false
+        }
+      ]
+    },
+    "John Zatz": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jon Sturholm": {
+      "rating": 1331.6049382716049,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1331.6049382716049,
+          "change": 31.60493827160485,
+          "position": 1,
+          "expected_position": 8.11111111111111,
+          "score": 51,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Jored Sommer": {
+      "rating": 1309.3827160493827,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1309.3827160493827,
+          "change": 9.38271604938268,
+          "position": 6,
+          "expected_position": 8.11111111111111,
+          "score": 58,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Josh Gomez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Josiah Wylie": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "JP Marais": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Justin Hoyt": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "JV": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Kelly Conner": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Ken Wood": {
+      "rating": 1004.9382716049382,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1004.9382716049382,
+          "change": 4.9382716049382225,
+          "position": 7,
+          "expected_position": 8.11111111111111,
+          "score": 59,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Keri Taylor": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Kiefer Stolte": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Kirk Herbert": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Kody McClelland": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Liliana Ponce": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Mac Lyle": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Marc Umeno": {
+      "rating": 1000.4938271604939,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1000.4938271604939,
+          "change": 0.4938271604938791,
+          "position": 8,
+          "expected_position": 8.11111111111111,
+          "score": 59,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Matt Emmons": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Matt Hayes": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Matt M": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Matt Marquess": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Matt Shustack": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Max Umeno": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Michael Bueno": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Michael Majchrowicz": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Michael Meduri": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Miggy Ayala": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Mike Eberhart": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Mike Ghilarducci": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Mike Ghillarducci": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Mike Lloyd": {
+      "rating": 1304.9382716049383,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1304.9382716049383,
+          "change": 4.938271604938336,
+          "position": 7,
+          "expected_position": 8.11111111111111,
+          "score": 59,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Mikee Rodriguez": {
+      "rating": 1013.8271604938271,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1013.8271604938271,
+          "change": 13.827160493827137,
+          "position": 5,
+          "expected_position": 8.11111111111111,
+          "score": 56,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Neil Witzig": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Ferchau": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Garcia": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Gubatan": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Hayes": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Marozick": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Pantages-Method": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nikita Pak": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Patrick Apodaca": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Patrick McClain": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Pedro Sanchez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Phil Nunez": {
+      "rating": 1327.1604938271605,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1327.1604938271605,
+          "change": 27.160493827160508,
+          "position": 2,
+          "expected_position": 8.11111111111111,
+          "score": 52,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Philip Mallory": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Rafael Guillen": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Randy Amann": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Ray Barron": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Richard Hernandez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Rick Santa Cruz": {
+      "rating": 1009.3827160493827,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1009.3827160493827,
+          "change": 9.38271604938268,
+          "position": 6,
+          "expected_position": 8.11111111111111,
+          "score": 58,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Robert Shehee": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Roderick Kast": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Saben Cave": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Salvador Avalos": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Sam Buckman": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Samuel Gomez": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Scooter ": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Scott Clayton": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Seth Hernstedt": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Shannon Riddell": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Shiloh Seider": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Steff Powers": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Stephen Connell": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Steve Kehrer": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Steve Moravec": {
+      "rating": 1322.716049382716,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1322.716049382716,
+          "change": 22.716049382715937,
+          "position": 3,
+          "expected_position": 8.11111111111111,
+          "score": 53,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Steven Neuendorffer": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Taylor ": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Taylor DiBiasio": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Taylor Yemm": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Thomas McCrone": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Thomas Werner": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Tim Christ": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Troy Campbell": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Troy Hernstedt": {
+      "rating": 1027.1604938271605,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1027.1604938271605,
+          "change": 27.160493827160508,
+          "position": 2,
+          "expected_position": 8.11111111111111,
+          "score": 52,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Troy Parker": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Victor Stemplewski": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Vito Taulealo": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Wonald Powers": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Zach Dando": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Ryan Liu": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Clyde Stange": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Josh Bernard": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Tommy Hibbard": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Daniel Kim": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Manuel Oliver": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Hamed": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Karl Deichmann": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Spenner": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Budinger": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Peralta": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Austin Watson": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Xia Liu": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Chris Lawrence": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Art Maurice": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Johnny Dagnino": {
+      "rating": 1296.0493827160494,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1300,
+          "new_rating": 1296.0493827160494,
+          "change": -3.950617283950578,
+          "position": 9,
+          "expected_position": 8.11111111111111,
+          "score": 60,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Felipe Fernandez": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "David Flamm": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jacob Sabin": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Julio Valenzula": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Apostole": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Alan Kane": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Nick Mucha": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Bobby Galmeister": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Miguel Rios": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Brett Arietta": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Victor Padilla": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Edwin Corona": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Mikiah R": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Jason Kubo": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Teddy Stieber": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Everett Lyons": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Matthew Knudsen": {
+      "rating": 1018.2716049382716,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-03-01",
+          "old_rating": 1000,
+          "new_rating": 1018.2716049382716,
+          "change": 18.271604938271594,
+          "position": 4,
+          "expected_position": 8.11111111111111,
+          "score": 53,
+          "with_ghost": false
+        }
+      ]
+    }
+  },
+  "tournaments": [
+    {
+      "date": "2025-03-01",
+      "course": "Kelley Park",
+      "teams": 9,
+      "results": [
+        {
+          "team": [
+            "Jon Sturholm",
+            "Casanova Garcia"
+          ],
+          "score": 51,
+          "position": 1,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Phil Nunez",
+            "Troy Hernstedt"
+          ],
+          "score": 52,
+          "position": 2,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Steve Moravec",
+            "John Lubushkin"
+          ],
+          "score": 53,
+          "position": 3,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Anthony O'Malley",
+            "Matthew Knudsen"
+          ],
+          "score": 53,
+          "position": 4,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "George Peters",
+            "Mikee Rodriguez"
+          ],
+          "score": 56,
+          "position": 5,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Jored Sommer",
+            "Rick Santa Cruz"
+          ],
+          "score": 58,
+          "position": 6,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Mike Lloyd",
+            "Ken Wood"
+          ],
+          "score": 59,
+          "position": 7,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Daviar Afraimi",
+            "Marc Umeno"
+          ],
+          "score": 59,
+          "position": 8,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Johnny Dagnino",
+            "Jeff Aldinger"
+          ],
+          "score": 60,
+          "position": 9,
+          "expected_position": 8.11111111111111,
+          "team_rating": 1150.0
+        }
+      ]
+    }
+  ]
+}
