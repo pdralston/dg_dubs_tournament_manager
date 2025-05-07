@@ -1,0 +1,300 @@
+{
+  "players": {
+    "John": {
+      "rating": 1124.9597855227883,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 1100,
+          "new_rating": 1112.5,
+          "change": 12.5,
+          "position": 2,
+          "expected_position": 3.25,
+          "score": 54
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 1112.5,
+          "new_rating": 1124.9597855227883,
+          "change": 12.459785522788252,
+          "position": 2,
+          "expected_position": 3.2459785522788205,
+          "score": 54,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Sarah": {
+      "rating": 1035.1206434316355,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 1050,
+          "new_rating": 1042.5,
+          "change": -7.5,
+          "position": 4,
+          "expected_position": 3.25,
+          "score": 58
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 1042.5,
+          "new_rating": 1035.1206434316355,
+          "change": -7.379356568364528,
+          "position": 4,
+          "expected_position": 3.262064343163539,
+          "score": 58,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Mike": {
+      "rating": 1044.0750670241287,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 1000,
+          "new_rating": 1022.0945945945946,
+          "change": 22.094594594594582,
+          "position": 1,
+          "expected_position": 3.2094594594594597,
+          "score": 52
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 1022.0945945945946,
+          "new_rating": 1044.0750670241287,
+          "change": 21.980472429534075,
+          "position": 1,
+          "expected_position": 3.1980472429534093,
+          "score": 52,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Lisa": {
+      "rating": 994.0750670241287,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 950,
+          "new_rating": 972.0945945945946,
+          "change": 22.094594594594582,
+          "position": 1,
+          "expected_position": 3.2094594594594597,
+          "score": 52
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 972.0945945945946,
+          "new_rating": 994.0750670241287,
+          "change": 21.980472429534075,
+          "position": 1,
+          "expected_position": 3.1980472429534093,
+          "score": 52,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Dave": {
+      "rating": 905.8445040214477,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 900,
+          "new_rating": 902.9054054054054,
+          "change": 2.9054054054054177,
+          "position": 3,
+          "expected_position": 3.2905405405405403,
+          "score": 56
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 902.9054054054054,
+          "new_rating": 905.8445040214477,
+          "change": 2.9390986160423154,
+          "position": 3,
+          "expected_position": 3.2939098616042317,
+          "score": 56,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Amy": {
+      "rating": 855.8445040214477,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 850,
+          "new_rating": 852.9054054054054,
+          "change": 2.9054054054054177,
+          "position": 3,
+          "expected_position": 3.2905405405405403,
+          "score": 56
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 852.9054054054054,
+          "new_rating": 855.8445040214477,
+          "change": 2.9390986160423154,
+          "position": 3,
+          "expected_position": 3.2939098616042317,
+          "score": 56,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Tom": {
+      "rating": 785.1206434316354,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 800,
+          "new_rating": 792.5,
+          "change": -7.5,
+          "position": 4,
+          "expected_position": 3.25,
+          "score": 58
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 792.5,
+          "new_rating": 785.1206434316354,
+          "change": -7.379356568364642,
+          "position": 4,
+          "expected_position": 3.262064343163539,
+          "score": 58,
+          "with_ghost": false
+        }
+      ]
+    },
+    "Kate": {
+      "rating": 774.9597855227883,
+      "tournaments_played": 2,
+      "history": [
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 750,
+          "new_rating": 762.5,
+          "change": 12.5,
+          "position": 2,
+          "expected_position": 3.25,
+          "score": 54
+        },
+        {
+          "tournament_date": "2025-04-26",
+          "old_rating": 762.5,
+          "new_rating": 774.9597855227883,
+          "change": 12.459785522788252,
+          "position": 2,
+          "expected_position": 3.2459785522788205,
+          "score": 54,
+          "with_ghost": false
+        }
+      ]
+    }
+  },
+  "tournaments": [
+    {
+      "date": "2025-04-26",
+      "course": "Pine Valley",
+      "teams": 4,
+      "results": [
+        {
+          "team": [
+            "Mike",
+            "Lisa"
+          ],
+          "score": 52,
+          "position": 1,
+          "expected_position": 3.2094594594594597,
+          "team_rating": 975.0
+        },
+        {
+          "team": [
+            "John",
+            "Kate"
+          ],
+          "score": 54,
+          "position": 2,
+          "expected_position": 3.25,
+          "team_rating": 925.0
+        },
+        {
+          "team": [
+            "Dave",
+            "Amy"
+          ],
+          "score": 56,
+          "position": 3,
+          "expected_position": 3.2905405405405403,
+          "team_rating": 875.0
+        },
+        {
+          "team": [
+            "Sarah",
+            "Tom"
+          ],
+          "score": 58,
+          "position": 4,
+          "expected_position": 3.25,
+          "team_rating": 925.0
+        }
+      ]
+    },
+    {
+      "date": "2025-04-26",
+      "course": "Pine Valley",
+      "teams": 4,
+      "results": [
+        {
+          "team": [
+            "Mike",
+            "Lisa"
+          ],
+          "score": 52,
+          "position": 1,
+          "expected_position": 3.1980472429534093,
+          "team_rating": 997.0945945945946
+        },
+        {
+          "team": [
+            "John",
+            "Kate"
+          ],
+          "score": 54,
+          "position": 2,
+          "expected_position": 3.2459785522788205,
+          "team_rating": 937.5
+        },
+        {
+          "team": [
+            "Dave",
+            "Amy"
+          ],
+          "score": 56,
+          "position": 3,
+          "expected_position": 3.2939098616042317,
+          "team_rating": 877.9054054054054
+        },
+        {
+          "team": [
+            "Sarah",
+            "Tom"
+          ],
+          "score": 58,
+          "position": 4,
+          "expected_position": 3.262064343163539,
+          "team_rating": 917.5
+        }
+      ]
+    }
+  ]
+}
