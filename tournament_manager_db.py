@@ -230,16 +230,16 @@ class TournamentManagerDB:
             predictions = self.rating_system.predict_tournament_outcome(teams)
             
             print("\nTournament Predictions:")
-            print("-" * 60)
-            print(f"{'Team':<30} {'Rating':<10} {'Expected Position':<20}")
-            print("-" * 60)
+            print("-" * 80)
+            print(f"{'Team':<50} {'Rating':<10} {'Expected Position':<20}")
+            print("-" * 80)
             
             # Sort by expected position
             sorted_predictions = sorted(predictions.items(), key=lambda x: x[1]['expected_position'])
             
             for team, prediction in sorted_predictions:
                 team_str = f"{team[0]} & {team[1]}"
-                print(f"{team_str:<30} {prediction['rating']:<10.1f} {prediction['expected_position']:<20.1f}")
+                print(f"{team_str:<50} {prediction['rating']:<10.1f} {prediction['expected_position']:^20d}")
                 
             # If par is provided, predict scores
             if par is not None:
@@ -288,6 +288,22 @@ class TournamentManagerDB:
         except ValueError as e:
             print(f"Error: {e}")
             
+    def generate_teams_from_file(self, file: str) -> None:
+        player_list = []
+        try:
+            with open(file, 'r') as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    player_list.append(line)
+        except FileNotFoundError:
+            print(f"File not found: {results_file}")
+        except ValueError as e:
+            print(f"Error: {e}")
+        finally:
+            self.generate_teams(players=player_list, allow_ghost=True)
+
     def generate_teams(self, players: List[str], allow_ghost: bool = False) -> None:
         """
         Generate balanced teams from a list of players.
@@ -387,7 +403,8 @@ def parse_args():
     
     # Generate teams command
     teams_parser = subparsers.add_parser("teams", help="Generate balanced teams")
-    teams_parser.add_argument("players", nargs="+", help="List of player names")
+    teams_parser.add_argument("--players", nargs="+", help="List of player names")
+    teams_parser.add_argument("--file", help="File with each player on a seperate line")
     teams_parser.add_argument("--allow-ghost", action="store_true", help="Allow adding a ghost player for odd numbers")
     
     # Tournament history command
@@ -435,7 +452,10 @@ def main():
     elif args.command == "details":
         manager.player_details(args.name)
     elif args.command == "teams":
-        manager.generate_teams(args.players, args.allow_ghost)
+        if args.file:
+            manager.generate_teams_from_file(args.file)
+        else:
+            manager.generate_teams(args.players, args.allow_ghost)
     elif args.command == "history":
         manager.tournament_history(args.limit)
     elif args.command == "storage":

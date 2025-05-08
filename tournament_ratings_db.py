@@ -198,19 +198,14 @@ class TournamentRatingSystemDB:
             team_ratings[team] = self.calculate_team_rating(team[0], team[1])
             
         # Calculate expected positions
-        total_rating = sum(team_ratings.values())
+        expected_position = 1
+        previous_rating = 0
         team_predictions = {}
         
-        for team, rating in team_ratings.items():
-            # Higher rating means fewer expected throws
-            # We invert the rating proportion to get expected position
-            # (lower is better for position)
-            relative_strength = rating / total_rating
-            
-            # Expected position (1-indexed, where 1 is best)
-            # Lower expected_position means better expected performance
-            expected_position = 1 + (1 - relative_strength) * (len(teams) - 1)
-            
+        for team, rating in sorted(team_ratings.items(), key=lambda item:item[1], reverse=True):
+            if previous_rating > rating:
+                expected_position += 1
+            previous_rating = rating
             team_predictions[team] = {
                 'team': team,
                 'rating': rating,
@@ -388,7 +383,7 @@ class TournamentRatingSystemDB:
             
         return teams
         
-    def predict_scores(self, teams: List[Tuple[str, str]], par: int = 54) -> Dict[Tuple[str, str], float]:
+    def predict_scores(self, teams: List[Tuple[str, str]], par: int = 64) -> Dict[Tuple[str, str], float]:
         """
         Predict scores for each team based on their ratings.
         
