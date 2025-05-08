@@ -354,13 +354,13 @@ class TournamentManagerDB:
             if tournament.get('course'):
                 print(f"Course: {tournament['course']}")
             print(f"Teams: {tournament['teams']}")
-            print("-" * 50)
-            print(f"{'Position':<10} {'Team':<30} {'Score':<10}")
-            print("-" * 50)
+            print("-" * 60)
+            print(f"{'Position':<10} {'Team':<40} {'Score':^10}")
+            print("-" * 60)
             
             for result in tournament['results']:
                 team_str = f"{result['team'][0]} & {result['team'][1]}"
-                print(f"{result['position']:<10} {team_str:<30} {result['score']:<10}")
+                print(f"{result['position']:<10} {team_str:<40} {result['score']:^10}")
                 
     def switch_storage(self, use_db: bool) -> None:
         """
