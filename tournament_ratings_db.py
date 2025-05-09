@@ -269,6 +269,15 @@ class TournamentRatingSystemDB:
             # Performance is better when actual position is better than expected
             # (lower position number is better)
             position_diff = expected_position - position
+
+            # Overall Position in the tournament adds an additional modifier
+            # This addresses the issue of a top rated team maintaining 
+            # pairings by their rating never changing, i.e. the "b" player
+            # stagnating
+            midpoint = len(teams) / 2
+            max_diff = len(teams) - midpoint
+            mid_diff = midpoint - position
+            overall_modifier = (mid_diff) * (mid_diff / max_diff) 
             
             # Record team result
             team_result = {
@@ -297,7 +306,7 @@ class TournamentRatingSystemDB:
                 
                 # Rating adjustment based on position difference
                 # Normalize by number of teams to keep adjustments reasonable
-                adjustment = k_factor * position_diff / len(teams)
+                adjustment = k_factor * ((position_diff / len(teams)) + overall_modifier)
                 new_rating = old_rating + adjustment
                 
                 # Update player data
