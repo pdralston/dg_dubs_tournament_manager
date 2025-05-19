@@ -240,6 +240,10 @@ class TournamentManagerDB:
             for team, prediction in sorted_predictions:
                 team_str = f"{team[0]} & {team[1]}"
                 print(f"{team_str:<50} {prediction['rating']:<10.1f} {prediction['expected_position']:^20d}")
+            
+            print("\nCopyable Team List\n" + "-" * 17)
+            [print(copy_string) for copy_string in [f"{team[0]}, {team[1]}" for team, score in sorted_predictions]]
+               
                 
             # If par is provided, predict scores
             if par is not None:
@@ -256,10 +260,13 @@ class TournamentManagerDB:
                 for team, score in sorted_scores:
                     team_str = f"{team[0]} & {team[1]}"
                     print(f"{team_str:<30} {score:<15.1f}")
-                    
+                 
         except ValueError as e:
             print(f"Error: {e}")
             
+    def player_details_list(self, names: List[str]) -> None:
+        for name in names: self.player_details(name)
+
     def player_details(self, name: str) -> None:
         """Show detailed information about a player."""
         try:
@@ -396,6 +403,10 @@ def parse_args():
     predict_parser = subparsers.add_parser("predict", help="Predict tournament outcome")
     predict_parser.add_argument("--file", help="File containing teams")
     predict_parser.add_argument("--par", type=int, help="Par score for the course")
+
+    # List of players details command
+    details_list_parser = subparsers.add_parser("details_list", help="Show the details for a list of players")
+    details_list_parser.add_argument("names", nargs="+", help="Comma seperated list of player names")
     
     # Player details command
     details_parser = subparsers.add_parser("details", help="Show player details")
@@ -451,6 +462,8 @@ def main():
             manager.predict_tournament_interactive(args.par)
     elif args.command == "details":
         manager.player_details(args.name)
+    elif args.command == "details_list":
+        manager.player_details_list(args.names)
     elif args.command == "teams":
         if args.file:
             manager.generate_teams_from_file(args.file)
