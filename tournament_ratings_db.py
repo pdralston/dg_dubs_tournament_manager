@@ -277,7 +277,7 @@ class TournamentRatingSystemDB:
             midpoint = len(teams) / 2
             max_diff = len(teams) - midpoint
             mid_diff = midpoint - position
-            overall_modifier = (mid_diff) * (mid_diff / max_diff) 
+            overall_modifier = (mid_diff) * abs(mid_diff / max_diff) 
             
             # Record team result
             team_result = {
