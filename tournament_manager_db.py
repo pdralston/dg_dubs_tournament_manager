@@ -265,7 +265,14 @@ class TournamentManagerDB:
             print(f"Error: {e}")
             
     def player_details_list(self, names: List[str]) -> None:
-        for name in names: self.player_details(name)
+        rawList = []
+        for name in names: 
+            self.player_details(name)
+            ratingDetails = self.rating_system.get_player_details(name)
+            rawList.append((name, ratingDetails['rating']))
+        print(f"\n{'-' * 13}\n{'Copyable List'}\n{'-' * 13}\n")
+        for detail in sorted(rawList, key=lambda x: x[1], reverse=True):
+            print(f"{detail[0]}: {detail[1]:.1f}")
 
     def player_details(self, name: str) -> None:
         """Show detailed information about a player."""
