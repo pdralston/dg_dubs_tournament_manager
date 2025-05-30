@@ -9,9 +9,9 @@ import json
 import os
 import datetime
 import math
+from _collections_abc import Iterable
 from typing import Dict, List, Tuple, Optional, Union, Any
 from tournament_db_manager import TournamentDBManager
-
 
 class TournamentRatingSystemDB:
     def __init__(self, db_file: str = "tournament_data.db", use_db: bool = True):
@@ -260,7 +260,7 @@ class TournamentRatingSystemDB:
             tournament_id = self.db_manager.add_tournament(date, course_name, len(teams))
         
         # Process results and update ratings
-        for position, (team, score) in enumerate(team_results, 1):
+        for position, (team, score) in self.resolve_tournament_positions(team_results):
             player1, player2 = team
             team_rating = self.calculate_team_rating(player1, player2)
             expected_position = predictions[team]['expected_position']
@@ -342,6 +342,23 @@ class TournamentRatingSystemDB:
         # Save data
         self.save_data()
         
+    def resolve_tournament_positions(self, results: Iterable[Tuple[Tuple[str, str], int]]) -> enumerate:
+        pos = 1
+        first = True
+        previous_score: int
+        standings = []
+        for (team, score) in results:
+            if first:
+                first = False
+                previous_score = score
+            else:
+                if previous_score != score: 
+                    pos += 1
+                    previous_score = score
+            standings.append((pos,(team,score)))
+        return standings
+
+    
     def get_player_ratings(self) -> Dict[str, float]:
         """Return a dictionary of player names and their current ratings."""
         return {name: data['rating'] for name, data in self.players.items()}
