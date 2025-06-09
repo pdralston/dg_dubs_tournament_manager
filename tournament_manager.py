@@ -246,16 +246,19 @@ class TournamentManager:
             predictions = self.rating_system.predict_tournament_outcome(teams)
             
             print("\nTournament Predictions:")
-            print("-" * 60)
-            print(f"{'Team':<30} {'Rating':<10} {'Expected Position':<20}")
-            print("-" * 60)
+            print("-" * 80)
+            print(f"{'Team':<50} {'Rating':<10} {'Expected Position':<20}")
+            print("-" * 80)
             
             # Sort by expected position
             sorted_predictions = sorted(predictions.items(), key=lambda x: x[1]['expected_position'])
             
             for team, data in sorted_predictions:
                 team_str = f"{team[0]} & {team[1]}"
-                print(f"{team_str:<30} {data['rating']:<10.1f} {data['expected_position']:<20.1f}")
+                print(f"{team_str:<50} {data['rating']:<10.1f} {data['expected_position']:<20d}")
+            
+            print("\nCopyable Team List\n" + "-" * 17)
+            [print(copy_string) for copy_string in [f"{team[0]}, {team[1]}" for team, score in sorted_predictions]]
                 
             # Predict scores if par is provided
             if par:
@@ -271,11 +274,14 @@ class TournamentManager:
                 
                 for team, score in sorted_scores:
                     team_str = f"{team[0]} & {team[1]}"
-                    print(f"{team_str:<30} {score:<10.1f}")
+                    print(f"{team_str:<30} {score:<10d}")
                     
         except ValueError as e:
             print(f"Error: {e}")
             
+    def player_details_list(self, names: List[str]) -> None:
+        for name in names: self.player_details(name)
+    
     def player_details(self, name: str) -> None:
         """Show detailed information about a player."""
         try:
@@ -381,13 +387,13 @@ class TournamentManager:
             if tournament.get('course'):
                 print(f"Course: {tournament['course']}")
             print(f"Teams: {tournament['teams']}")
-            print("-" * 50)
-            print(f"{'Position':<10} {'Team':<30} {'Score':<10}")
-            print("-" * 50)
+            print("-" * 60)
+            print(f"{'Position':<10} {'Team':<40} {'Score':^10}")
+            print("-" * 60)
             
             for result in tournament['results']:
                 team_str = f"{result['team'][0]} & {result['team'][1]}"
-                print(f"{result['position']:<10} {team_str:<30} {result['score']:<10}")
+                print(f"{result['position']:<10} {team_str:<40} {result['score']:^10}")
                 
     def switch_storage(self, use_db: bool) -> None:
         """Switch between database and JSON storage."""
@@ -421,6 +427,10 @@ def main():
     predict_parser.add_argument("--file", help="File containing teams")
     predict_parser.add_argument("--par", type=int, help="Par score for the course")
     
+    # List of players details command
+    details_list_parser = subparsers.add_parser("details_list", help="Show the details for a list of players")
+    details_list_parser.add_argument("names", nargs="+", help="Comma seperated list of player names")
+
     # Player details command
     details_parser = subparsers.add_parser("details", help="Show player details")
     details_parser.add_argument("name", help="Player name")
@@ -464,6 +474,8 @@ def main():
             manager.predict_tournament_interactive(args.par)
     elif args.command == "details":
         manager.player_details(args.name)
+    elif args.command == "details_list":
+        manager.player_details_list(args.names)
     elif args.command == "teams":
         if args.file:
             manager.generate_teams_from_file(args.file, args.allow_ghost)
