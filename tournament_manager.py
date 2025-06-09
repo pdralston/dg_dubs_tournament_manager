@@ -2,7 +2,8 @@
 """
 Tournament-Style Disc Golf League Manager
 
-A command-line interface for managing the tournament-style disc golf league rating system.
+A command-line interface for managing the tournament-style disc golf league rating system
+with flexible storage options (SQLite database or JSON).
 """
 
 import os
@@ -13,20 +14,52 @@ from tournament_ratings import TournamentRatingSystem
 
 
 class TournamentManager:
-    def __init__(self, data_file: str = "tournament_data.json"):
-        """Initialize the tournament manager."""
-        self.rating_system = TournamentRatingSystem(data_file)
+    def __init__(self, db_file: str = "tournament_data.db", use_db: bool = True):
+        """
+        Initialize the tournament manager.
+        
+        Args:
+            db_file: Path to the SQLite database file
+            use_db: Whether to use the database (True) or JSON (False)
+        """
+        self.rating_system = TournamentRatingSystem(db_file, use_db)
         
     def add_player(self, name: str, rating: int = 1000) -> None:
         """Add a new player to the system."""
         self.rating_system.add_player(name, rating)
         self.rating_system.save_data()
+
+    def add_players_from_file(self, file: str) -> None:
+        """
+        Add multiple players from a file.
         
+        The file should have one player per line in the format:
+        PlayerName,SkillClass
+        
+        Where SkillClass is 'A' or 'B' ('A' players start with 1300 rating, 'B' with 1000)
+        """
+        try:
+            with open(file, 'r') as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    parts = line.split(",")
+                    if len(parts) != 2:
+                        continue
+                    self.rating_system.add_player(parts[0], 1300 if parts[1].lower() == 'a' else 1000)
+            self.rating_system.save_data()
+        except FileNotFoundError:
+            print(f"File not found: {file}")
+        except ValueError as e:
+            print(f"Error: {e}")
+            
     def list_players(self) -> None:
         """List all players and their ratings."""
-        players = self.rating_system.get_player_ratings()
+        players = self.rating_system.players
+        
         if not players:
-            print("No players in the system.")
+            print("No players found.")
             return
             
         print("\nPlayer Ratings:")
@@ -34,174 +67,181 @@ class TournamentManager:
         print(f"{'Player':<20} {'Rating':<10}")
         print("-" * 30)
         
-        # Sort by rating
-        sorted_players = sorted(players.items(), key=lambda x: x[1], reverse=True)
-        for name, rating in sorted_players:
-            print(f"{name:<20} {rating:<10.1f}")
+        # Sort by rating (highest first)
+        sorted_players = sorted(players.items(), key=lambda x: x[1]['rating'], reverse=True)
+        
+        for name, data in sorted_players:
+            print(f"{name:<20} {data['rating']:<10.1f}")
             
-    def record_tournament(self, results_file: str, course_name: str = None, date: str = None) -> None:
+    def record_tournament(self, results_file: str = None, course_name: str = None, date: str = None) -> None:
+        """
+        Record a tournament result.
+        
+        Args:
+            results_file: Optional path to file containing results
+            course_name: Optional name of the course
+            date: Optional date string (defaults to today)
+        """
+        if results_file:
+            self._record_tournament_from_file(results_file, course_name, date)
+        else:
+            self._record_tournament_interactive(course_name, date)
+            
+    def _record_tournament_from_file(self, results_file: str, course_name: str = None, date: str = None) -> None:
         """
         Record a tournament result from a file.
         
-        The file should have one team per line in the format:
-        Player1,Player2,Score
-        
-        Teams should be listed in order of finish (lowest score first).
+        Args:
+            results_file: Path to file containing results
+            course_name: Optional name of the course
+            date: Optional date string (defaults to today)
         """
+        team_results = []
         try:
             with open(results_file, 'r') as f:
-                lines = f.readlines()
-                
-            team_results = []
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    parts = line.split(",")
+                    if len(parts) != 3:
+                        print(f"Invalid line format: {line}")
+                        continue
+                    player1, player2, score = parts
+                    team_results.append(((player1, player2), int(score)))
                     
-                parts = line.split(',')
-                if len(parts) != 3:
-                    print(f"Invalid line format: {line}")
-                    print("Expected format: Player1,Player2,Score")
-                    return
-                    
-                player1 = parts[0].strip()
-                player2 = parts[1].strip()
-                try:
-                    score = int(parts[2].strip())
-                except ValueError:
-                    print(f"Invalid score: {parts[2]}")
-                    return
-                    
-                team_results.append(((player1, player2), score))
-                
-            # Sort by score (lowest first) if not already sorted
-            team_results.sort(key=lambda x: x[1])
-            
             self.rating_system.record_tournament(team_results, course_name, date)
-            
         except FileNotFoundError:
             print(f"File not found: {results_file}")
         except ValueError as e:
             print(f"Error: {e}")
             
-    def record_tournament_interactive(self, course_name: str = None, date: str = None) -> None:
-        """Record a tournament result interactively."""
-        print("\nEnter tournament results (lowest score first).")
-        print("For each team, enter: Player1,Player2,Score")
+    def _record_tournament_interactive(self, course_name: str = None, date: str = None) -> None:
+        """
+        Record a tournament result interactively.
+        
+        Args:
+            course_name: Optional name of the course
+            date: Optional date string (defaults to today)
+        """
+        if not course_name:
+            course_name = input("Course name: ")
+            
+        if not date:
+            date = input("Date (YYYY-MM-DD, leave blank for today): ")
+            if not date:
+                date = None
+                
+        print("\nEnter teams in order of finish (lowest score first).")
+        print("Format: Player1,Player2,Score")
         print("Enter a blank line when done.")
         
         team_results = []
-        position = 1
-        
+        i = 1
         while True:
-            line = input(f"Team {position}: ").strip()
+            line = input(f"Team {i}: ")
             if not line:
                 break
                 
-            parts = line.split(',')
+            parts = line.split(",")
             if len(parts) != 3:
-                print("Invalid format. Expected: Player1,Player2,Score")
+                print("Invalid format. Please use: Player1,Player2,Score")
                 continue
                 
-            player1 = parts[0].strip()
-            player2 = parts[1].strip()
-            
+            player1, player2, score = parts
             try:
-                score = int(parts[2].strip())
+                team_results.append(((player1, player2), int(score)))
+                i += 1
             except ValueError:
-                print(f"Invalid score: {parts[2]}")
-                continue
+                print("Invalid score. Please enter a number.")
                 
-            team_results.append(((player1, player2), score))
-            position += 1
-            
-        if not team_results:
-            print("No results entered.")
-            return
-            
-        try:
-            self.rating_system.record_tournament(team_results, course_name, date)
-        except ValueError as e:
-            print(f"Error: {e}")
-            
-    def predict_tournament(self, teams_file: str, par: int = None) -> None:
+        if team_results:
+            try:
+                self.rating_system.record_tournament(team_results, course_name, date)
+            except ValueError as e:
+                print(f"Error: {e}")
+                
+    def predict_tournament(self, teams_file: str = None, par: int = 54) -> None:
         """
-        Predict tournament outcome from a file listing teams.
+        Predict a tournament outcome from a file.
         
-        The file should have one team per line in the format:
-        Player1,Player2
+        Args:
+            teams_file: Path to file containing teams
+            par: Par score for the course
         """
+        teams = []
         try:
             with open(teams_file, 'r') as f:
                 lines = f.readlines()
-                
-            teams = []
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
+                i = 0
+                while i < len(lines):
+                    player1 = lines[i].strip()
+                    if not player1:
+                        i += 1
+                        continue
+                        
+                    if i + 1 < len(lines):
+                        player2 = lines[i + 1].strip()
+                        if not player2:
+                            i += 2
+                            continue
+                    else:
+                        player2 = "Ghost Player"
+                        
+                    teams.append((player1, player2))
+                    i += 2
                     
-                parts = line.split(',')
-                if len(parts) != 2:
-                    print(f"Invalid line format: {line}")
-                    print("Expected format: Player1,Player2")
-                    return
-                    
-                player1 = parts[0].strip()
-                player2 = parts[1].strip()
-                teams.append((player1, player2))
-                
             self._predict_tournament(teams, par)
-            
         except FileNotFoundError:
             print(f"File not found: {teams_file}")
         except ValueError as e:
             print(f"Error: {e}")
             
-    def predict_tournament_interactive(self, par: int = None) -> None:
-        """Predict tournament outcome interactively."""
-        print("\nEnter teams for tournament prediction.")
-        print("For each team, enter: Player1,Player2")
+    def predict_tournament_interactive(self, par: int = 54) -> None:
+        """
+        Predict a tournament outcome interactively.
+        
+        Args:
+            par: Par score for the course
+        """
+        print("\nEnter teams, one player per line.")
         print("Enter a blank line when done.")
         
         teams = []
-        team_num = 1
-        
         while True:
-            line = input(f"Team {team_num}: ").strip()
-            if not line:
+            player1 = input("Player 1: ")
+            if not player1:
                 break
                 
-            parts = line.split(',')
-            if len(parts) != 2:
-                print("Invalid format. Expected: Player1,Player2")
-                continue
+            player2 = input("Player 2 (leave blank for Ghost Player): ")
+            if not player2:
+                player2 = "Ghost Player"
                 
-            player1 = parts[0].strip()
-            player2 = parts[1].strip()
             teams.append((player1, player2))
-            team_num += 1
+            print()
             
-        if not teams:
-            print("No teams entered.")
-            return
-            
-        self._predict_tournament(teams, par)
-            
-    def _predict_tournament(self, teams: List[Tuple[str, str]], par: int = None) -> None:
-        """Internal method to predict tournament outcome."""
+        if teams:
+            try:
+                self._predict_tournament(teams, par)
+            except ValueError as e:
+                print(f"Error: {e}")
+                
+    def _predict_tournament(self, teams: List[Tuple[str, str]], par: int = 54) -> None:
+        """
+        Predict a tournament outcome.
+        
+        Args:
+            teams: List of (player1, player2) tuples
+            par: Par score for the course
+        """
         try:
             # Verify all players exist
-            all_players = set()
-            for p1, p2 in teams:
-                all_players.add(p1)
-                all_players.add(p2)
-                
-            for player in all_players:
-                if player not in self.rating_system.players:
-                    print(f"Warning: Player '{player}' not found in the system.")
-                    return
-            
+            for team in teams:
+                for player in team:
+                    if not self.rating_system.player_exists(player) and player != "Ghost Player":
+                        print(f"Error: Player '{player}' not found.")
+                        return
+                        
             # Get predictions
             predictions = self.rating_system.predict_tournament_outcome(teams)
             
@@ -213,25 +253,25 @@ class TournamentManager:
             # Sort by expected position
             sorted_predictions = sorted(predictions.items(), key=lambda x: x[1]['expected_position'])
             
-            for team, prediction in sorted_predictions:
+            for team, data in sorted_predictions:
                 team_str = f"{team[0]} & {team[1]}"
-                print(f"{team_str:<30} {prediction['rating']:<10.1f} {prediction['expected_position']:<20.1f}")
+                print(f"{team_str:<30} {data['rating']:<10.1f} {data['expected_position']:<20.1f}")
                 
-            # If par is provided, predict scores
-            if par is not None:
+            # Predict scores if par is provided
+            if par:
                 predicted_scores = self.rating_system.predict_scores(teams, par)
                 
                 print("\nPredicted Scores:")
                 print("-" * 50)
-                print(f"{'Team':<30} {'Predicted Score':<15}")
+                print(f"{'Team':<30} {'Score':<10}")
                 print("-" * 50)
                 
-                # Sort by predicted score
+                # Sort by score (lowest first)
                 sorted_scores = sorted(predicted_scores.items(), key=lambda x: x[1])
                 
                 for team, score in sorted_scores:
                     team_str = f"{team[0]} & {team[1]}"
-                    print(f"{team_str:<30} {score:<15.1f}")
+                    print(f"{team_str:<30} {score:<10.1f}")
                     
         except ValueError as e:
             print(f"Error: {e}")
@@ -241,7 +281,7 @@ class TournamentManager:
         try:
             details = self.rating_system.get_player_details(name)
             
-            print(f"\nPlayer: {name}")
+            print(f"\nPlayer: {details['name']}")
             print("-" * 40)
             print(f"Current Rating: {details['rating']:.1f}")
             print(f"Tournaments Played: {details['tournaments_played']}")
@@ -256,13 +296,40 @@ class TournamentManager:
                 
                 for entry in sorted_history:
                     ghost_indicator = "Yes" if entry.get('with_ghost', False) else "No"
+                    change = entry['change']
+                    change_str = f"{'+' if change >= 0 else ''}{change:.1f}"
                     print(f"{entry['tournament_date']:<12} {entry['position']:<10} {entry['expected_position']:<10.1f} "
-                          f"{entry['old_rating']:<8.1f} {entry['new_rating']:<8.1f} {entry['change']:+.1f} {ghost_indicator:<8}")
+                          f"{entry['old_rating']:<8.1f} {entry['new_rating']:<8.1f} {change_str:<8} "
+                          f"{ghost_indicator}")
             else:
                 print("\nNo rating history available.")
-                
         except ValueError as e:
             print(f"Error: {e}")
+            
+    def generate_teams_from_file(self, file: str, allow_ghost: bool = False) -> None:
+        """
+        Generate balanced teams from a file containing player names.
+        
+        Args:
+            file: Path to file containing player names (one per line)
+            allow_ghost: Whether to allow a ghost player for odd numbers
+        """
+        player_list = []
+        try:
+            with open(file, 'r') as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    player_list.append(line)
+        except FileNotFoundError:
+            print(f"File not found: {file}")
+            return
+        except ValueError as e:
+            print(f"Error: {e}")
+            return
+            
+        self.generate_teams(players=player_list, allow_ghost=allow_ghost)
             
     def generate_teams(self, players: List[str], allow_ghost: bool = False) -> None:
         """
@@ -279,7 +346,7 @@ class TournamentManager:
         try:
             # Verify all players exist
             for player in players:
-                if player not in self.rating_system.players and player != "Ghost Player":
+                if not self.rating_system.player_exists(player) and player != "Ghost Player":
                     print(f"Error: Player '{player}' not found.")
                     return
                     
@@ -321,17 +388,24 @@ class TournamentManager:
             for result in tournament['results']:
                 team_str = f"{result['team'][0]} & {result['team'][1]}"
                 print(f"{result['position']:<10} {team_str:<30} {result['score']:<10}")
+                
+    def switch_storage(self, use_db: bool) -> None:
+        """Switch between database and JSON storage."""
+        self.rating_system.switch_storage_mode(use_db)
 
 
-def parse_args():
-    """Parse command line arguments."""
+def main():
     parser = argparse.ArgumentParser(description="Tournament-Style Disc Golf League Manager")
-    subparsers = parser.add_subparsers(dest="command", help="Command to run")
+    parser.add_argument("--use-json", action="store_true", help="Use JSON storage instead of database")
+    parser.add_argument("--db-file", default="tournament_data.db", help="Database file path")
+    
+    subparsers = parser.add_subparsers(dest="command")
     
     # Add player command
-    add_parser = subparsers.add_parser("add", help="Add a new player")
-    add_parser.add_argument("name", help="Player name")
-    add_parser.add_argument("--rating", type=int, default=1000, help="Initial rating (default: 1000)")
+    add_parser = subparsers.add_parser("add", help="Add a player")
+    add_parser.add_argument("name", nargs="?", help="Player name")
+    add_parser.add_argument("--rating", type=int, default=1000, help="Initial rating")
+    add_parser.add_argument("--file", help="File containing players to add")
     
     # List players command
     subparsers.add_parser("list", help="List all players and their ratings")
@@ -353,30 +427,36 @@ def parse_args():
     
     # Generate teams command
     teams_parser = subparsers.add_parser("teams", help="Generate balanced teams")
-    teams_parser.add_argument("players", nargs="+", help="List of player names")
+    teams_group = teams_parser.add_mutually_exclusive_group(required=True)
+    teams_group.add_argument("--players", nargs="+", help="List of player names")
+    teams_group.add_argument("--file", help="File containing player names (one per line)")
     teams_parser.add_argument("--allow-ghost", action="store_true", help="Allow adding a ghost player for odd numbers")
     
     # Tournament history command
     history_parser = subparsers.add_parser("history", help="Show tournament history")
     history_parser.add_argument("--limit", type=int, help="Limit number of tournaments to show")
     
-    return parser.parse_args()
-
-
-def main():
-    """Main entry point for the tournament manager."""
-    args = parse_args()
-    manager = TournamentManager()
+    # Storage command
+    storage_parser = subparsers.add_parser("storage", help="Switch storage mode")
+    storage_parser.add_argument("mode", choices=["db", "json"], help="Storage mode")
     
+    args = parser.parse_args()
+    
+    # Create manager
+    manager = TournamentManager(args.db_file, not args.use_json)
+    
+    # Process command
     if args.command == "add":
-        manager.add_player(args.name, args.rating)
+        if args.file:
+            manager.add_players_from_file(args.file)
+        elif args.name:
+            manager.add_player(args.name, args.rating)
+        else:
+            print("Please specify a player name or file. Use --help for more information.")
     elif args.command == "list":
         manager.list_players()
     elif args.command == "record":
-        if args.file:
-            manager.record_tournament(args.file, args.course, args.date)
-        else:
-            manager.record_tournament_interactive(args.course, args.date)
+        manager.record_tournament(args.file, args.course, args.date)
     elif args.command == "predict":
         if args.file:
             manager.predict_tournament(args.file, args.par)
@@ -385,9 +465,14 @@ def main():
     elif args.command == "details":
         manager.player_details(args.name)
     elif args.command == "teams":
-        manager.generate_teams(args.players, args.allow_ghost)
+        if args.file:
+            manager.generate_teams_from_file(args.file, args.allow_ghost)
+        else:
+            manager.generate_teams(args.players, args.allow_ghost)
     elif args.command == "history":
         manager.tournament_history(args.limit)
+    elif args.command == "storage":
+        manager.switch_storage(args.mode == "db")
     else:
         print("Please specify a command. Use --help for more information.")
 

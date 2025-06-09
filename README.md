@@ -11,16 +11,38 @@ A rating system for doubles disc golf leagues that tracks individual player cont
 - Generate balanced teams for league play
 - Tournament history tracking
 - Support for ghost players when there's an odd number of players
-- Optional SQLite database storage for improved data management
+- Flexible storage options: SQLite database (default) or JSON
+
+## Reliability Features
+
+The system includes several reliability features to ensure data integrity:
+
+### Case-Insensitive Player Lookups
+- Player names are matched case-insensitively for all operations
+- Original casing is preserved in the database and output
+- This allows for more flexible user input (e.g., "player" vs "Player")
+
+### Database Corruption Protection
+- Automatic detection of invalid or corrupted database files
+- Automatic backup creation before any potentially destructive operations
+- Automatic recovery from JSON data when available
+- Detailed error messages and warnings instead of crashes
+
+### Robust Error Handling
+- Graceful handling of database connection issues
+- Continued operation even when database operations fail
+- Safe transaction management with proper rollbacks
 
 ## How It Works
 
 This system uses a modified Elo-style rating algorithm adapted for tournament play:
 
 1. Each player has an individual rating (starting at 1000 by default)
+   - When adding via CSV, a provided skill class of A or B sill seed the rating as 1300 or 1000 respectively 
 2. Team ratings are calculated as the average of individual player ratings
 3. Expected tournament positions are calculated based on team ratings
 4. After each tournament, player ratings are updated based on:
+   - The player's overall position
    - The difference between expected and actual positions
    - A K-factor that determines how quickly ratings change
    - The player's experience level (newer players' ratings change faster)
@@ -30,7 +52,7 @@ This system uses a modified Elo-style rating algorithm adapted for tournament pl
 ### Prerequisites
 
 - Python 3.6 or higher
-- SQLite3 (optional, for database storage)
+- SQLite3 (included with Python)
 
 ### Installation
 
@@ -39,29 +61,42 @@ This system uses a modified Elo-style rating algorithm adapted for tournament pl
 
 ### Usage
 
-The system provides two command-line interfaces:
-
-1. `tournament_manager.py` - Original JSON-based storage
-2. `tournament_manager_db.py` - With optional SQLite database support
+The system provides a unified command-line interface with flexible storage options:
 
 #### Add a new player
 
 ```bash
-# Using JSON storage (default)
+# Using database storage (default)
 python tournament_manager.py add "Player Name" --rating 1000
 
-# Using database storage
-python tournament_manager_db.py --use-db add "Player Name" --rating 1000
+# Using JSON storage
+python tournament_manager.py --use-json add "Player Name" --rating 1000
 ```
+
+#### Add multiple players from a file
+
+```bash
+# Using database storage (default)
+python tournament_manager.py add --file players.csv
+
+# Using JSON storage
+python tournament_manager.py --use-json add --file players.csv
+```
+
+The players file should have one player per line in the format:
+```
+PlayerName,SkillClass
+```
+Where SkillClass is 'A' or 'B' ('A' players start with 1300 rating, 'B' with 1000)
 
 #### List all players and their ratings
 
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py list
 
-# Using database storage
-python tournament_manager_db.py --use-db list
+# Using JSON storage
+python tournament_manager.py --use-json list
 ```
 
 #### Record a tournament result
@@ -70,20 +105,20 @@ You can record tournament results in two ways:
 
 1. Interactive mode:
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py record --course "Course Name" --date "YYYY-MM-DD"
 
-# Using database storage
-python tournament_manager_db.py --use-db record --course "Course Name" --date "YYYY-MM-DD"
+# Using JSON storage
+python tournament_manager.py --use-json record --course "Course Name" --date "YYYY-MM-DD"
 ```
 
 2. From a file:
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py record --file results.txt --course "Course Name" --date "YYYY-MM-DD"
 
-# Using database storage
-python tournament_manager_db.py --use-db record --file results.txt --course "Course Name" --date "YYYY-MM-DD"
+# Using JSON storage
+python tournament_manager.py --use-json record --file results.txt --course "Course Name" --date "YYYY-MM-DD"
 ```
 
 The results file should have one team per line in the format:
@@ -98,20 +133,20 @@ You can predict tournament outcomes in two ways:
 
 1. Interactive mode:
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py predict --par 54
 
-# Using database storage
-python tournament_manager_db.py --use-db predict --par 54
+# Using JSON storage
+python tournament_manager.py --use-json predict --par 54
 ```
 
 2. From a file:
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py predict --file teams.txt --par 54
 
-# Using database storage
-python tournament_manager_db.py --use-db predict --file teams.txt --par 54
+# Using JSON storage
+python tournament_manager.py --use-json predict --file teams.txt --par 54
 ```
 
 The teams file should have one team per line in the format:
@@ -122,61 +157,61 @@ Player1,Player2
 #### View player details
 
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py details "Player Name"
 
-# Using database storage
-python tournament_manager_db.py --use-db details "Player Name"
+# Using JSON storage
+python tournament_manager.py --use-json details "Player Name"
 ```
 
 #### Generate balanced teams
 
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py teams "Player1" "Player2" "Player3" "Player4" "Player5" "Player6" "Player7" "Player8"
 
-# Using database storage
-python tournament_manager_db.py --use-db teams "Player1" "Player2" "Player3" "Player4" "Player5" "Player6" "Player7" "Player8"
+# Using JSON storage
+python tournament_manager.py --use-json teams "Player1" "Player2" "Player3" "Player4" "Player5" "Player6" "Player7" "Player8"
 ```
 
 For odd numbers of players, use the `--allow-ghost` flag:
 
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py teams "Player1" "Player2" "Player3" "Player4" "Player5" "Player6" "Player7" --allow-ghost
 
-# Using database storage
-python tournament_manager_db.py --use-db teams "Player1" "Player2" "Player3" "Player4" "Player5" "Player6" "Player7" --allow-ghost
+# Using JSON storage
+python tournament_manager.py --use-json teams "Player1" "Player2" "Player3" "Player4" "Player5" "Player6" "Player7" --allow-ghost
 ```
 
 #### View tournament history
 
 ```bash
-# Using JSON storage
+# Using database storage (default)
 python tournament_manager.py history --limit 5
 
-# Using database storage
-python tournament_manager_db.py --use-db history --limit 5
+# Using JSON storage
+python tournament_manager.py --use-json history --limit 5
 ```
 
 #### Switch storage mode
 
-You can switch between JSON and database storage:
+You can switch between database and JSON storage:
 
 ```bash
-# Switch to database storage
-python tournament_manager_db.py storage db
+# Switch to JSON storage
+python tournament_manager.py storage json
 
-# Switch back to JSON storage
-python tournament_manager_db.py --use-db storage json
+# Switch back to database storage
+python tournament_manager.py --use-json storage db
 ```
 
 ## Data Storage
 
 Player data and tournament history can be stored in two ways:
 
-1. JSON file (`tournament_data.json` by default) in the project directory
-2. SQLite database (`tournament_data.db` by default) for improved data management
+1. SQLite database (`tournament_data.db` by default) - This is the default storage method
+2. JSON file (`tournament_data.json` by default) - Available as an alternative option
 
 ## Example Scripts
 
@@ -184,7 +219,7 @@ The project includes example scripts to demonstrate functionality:
 
 - `example_tournament.sh` - Demonstrates basic tournament functionality
 - `example_ghost_player.sh` - Demonstrates the ghost player feature for odd numbers of players
-- `example_db_storage.sh` - Demonstrates switching between JSON and database storage
+- `example_db_storage.sh` - Demonstrates switching between database and JSON storage
 
 ## Next Steps
 
@@ -197,12 +232,17 @@ Planned enhancements include:
 
 ## Customization
 
-You can modify the rating system parameters in `tournament_ratings.py` or `tournament_ratings_db.py`:
+You can modify the rating system parameters in `tournament_ratings.py`:
 
 - Adjust K-factors to change how quickly ratings update
 - Modify the team rating calculation
 - Change the expected position formula
 - Adjust the score prediction model
+
+Database behavior can be customized in `tournament_db_manager.py`:
+- Configure backup file naming and locations
+- Adjust error handling and reporting
+- Modify recovery strategies
 
 ## License
 
