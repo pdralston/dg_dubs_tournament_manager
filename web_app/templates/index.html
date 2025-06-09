@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disc Golf League Rating System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Disc Golf League Rating System</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('list_players') }}">Players</a></li>
+                <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
+                <li><a href="{{ url_for('add_player') }}">Add Player</a></li>
+                <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
+                <li><a href="{{ url_for('generate_teams') }}">Generate Teams</a></li>
+                <li><a href="{{ url_for('storage_settings') }}">Storage Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="welcome">
+            <h2>Welcome to the Disc Golf League Rating System</h2>
+            <p>This system tracks individual player ratings and predicts team performance in tournament-style play.</p>
+            
+            <div class="features">
+                <h3>Features:</h3>
+                <ul>
+                    <li>Track individual player ratings</li>
+                    <li>Calculate team ratings based on individual player skills</li>
+                    <li>Predict tournament outcomes and expected scores</li>
+                    <li>Update ratings based on actual vs. expected performance</li>
+                    <li>Generate balanced teams for league play</li>
+                    <li>Tournament history tracking</li>
+                    <li>Support for ghost players when there's an odd number of players</li>
+                </ul>
+            </div>
+            
+            <div class="quick-links">
+                <h3>Quick Links:</h3>
+                <div class="button-group">
+                    <a href="{{ url_for('list_players') }}" class="button">View Players</a>
+                    <a href="{{ url_for('list_tournaments') }}" class="button">View Tournaments</a>
+                    <a href="{{ url_for('add_player') }}" class="button">Add Player</a>
+                    <a href="{{ url_for('record_tournament') }}" class="button">Record Tournament</a>
+                    <a href="{{ url_for('generate_teams') }}" class="button">Generate Teams</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Disc Golf League Rating System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

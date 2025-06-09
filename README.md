@@ -2,6 +2,14 @@
 
 A rating system for doubles disc golf leagues that tracks individual player contributions and predicts team performance in tournament-style play.
 
+## Project Structure
+
+This project is organized into two main components:
+
+1. **Core Rating System** (`tournament_core/`): The core functionality for tracking player ratings, recording tournaments, and generating teams.
+
+2. **Web Application** (`web_app/`): A Flask-based web interface for the rating system.
+
 ## Features
 
 - Track individual player ratings
@@ -58,8 +66,19 @@ This system uses a modified Elo-style rating algorithm adapted for tournament pl
 
 1. Clone this repository or download the files
 2. Navigate to the project directory
+3. Install the core package:
 
-### Usage
+```bash
+pip install -e ./tournament_core
+```
+
+4. For the web application, install additional dependencies:
+
+```bash
+pip install -r web_app/requirements.txt
+```
+
+### Command-Line Usage
 
 The system provides a unified command-line interface with flexible storage options:
 
@@ -206,6 +225,17 @@ python tournament_manager.py storage json
 python tournament_manager.py --use-json storage db
 ```
 
+### Web Application Usage
+
+To run the web application:
+
+```bash
+cd web_app
+python app.py
+```
+
+The application will be available at http://localhost:5000
+
 ## Data Storage
 
 Player data and tournament history can be stored in two ways:
@@ -232,14 +262,14 @@ Planned enhancements include:
 
 ## Customization
 
-You can modify the rating system parameters in `tournament_ratings.py`:
+You can modify the rating system parameters in `tournament_core/tournament_ratings.py`:
 
 - Adjust K-factors to change how quickly ratings update
 - Modify the team rating calculation
 - Change the expected position formula
 - Adjust the score prediction model
 
-Database behavior can be customized in `tournament_db_manager.py`:
+Database behavior can be customized in `tournament_core/tournament_db_manager.py`:
 - Configure backup file naming and locations
 - Adjust error handling and reporting
 - Modify recovery strategies

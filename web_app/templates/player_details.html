@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ name }} - Player Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Disc Golf League Rating System</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('list_players') }}">Players</a></li>
+                <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
+                <li><a href="{{ url_for('add_player') }}">Add Player</a></li>
+                <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
+                <li><a href="{{ url_for('generate_teams') }}">Generate Teams</a></li>
+                <li><a href="{{ url_for('storage_settings') }}">Storage Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="player-details">
+            <h2>Player: {{ name }}</h2>
+            
+            <div class="player-info">
+                <div class="info-card">
+                    <h3>Current Rating</h3>
+                    <div class="rating">{{ rating|round(1) }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Tournaments Played</h3>
+                    <div class="count">{{ tournaments_played }}</div>
+                </div>
+            </div>
+            
+            <h3>Rating History</h3>
+            {% if history %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Position</th>
+                        <th>Expected</th>
+                        <th>Old Rating</th>
+                        <th>New Rating</th>
+                        <th>Change</th>
+                        <th>Ghost?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in history %}
+                    <tr>
+                        <td>{{ entry.date }}</td>
+                        <td>{{ entry.position }}</td>
+                        <td>{{ entry.expected_position|round(1) }}</td>
+                        <td>{{ entry.old_rating|round(1) }}</td>
+                        <td>{{ entry.new_rating|round(1) }}</td>
+                        <td class="{{ 'positive' if entry.change > 0 else 'negative' if entry.change < 0 else '' }}">
+                            {{ '+' if entry.change > 0 else '' }}{{ entry.change|round(1) }}
+                        </td>
+                        <td>{{ 'Yes' if entry.with_ghost else 'No' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No tournament history available for this player.</p>
+            {% endif %}
+            
+            <div class="actions">
+                <a href="{{ url_for('list_players') }}" class="button">Back to Players</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Disc Golf League Rating System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
