@@ -6,9 +6,11 @@ A rating system for doubles disc golf leagues that tracks individual player cont
 
 This project is organized into two main components:
 
-1. **Core Rating System** (`tournament_core/`): The core functionality for tracking player ratings, recording tournaments, and generating teams.
+1. **Core Rating System** (`simple_approach/`): The core functionality for tracking player ratings, recording tournaments, and generating teams.
 
 2. **Web Application** (`web_app/`): A Flask-based web interface for the rating system.
+
+3. **Command-Line Interface** (`tournament_manager.py`): A CLI for interacting with the rating system.
 
 ## Features
 

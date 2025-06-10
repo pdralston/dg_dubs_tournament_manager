@@ -6,12 +6,23 @@ This module provides a web interface for the tournament rating system.
 """
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from tournament_core import TournamentRatingSystem
 import os
 import datetime
+import sys
+
+# Add project root to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from tournament_core import TournamentRatingSystem
+
+# Import API blueprints
+from api import all_blueprints
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_testing')
+
+# Register API blueprints
+for blueprint in all_blueprints:
+    app.register_blueprint(blueprint)
 
 # Initialize the rating system
 rating_system = TournamentRatingSystem()
@@ -129,12 +140,14 @@ def record_tournament():
                 except ValueError:
                     flash(f"Invalid score for team {player1} & {player2}", "error")
                     return render_template('record_tournament.html', 
-                                          players=list(rating_system.players.keys()))
+                                          players=list(rating_system.players.keys()),
+                                          now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
         
         if not team_results:
             flash("No valid team results provided", "error")
             return render_template('record_tournament.html', 
-                                  players=list(rating_system.players.keys()))
+                                  players=list(rating_system.players.keys()),
+                                  now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
         
         try:
             rating_system.record_tournament(team_results, course, date)
@@ -143,7 +156,8 @@ def record_tournament():
         except ValueError as e:
             flash(str(e), "error")
             return render_template('record_tournament.html', 
-                                  players=list(rating_system.players.keys()))
+                                  players=list(rating_system.players.keys()),
+                                  now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
     
     return render_template('record_tournament.html', 
                           players=list(rating_system.players.keys()),
@@ -168,10 +182,11 @@ def generate_teams():
             # Format for template
             team_data = []
             for i, team in enumerate(teams):
+                team_tuple = tuple(team)
                 team_data.append({
                     'players': team,
                     'rating': rating_system.calculate_team_rating(team[0], team[1]),
-                    'expected_position': predictions[tuple(team)]['expected_position']
+                    'expected_position': predictions[team_tuple].get('expected_position', 0)
                 })
             
             return render_template('team_results.html', teams=team_data)
@@ -182,22 +197,6 @@ def generate_teams():
     
     return render_template('generate_teams.html', 
                           players=list(rating_system.players.keys()))
-
-@app.route('/api/players')
-def api_players():
-    """API endpoint for players."""
-    players = {}
-    for name, data in rating_system.players.items():
-        players[name] = {
-            'rating': data['rating'],
-            'tournaments_played': data['tournaments_played']
-        }
-    return jsonify(players)
-
-@app.route('/api/tournaments')
-def api_tournaments():
-    """API endpoint for tournaments."""
-    return jsonify(rating_system.tournaments)
 
 @app.route('/storage', methods=['GET', 'POST'])
 def storage_settings():

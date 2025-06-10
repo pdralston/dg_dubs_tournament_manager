@@ -8,6 +8,9 @@ This script provides a command-line interface for the tournament rating system.
 import argparse
 import sys
 import os
+import sys
+# Add project root to Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tournament_core import TournamentRatingSystem
 
 def main():
@@ -288,7 +291,9 @@ def main():
             
             for team, data in sorted_teams:
                 team_str = f"{team[0]} & {team[1]}"
-                print(f"{team_str:<30} {data['team_rating']:<10.1f} {data['expected_position']:<20.1f}")
+                team_rating = data.get('team_rating', 0)
+                expected_position = data.get('expected_position', 0)
+                print(f"{team_str:<30} {team_rating:<10.1f} {expected_position:<20.1f}")
                 
             print("\nPredicted Scores:")
             print("-" * 50)
@@ -343,7 +348,9 @@ def main():
                 team_tuple = tuple(team)
                 team_str = f"{team[0]} & {team[1]}"
                 data = predictions[team_tuple]
-                print(f"{team_str:<30} {data['team_rating']:<10.1f} {data['expected_position']:<20.1f}")
+                team_rating = data.get('team_rating', 0)
+                expected_position = data.get('expected_position', 0)
+                print(f"{team_str:<30} {team_rating:<10.1f} {expected_position:<20.1f}")
                 
             print("\nPredicted Scores:")
             print("-" * 50)

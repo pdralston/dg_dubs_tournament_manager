@@ -23,7 +23,7 @@ python3 tournament_manager.py list
 # Generate teams for a league night
 echo ""
 echo "Generating balanced teams for league night:"
-python3 tournament_manager.py teams John Sarah Mike Lisa Dave Amy Tom Kate
+python3 tournament_manager.py teams --players John Sarah Mike Lisa Dave Amy Tom Kate
 
 # Create a teams file for prediction
 echo ""
