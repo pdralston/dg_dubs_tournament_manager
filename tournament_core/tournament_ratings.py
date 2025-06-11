@@ -13,7 +13,7 @@ import datetime
 import math
 from collections.abc import Iterable
 from typing import Dict, List, Tuple, Optional, Union, Any
-from tournament_db_manager import TournamentDBManager
+from .tournament_db_manager import TournamentDBManager
 
 
 class TournamentRatingSystem:

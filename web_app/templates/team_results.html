@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Results - Disc Golf League Rating System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Disc Golf League Rating System</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('list_players') }}">Players</a></li>
+                <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
+                <li><a href="{{ url_for('add_player') }}">Add Player</a></li>
+                <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
+                <li><a href="{{ url_for('generate_teams') }}" class="active">Generate Teams</a></li>
+                <li><a href="{{ url_for('storage_settings') }}">Storage Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="team-results">
+            <h2>Generated Teams</h2>
+            
+            <div class="teams-container">
+                {% for team in teams %}
+                <div class="team-card">
+                    <h3>Team {{ loop.index }}</h3>
+                    <div class="team-members">
+                        {% if team.players[1] == "Ghost Player" %}
+                        <div class="player">{{ team.players[0] }}</div>
+                        <div class="player ghost">Ghost Player</div>
+                        {% else %}
+                        <div class="player">{{ team.players[0] }}</div>
+                        <div class="player">{{ team.players[1] }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="team-stats">
+                        <div class="stat">
+                            <span class="label">Rating:</span>
+                            <span class="value">{{ team.rating|round(1) }}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Expected Position:</span>
+                            <span class="value">{{ team.expected_position|round(1) }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <h3>Tournament Predictions</h3>
+            <table class="predictions-table">
+                <thead>
+                    <tr>
+                        <th>Team</th>
+                        <th>Rating</th>
+                        <th>Expected Position</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams|sort(attribute='expected_position') %}
+                    <tr>
+                        <td>
+                            {% if team.players[1] == "Ghost Player" %}
+                            {{ team.players[0] }} & Ghost Player
+                            {% else %}
+                            {{ team.players[0] }} & {{ team.players[1] }}
+                            {% endif %}
+                        </td>
+                        <td>{{ team.rating|round(1) }}</td>
+                        <td>{{ team.expected_position|round(1) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="actions">
+                <a href="{{ url_for('record_tournament') }}" class="button primary">Record Tournament</a>
+                <a href="{{ url_for('generate_teams') }}" class="button">Generate Different Teams</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Disc Golf League Rating System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Tournament - Disc Golf League Rating System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Disc Golf League Rating System</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('list_players') }}">Players</a></li>
+                <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
+                <li><a href="{{ url_for('add_player') }}">Add Player</a></li>
+                <li><a href="{{ url_for('record_tournament') }}" class="active">Record Tournament</a></li>
+                <li><a href="{{ url_for('generate_teams') }}">Generate Teams</a></li>
+                <li><a href="{{ url_for('storage_settings') }}">Storage Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="record-tournament">
+            <h2>Record Tournament Results</h2>
+            
+            <form method="post" action="{{ url_for('record_tournament') }}">
+                <div class="form-group">
+                    <label for="course">Course Name:</label>
+                    <input type="text" id="course" name="course">
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Tournament Date:</label>
+                    <input type="date" id="date" name="date" value="{{ now_date }}">
+                </div>
+                
+                <h3>Team Results</h3>
+                <p class="help-text">Enter teams in order of finish (lowest score first)</p>
+                
+                <div id="team-results">
+                    {% for i in range(5) %}
+                    <div class="team-result">
+                        <div class="position">{{ i + 1 }}</div>
+                        <div class="team-inputs">
+                            <select name="player1_{{ i }}" required>
+                                <option value="">-- Select Player 1 --</option>
+                                {% for player in players %}
+                                <option value="{{ player }}">{{ player }}</option>
+                                {% endfor %}
+                                <option value="Ghost Player">Ghost Player</option>
+                            </select>
+                            
+                            <select name="player2_{{ i }}" required>
+                                <option value="">-- Select Player 2 --</option>
+                                {% for player in players %}
+                                <option value="{{ player }}">{{ player }}</option>
+                                {% endfor %}
+                                <option value="Ghost Player">Ghost Player</option>
+                            </select>
+                            
+                            <input type="number" name="score_{{ i }}" placeholder="Score" required>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="add-team" class="button">Add Team</button>
+                    <button type="submit" class="button primary">Record Tournament</button>
+                    <a href="{{ url_for('list_tournaments') }}" class="button">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Disc Golf League Rating System</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addTeamButton = document.getElementById('add-team');
+            const teamResults = document.getElementById('team-results');
+            let teamCount = {{ 5 }};
+            
+            addTeamButton.addEventListener('click', function() {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'team-result';
+                
+                const position = document.createElement('div');
+                position.className = 'position';
+                position.textContent = teamCount + 1;
+                
+                const inputs = document.createElement('div');
+                inputs.className = 'team-inputs';
+                
+                // Create player 1 select
+                const player1Select = document.createElement('select');
+                player1Select.name = `player1_${teamCount}`;
+                player1Select.required = true;
+                
+                let player1Options = '<option value="">-- Select Player 1 --</option>';
+                {% for player in players %}
+                player1Options += `<option value="{{ player }}">{{ player }}</option>`;
+                {% endfor %}
+                player1Options += '<option value="Ghost Player">Ghost Player</option>';
+                player1Select.innerHTML = player1Options;
+                
+                // Create player 2 select
+                const player2Select = document.createElement('select');
+                player2Select.name = `player2_${teamCount}`;
+                player2Select.required = true;
+                
+                let player2Options = '<option value="">-- Select Player 2 --</option>';
+                {% for player in players %}
+                player2Options += `<option value="{{ player }}">{{ player }}</option>`;
+                {% endfor %}
+                player2Options += '<option value="Ghost Player">Ghost Player</option>';
+                player2Select.innerHTML = player2Options;
+                
+                // Create score input
+                const scoreInput = document.createElement('input');
+                scoreInput.type = 'number';
+                scoreInput.name = `score_${teamCount}`;
+                scoreInput.placeholder = 'Score';
+                scoreInput.required = true;
+                
+                // Add all elements to the DOM
+                inputs.appendChild(player1Select);
+                inputs.appendChild(player2Select);
+                inputs.appendChild(scoreInput);
+                
+                teamDiv.appendChild(position);
+                teamDiv.appendChild(inputs);
+                
+                teamResults.appendChild(teamDiv);
+                teamCount++;
+            });
+        });
+    </script>
+</body>
+</html>
