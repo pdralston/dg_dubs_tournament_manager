@@ -74,7 +74,18 @@ This system uses a modified Elo-style rating algorithm adapted for tournament pl
 pip install -e ./tournament_core
 ```
 
-4. For the web application, install additional dependencies:
+4. For the web application create and activate a virtual environment:
+```bash
+python -m venv venv
+./venv/Scripts/activate
+```
+
+If you are on a Windows machine you may need to set the execution policy:
+```bash
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.\venv\Scripts\activate
+```
+5. install additional dependencies:
 
 ```bash
 pip install -r web_app/requirements.txt
