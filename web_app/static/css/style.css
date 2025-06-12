@@ -475,3 +475,14 @@ textarea {
         margin-bottom: 0.5rem;
     }
 }
+
+.search-container {
+  max-width: 500px;
+  margin: 0 auto 20px;
+}
+
+#playerSearchInput {
+  padding: 8px 15px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
