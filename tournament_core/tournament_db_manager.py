@@ -391,9 +391,13 @@ class TournamentDBManager:
             if player2 != "Ghost Player":
                 player2_id = self._get_player_id_safe(player2)
                 
-            if player1_id is None:
+            if player1_id is None and player1 != "Ghost Player":
                 print(f"Error: Player {player1} not found")
                 return team_id
+                
+            # Special handling for ghost player
+            if player1 == "Ghost Player":
+                player1_id = -1  # Special ID for ghost player
                 
             # Add team result
             cursor.execute(
@@ -687,6 +691,12 @@ class TournamentDBManager:
         Returns:
             Player ID or None if not found
         """
+        # Special case for ghost player
+        if name == "Ghost Player":
+            # Return a special ID for ghost player
+            # We don't actually store ghost players in the database
+            return -1
+            
         if not self.conn:
             return None
             

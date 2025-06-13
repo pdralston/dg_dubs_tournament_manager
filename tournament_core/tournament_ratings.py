@@ -184,6 +184,10 @@ class TournamentRatingSystem:
         Returns:
             True if player exists, False otherwise
         """
+        # Special case for ghost player
+        if name == "Ghost Player":
+            return True
+            
         player_lookup = self._create_case_insensitive_lookup()
         return name.lower() in player_lookup
         
@@ -200,6 +204,15 @@ class TournamentRatingSystem:
         Raises:
             ValueError: If player not found
         """
+        # Special case for ghost player
+        if name == "Ghost Player":
+            ghost_rating = self.get_ghost_player_rating()
+            return {
+                'rating': ghost_rating,
+                'tournaments_played': 0,
+                'history': []
+            }
+            
         player_lookup = self._create_case_insensitive_lookup()
         if name.lower() in player_lookup:
             original_name = player_lookup[name.lower()]
@@ -220,6 +233,10 @@ class TournamentRatingSystem:
         Raises:
             ValueError: If player not found
         """
+        # Special case for ghost player
+        if name == "Ghost Player":
+            return "Ghost Player"
+            
         player_lookup = self._create_case_insensitive_lookup()
         if name.lower() in player_lookup:
             return player_lookup[name.lower()]
@@ -278,6 +295,17 @@ class TournamentRatingSystem:
         # Calculate team ratings
         team_ratings = {}
         for team in teams:
+            # Handle ghost player in either position
+            if team[0] == "Ghost Player" or team[1] == "Ghost Player":
+                if team[0] == "Ghost Player":
+                    player = team[1]
+                else:
+                    player = team[0]
+                    
+                # Make sure the player exists
+                if not self.player_exists(player):
+                    raise ValueError(f"Player {player} not found")
+                    
             team_ratings[team] = self.calculate_team_rating(team[0], team[1])
             
         # Calculate expected positions
@@ -468,6 +496,20 @@ class TournamentRatingSystem:
             
         return positions
         
+    def get_ghost_player_rating(self) -> float:
+        """
+        Calculate an appropriate rating for a ghost player based on the average of all players.
+        
+        Returns:
+            Ghost player rating
+        """
+        if not self.players:
+            return 1000  # Default rating if no players exist
+            
+        # Calculate average rating of all players
+        total_rating = sum(player['rating'] for player in self.players.values())
+        return total_rating / len(self.players)
+        
     def calculate_team_rating(self, player1: str, player2: str) -> float:
         """
         Calculate a team's rating based on individual player ratings.
@@ -506,6 +548,17 @@ class TournamentRatingSystem:
         # Calculate team ratings
         team_ratings = {}
         for team in teams:
+            # Handle ghost player in either position
+            if team[0] == "Ghost Player" or team[1] == "Ghost Player":
+                if team[0] == "Ghost Player":
+                    player = team[1]
+                else:
+                    player = team[0]
+                    
+                # Make sure the player exists
+                if not self.player_exists(player):
+                    raise ValueError(f"Player {player} not found")
+                    
             team_ratings[team] = self.calculate_team_rating(team[0], team[1])
             
         # Calculate average rating
