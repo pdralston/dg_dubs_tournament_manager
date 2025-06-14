@@ -16,6 +16,44 @@ document.addEventListener('DOMContentLoaded', function() {
         addTeamButton.addEventListener('click', function() {
             addNewTeamRow(teamCount, playersData);
             teamCount++;
+            updatePositionNumbers();
+        });
+    }
+    
+    // Form validation
+    const tournamentForm = document.querySelector('form');
+    if (tournamentForm) {
+        tournamentForm.addEventListener('submit', function(e) {
+            // Count valid teams (teams with both players and a score)
+            let validTeams = 0;
+            const teamRows = document.querySelectorAll('.team-result');
+            
+            teamRows.forEach(row => {
+                const player1 = row.querySelector('select[name^="player1_"]').value;
+                const player2 = row.querySelector('select[name^="player2_"]').value;
+                const score = row.querySelector('input[name^="score_"]').value;
+                
+                if (player1 && player2 && score) {
+                    validTeams++;
+                }
+            });
+            
+            // Check if we have at least 2 valid teams
+            if (validTeams < 2) {
+                e.preventDefault();
+                
+                // Show error message
+                const errorMsg = document.getElementById('validation-error');
+                if (errorMsg) {
+                    errorMsg.textContent = 'At least 2 complete teams are required to record a tournament.';
+                    errorMsg.style.display = 'block';
+                    
+                    // Scroll to error message
+                    errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    alert('At least 2 complete teams are required to record a tournament.');
+                }
+            }
         });
     }
     
@@ -41,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function addNewTeamRow(index, players, teamData = null) {
         const teamDiv = document.createElement('div');
         teamDiv.className = 'team-result';
+        teamDiv.dataset.index = index;
         
         const position = document.createElement('div');
         position.className = 'position';
@@ -80,10 +119,22 @@ document.addEventListener('DOMContentLoaded', function() {
         scoreInput.placeholder = 'Score';
         scoreInput.required = true;
         
+        // Create remove button
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'remove-team';
+        removeButton.innerHTML = '&times;';
+        removeButton.title = 'Remove Team';
+        removeButton.addEventListener('click', function() {
+            teamDiv.remove();
+            updatePositionNumbers();
+        });
+        
         // Add all elements to the DOM
         inputs.appendChild(player1Select);
         inputs.appendChild(player2Select);
         inputs.appendChild(scoreInput);
+        inputs.appendChild(removeButton);
         
         teamDiv.appendChild(position);
         teamDiv.appendChild(inputs);
@@ -95,5 +146,18 @@ document.addEventListener('DOMContentLoaded', function() {
             player1Select.value = teamData.player1;
             player2Select.value = teamData.player2;
         }
+    }
+    
+    /**
+     * Updates the position numbers for all team rows
+     */
+    function updatePositionNumbers() {
+        const teamRows = document.querySelectorAll('.team-result');
+        teamRows.forEach((row, index) => {
+            const position = row.querySelector('.position');
+            if (position) {
+                position.textContent = index + 1;
+            }
+        });
     }
 });

@@ -5,6 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Record Tournament - Disc Golf League Rating System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .team-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .remove-team {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .remove-team:hover {
+            background-color: #ff1a1a;
+        }
+        
+        #validation-error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -37,9 +72,11 @@
             <h2>Record Tournament Results</h2>
             
             <form method="post" action="{{ url_for('record_tournament') }}">
+                <div id="validation-error"></div>
+                
                 <div class="form-group">
                     <label for="course">Course Name:</label>
-                    <input type="text" id="course" name="course">
+                    <input type="text" id="course" name="course" required>
                 </div>
                 
                 <div class="form-group">
@@ -48,7 +85,7 @@
                 </div>
                 
                 <h3>Team Results</h3>
-                <p class="help-text">Enter teams in order of finish (lowest score first)</p>
+                <p class="help-text">Enter teams in order of finish (lowest score first). At least 2 teams are required.</p>
                 
                 <!-- Store data for JavaScript -->
                 <div id="team-results" 
@@ -56,7 +93,7 @@
                      data-pre-populated-teams='{{ pre_populated_teams|tojson if pre_populated_teams else "[]" }}'
                      data-initial-team-count="5">
                     {% for i in range(5) %}
-                    <div class="team-result">
+                    <div class="team-result" data-index="{{ i }}">
                         <div class="position">{{ i + 1 }}</div>
                         <div class="team-inputs">
                             <select name="player1_{{ i }}" required>
@@ -76,6 +113,8 @@
                             </select>
                             
                             <input type="number" name="score_{{ i }}" placeholder="Score" required>
+                            
+                            <button type="button" class="remove-team" title="Remove Team">&times;</button>
                         </div>
                     </div>
                     {% endfor %}
@@ -98,5 +137,29 @@
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <!-- Include page-specific script -->
     <script src="{{ url_for('static', filename='js/record_tournament.js') }}"></script>
+    
+    <script>
+        // Initialize remove buttons for pre-existing rows
+        document.addEventListener('DOMContentLoaded', function() {
+            const removeButtons = document.querySelectorAll('.remove-team');
+            removeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const teamRow = this.closest('.team-result');
+                    if (teamRow) {
+                        teamRow.remove();
+                        
+                        // Update position numbers
+                        const teamRows = document.querySelectorAll('.team-result');
+                        teamRows.forEach((row, index) => {
+                            const position = row.querySelector('.position');
+                            if (position) {
+                                position.textContent = index + 1;
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
