@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Track all autocomplete instances
     const autocompleteInstances = [];
     
+    // Track tournament participants
+    const tournamentParticipants = new Set();
+    
     // Initialize existing player inputs
     initializeExistingInputs();
     
@@ -60,6 +63,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (player1Input && player2Input && scoreInput && 
                     player1Input.value.trim() && player2Input.value.trim() && scoreInput.value.trim()) {
                     validTeams++;
+                    
+                    // Add players to tournament participants set
+                    if (player1Input.value !== "Ghost Player") {
+                        tournamentParticipants.add(player1Input.value);
+                    }
+                    if (player2Input.value !== "Ghost Player") {
+                        tournamentParticipants.add(player2Input.value);
+                    }
                 }
             });
             
@@ -95,6 +106,118 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Ace Pot functionality
+    const acePotCheckbox = document.getElementById('ace-pot-paid');
+    const acePotRecipients = document.getElementById('ace-pot-recipients');
+    const addRecipientBtn = document.getElementById('add-recipient-btn');
+    const recipientList = document.querySelector('.ace-pot-recipient-list');
+    let recipientCount = 0;
+    
+    // Show/hide recipients section based on checkbox
+    if (acePotCheckbox) {
+        acePotCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                acePotRecipients.style.display = 'block';
+                
+                // Add first recipient if none exist
+                if (recipientCount === 0) {
+                    addAcePotRecipient();
+                }
+            } else {
+                acePotRecipients.style.display = 'none';
+            }
+        });
+    }
+    
+    // Add recipient button
+    if (addRecipientBtn) {
+        addRecipientBtn.addEventListener('click', function() {
+            addAcePotRecipient();
+        });
+    }
+    
+    /**
+     * Add a new ace pot recipient input
+     */
+    function addAcePotRecipient() {
+        const recipientDiv = document.createElement('div');
+        recipientDiv.className = 'ace-pot-recipient';
+        recipientDiv.style.display = 'flex';
+        recipientDiv.style.alignItems = 'center';
+        recipientDiv.style.marginBottom = '10px';
+        recipientDiv.style.gap = '10px';
+        
+        // Create autocomplete wrapper
+        const autocompleteWrapper = document.createElement('div');
+        autocompleteWrapper.className = 'autocomplete-wrapper';
+        autocompleteWrapper.style.flex = '1';
+        
+        // Create input
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = `ace_pot_recipient_${recipientCount}`;
+        input.placeholder = 'Select player';
+        input.required = acePotCheckbox.checked;
+        autocompleteWrapper.appendChild(input);
+        
+        // Create remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-recipient';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.title = 'Remove Recipient';
+        removeBtn.style.backgroundColor = '#ff4d4d';
+        removeBtn.style.color = 'white';
+        removeBtn.style.border = 'none';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.width = '24px';
+        removeBtn.style.height = '24px';
+        removeBtn.style.fontSize = '16px';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.style.display = 'flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        removeBtn.style.padding = '0';
+        
+        removeBtn.addEventListener('click', function() {
+            recipientDiv.remove();
+            updateRecipientCount();
+        });
+        
+        recipientDiv.appendChild(autocompleteWrapper);
+        recipientDiv.appendChild(removeBtn);
+        recipientList.appendChild(recipientDiv);
+        
+        // Initialize autocomplete for this input
+        // Use tournament participants instead of all players
+        const autocomplete = new PlayerAutocomplete(input, Array.from(tournamentParticipants));
+        autocompleteInstances.push(autocomplete);
+        
+        recipientCount++;
+        updateRecipientCount();
+    }
+    
+    /**
+     * Update recipient count and required status
+     */
+    function updateRecipientCount() {
+        const recipients = document.querySelectorAll('.ace-pot-recipient');
+        recipientCount = recipients.length;
+        
+        // If no recipients and checkbox is checked, add one
+        if (recipientCount === 0 && acePotCheckbox.checked) {
+            addAcePotRecipient();
+        }
+        
+        // Update required status based on checkbox
+        recipients.forEach(recipient => {
+            const input = recipient.querySelector('input');
+            if (input) {
+                input.required = acePotCheckbox.checked;
+            }
+        });
+    }
+    
     /**
      * Initialize autocomplete for existing player inputs
      */
@@ -107,11 +230,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (player1Input) {
                 const autocomplete1 = new PlayerAutocomplete(player1Input, playersData);
                 autocompleteInstances.push(autocomplete1);
+                
+                // Add input event to track tournament participants
+                player1Input.addEventListener('change', updateTournamentParticipants);
             }
             
             if (player2Input) {
                 const autocomplete2 = new PlayerAutocomplete(player2Input, playersData);
                 autocompleteInstances.push(autocomplete2);
+                
+                // Add input event to track tournament participants
+                player2Input.addEventListener('change', updateTournamentParticipants);
             }
             
             // Add remove button functionality
@@ -120,7 +249,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 removeButton.addEventListener('click', function() {
                     row.remove();
                     updatePositionNumbers();
+                    updateTournamentParticipants();
                 });
+            }
+        });
+        
+        // Initial update of tournament participants
+        updateTournamentParticipants();
+    }
+    
+    /**
+     * Update the set of tournament participants
+     */
+    function updateTournamentParticipants() {
+        tournamentParticipants.clear();
+        
+        const teamRows = document.querySelectorAll('.team-result');
+        teamRows.forEach(row => {
+            const player1Input = row.querySelector('input[name^="player1_"]');
+            const player2Input = row.querySelector('input[name^="player2_"]');
+            
+            if (player1Input && player1Input.value && player1Input.value !== "Ghost Player") {
+                tournamentParticipants.add(player1Input.value);
+            }
+            
+            if (player2Input && player2Input.value && player2Input.value !== "Ghost Player") {
+                tournamentParticipants.add(player2Input.value);
+            }
+        });
+        
+        // Update recipient autocomplete options
+        const recipientInputs = document.querySelectorAll('.ace-pot-recipient input');
+        recipientInputs.forEach(input => {
+            const instance = autocompleteInstances.find(i => i.input === input);
+            if (instance) {
+                instance.updateOptions(Array.from(tournamentParticipants));
             }
         });
     }
@@ -188,6 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
         removeButton.addEventListener('click', function() {
             teamDiv.remove();
             updatePositionNumbers();
+            updateTournamentParticipants();
         });
         
         // Add all elements to the DOM
@@ -207,6 +371,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         autocompleteInstances.push(autocomplete1, autocomplete2);
         
+        // Add input event to track tournament participants
+        player1Input.addEventListener('change', updateTournamentParticipants);
+        player2Input.addEventListener('change', updateTournamentParticipants);
+        
         // Set values if team data is provided
         if (teamData) {
             player1Input.value = teamData.player1;
@@ -215,6 +383,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate the inputs
             autocomplete1.validateInput();
             autocomplete2.validateInput();
+            
+            // Update tournament participants
+            updateTournamentParticipants();
         }
     }
     

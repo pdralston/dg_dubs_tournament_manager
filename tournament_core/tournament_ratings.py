@@ -38,6 +38,10 @@ class TournamentRatingSystem:
             try:
                 self.db_manager = TournamentDBManager(self.db_file)
                 self._load_from_db()
+                
+                # Initialize ace pot manager
+                from .ace_pot_manager import AcePotManager
+                self.ace_pot_manager = AcePotManager(self.db_manager)
             except Exception as e:
                 print(f"Error initializing database: {e}")
                 print("Exiting due to database error.")
@@ -243,8 +247,15 @@ class TournamentRatingSystem:
         else:
             raise ValueError(f"Player {name} not found")
 
-    def add_player(self, name: str, initial_rating: int = 1000) -> None:
-        """Add a new player to the system."""
+    def add_player(self, name: str, initial_rating: int = 1000, is_club_member: bool = False) -> None:
+        """
+        Add a new player to the system.
+        
+        Args:
+            name: Player name
+            initial_rating: Initial rating (default: 1000)
+            is_club_member: Whether the player is a club member
+        """
         # Check if player exists (case-insensitive)
         if self.player_exists(name):
             print(f"Player {name} already exists.")
@@ -253,18 +264,50 @@ class TournamentRatingSystem:
         self.players[name] = {
             'rating': initial_rating,
             'tournaments_played': 0,
-            'history': []
+            'history': [],
+            'is_club_member': is_club_member
         }
         
         if self.use_db:
             try:
-                self.db_manager.add_player(name, initial_rating)
+                self.db_manager.add_player(name, initial_rating, is_club_member)
             except Exception as e:
                 print(f"Error adding player to database: {e}")
                 print("Exiting due to database error.")
                 sys.exit(1)
             
         print(f"Added player {name} with initial rating {initial_rating}")
+        
+    def update_player_club_membership(self, name: str, is_club_member: bool) -> None:
+        """
+        Update a player's club membership status.
+        
+        Args:
+            name: Player name
+            is_club_member: Whether the player is a club member
+            
+        Raises:
+            ValueError: If player doesn't exist
+        """
+        # Check if player exists (case-insensitive)
+        if not self.player_exists(name):
+            raise ValueError(f"Player {name} not found")
+            
+        # Get original player name with correct casing
+        player_name = self.get_player_name(name)
+        
+        # Update player in database
+        if self.use_db:
+            success = self.db_manager.update_player_club_membership(player_name, is_club_member)
+            if not success:
+                print(f"Warning: Failed to update club membership for {player_name} in database")
+        
+        # Update player in memory
+        self.players[player_name]['is_club_member'] = is_club_member
+        
+        # Save data if using JSON
+        if not self.use_db:
+            self._save_to_json()
         
     def get_k_factor(self, player: str) -> float:
         """
@@ -326,7 +369,8 @@ class TournamentRatingSystem:
         return team_predictions
     
     def record_tournament(self, team_results: List[Tuple[Tuple[str, str], int]],
-                         course_name: str = None, date: str = None) -> None:
+                         course_name: str = None, date: str = None,
+                         ace_pot_paid: bool = False) -> Optional[int]:
         """
         Record a tournament result and update ratings.
         
@@ -334,6 +378,10 @@ class TournamentRatingSystem:
             team_results: List of ((player1, player2), score) tuples, sorted by score (lowest first)
             course_name: Optional name of the course
             date: Optional date string (defaults to today)
+            ace_pot_paid: Whether the ace pot was paid out
+            
+        Returns:
+            Tournament ID if using database, None otherwise
         """
         if date is None:
             date = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -369,10 +417,15 @@ class TournamentRatingSystem:
         # Add tournament to database if using DB
         tournament_id = None
         if self.use_db:
-            tournament_id = self.db_manager.add_tournament(date, course_name, len(teams))
+            tournament_id = self.db_manager.add_tournament(
+                date, 
+                course_name, 
+                len(teams),
+                ace_pot_paid
+            )
             if tournament_id is None:
                 print("Error: Failed to add tournament to database")
-                return
+                return None
         
         for position, (team, score) in self.resolve_tournament_positions(team_results):
             player1, player2 = team
@@ -468,6 +521,8 @@ class TournamentRatingSystem:
         
         # Save data
         self.save_data()
+        
+        return tournament_id
         
     def resolve_tournament_positions(self, team_results: List[Tuple[Tuple[str, str], int]]) -> List[Tuple[int, Tuple[Tuple[str, str], int]]]:
         """

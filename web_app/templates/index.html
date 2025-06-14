@@ -11,13 +11,12 @@
         <h1>Disc Golf League Rating System</h1>
         <nav>
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('index') }}" class="active">Home</a></li>
                 <li><a href="{{ url_for('list_players') }}">Players</a></li>
                 <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
-                <li><a href="{{ url_for('add_player') }}">Add Player</a></li>
                 <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
-                <li><a href="{{ url_for('generate_teams') }}">Generate Teams</a></li>
-                <li><a href="{{ url_for('storage_settings') }}">Storage Settings</a></li>
+                <li><a href="{{ url_for('event_registration') }}">Event Registration</a></li>
+                <li><a href="{{ url_for('ace_pot') }}">Ace Pot</a></li>
             </ul>
         </nav>
     </header>
@@ -55,9 +54,8 @@
                 <div class="button-group">
                     <a href="{{ url_for('list_players') }}" class="button">View Players</a>
                     <a href="{{ url_for('list_tournaments') }}" class="button">View Tournaments</a>
-                    <a href="{{ url_for('add_player') }}" class="button">Add Player</a>
                     <a href="{{ url_for('record_tournament') }}" class="button">Record Tournament</a>
-                    <a href="{{ url_for('generate_teams') }}" class="button">Generate Teams</a>
+                    <a href="{{ url_for('generate_teams') }}" class="button">Event Registration</a>
                 </div>
             </div>
         </section>
