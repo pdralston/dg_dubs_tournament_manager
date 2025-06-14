@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const prePopulatedTeams = JSON.parse(teamResultsContainer.dataset.prePopulatedTeams || '[]');
     let teamCount = parseInt(teamResultsContainer.dataset.initialTeamCount || 5);
     
+    // Track all autocomplete instances
+    const autocompleteInstances = [];
+    
+    // Initialize existing player inputs
+    initializeExistingInputs();
+    
     // Add team button functionality
     const addTeamButton = document.getElementById('add-team');
     if (addTeamButton) {
@@ -24,16 +30,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const tournamentForm = document.querySelector('form');
     if (tournamentForm) {
         tournamentForm.addEventListener('submit', function(e) {
+            // Validate all inputs first
+            let allValid = true;
+            autocompleteInstances.forEach(instance => {
+                if (!instance.validateInput(true)) {
+                    allValid = false;
+                }
+            });
+            
+            if (!allValid) {
+                e.preventDefault();
+                const errorMsg = document.getElementById('validation-error');
+                if (errorMsg) {
+                    errorMsg.textContent = 'Please correct the invalid player names.';
+                    errorMsg.style.display = 'block';
+                }
+                return;
+            }
+            
             // Count valid teams (teams with both players and a score)
             let validTeams = 0;
             const teamRows = document.querySelectorAll('.team-result');
             
             teamRows.forEach(row => {
-                const player1 = row.querySelector('select[name^="player1_"]').value;
-                const player2 = row.querySelector('select[name^="player2_"]').value;
-                const score = row.querySelector('input[name^="score_"]').value;
+                const player1Input = row.querySelector('input[name^="player1_"]');
+                const player2Input = row.querySelector('input[name^="player2_"]');
+                const scoreInput = row.querySelector('input[name^="score_"]');
                 
-                if (player1 && player2 && score) {
+                if (player1Input && player2Input && scoreInput && 
+                    player1Input.value.trim() && player2Input.value.trim() && scoreInput.value.trim()) {
                     validTeams++;
                 }
             });
@@ -71,6 +96,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
+     * Initialize autocomplete for existing player inputs
+     */
+    function initializeExistingInputs() {
+        const existingRows = document.querySelectorAll('.team-result');
+        existingRows.forEach(row => {
+            const player1Input = row.querySelector('input[name^="player1_"]');
+            const player2Input = row.querySelector('input[name^="player2_"]');
+            
+            if (player1Input) {
+                const autocomplete1 = new PlayerAutocomplete(player1Input, playersData);
+                autocompleteInstances.push(autocomplete1);
+            }
+            
+            if (player2Input) {
+                const autocomplete2 = new PlayerAutocomplete(player2Input, playersData);
+                autocompleteInstances.push(autocomplete2);
+            }
+            
+            // Add remove button functionality
+            const removeButton = row.querySelector('.remove-team');
+            if (removeButton) {
+                removeButton.addEventListener('click', function() {
+                    row.remove();
+                    updatePositionNumbers();
+                });
+            }
+        });
+    }
+    
+    /**
      * Adds a new team row to the form
      * @param {number} index - The team index
      * @param {Array} players - List of player names
@@ -88,29 +143,33 @@ document.addEventListener('DOMContentLoaded', function() {
         const inputs = document.createElement('div');
         inputs.className = 'team-inputs';
         
-        // Create player 1 select
-        const player1Select = document.createElement('select');
-        player1Select.name = `player1_${index}`;
-        player1Select.required = true;
+        // Create player 1 input wrapper
+        const player1Wrapper = document.createElement('div');
+        player1Wrapper.className = 'player-input';
         
-        let player1Options = '<option value="">-- Select Player 1 --</option>';
-        players.forEach(player => {
-            player1Options += `<option value="${player}">${player}</option>`;
-        });
-        player1Options += '<option value="Ghost Player">Ghost Player</option>';
-        player1Select.innerHTML = player1Options;
+        // Create player 1 input
+        const player1Input = document.createElement('input');
+        player1Input.type = 'text';
+        player1Input.name = `player1_${index}`;
+        player1Input.placeholder = 'Player 1';
+        player1Input.required = true;
+        player1Wrapper.appendChild(player1Input);
         
-        // Create player 2 select
-        const player2Select = document.createElement('select');
-        player2Select.name = `player2_${index}`;
-        player2Select.required = true;
+        // Create player 2 input wrapper
+        const player2Wrapper = document.createElement('div');
+        player2Wrapper.className = 'player-input';
         
-        let player2Options = '<option value="">-- Select Player 2 --</option>';
-        players.forEach(player => {
-            player2Options += `<option value="${player}">${player}</option>`;
-        });
-        player2Options += '<option value="Ghost Player">Ghost Player</option>';
-        player2Select.innerHTML = player2Options;
+        // Create player 2 input
+        const player2Input = document.createElement('input');
+        player2Input.type = 'text';
+        player2Input.name = `player2_${index}`;
+        player2Input.placeholder = 'Player 2';
+        player2Input.required = true;
+        player2Wrapper.appendChild(player2Input);
+        
+        // Create score input wrapper
+        const scoreWrapper = document.createElement('div');
+        scoreWrapper.className = 'score-input';
         
         // Create score input
         const scoreInput = document.createElement('input');
@@ -118,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scoreInput.name = `score_${index}`;
         scoreInput.placeholder = 'Score';
         scoreInput.required = true;
+        scoreWrapper.appendChild(scoreInput);
         
         // Create remove button
         const removeButton = document.createElement('button');
@@ -131,9 +191,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Add all elements to the DOM
-        inputs.appendChild(player1Select);
-        inputs.appendChild(player2Select);
-        inputs.appendChild(scoreInput);
+        inputs.appendChild(player1Wrapper);
+        inputs.appendChild(player2Wrapper);
+        inputs.appendChild(scoreWrapper);
         inputs.appendChild(removeButton);
         
         teamDiv.appendChild(position);
@@ -141,10 +201,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         teamResultsContainer.appendChild(teamDiv);
         
-        // Set selected values if team data is provided
+        // Initialize autocomplete for player inputs
+        const autocomplete1 = new PlayerAutocomplete(player1Input, players);
+        const autocomplete2 = new PlayerAutocomplete(player2Input, players);
+        
+        autocompleteInstances.push(autocomplete1, autocomplete2);
+        
+        // Set values if team data is provided
         if (teamData) {
-            player1Select.value = teamData.player1;
-            player2Select.value = teamData.player2;
+            player1Input.value = teamData.player1;
+            player2Input.value = teamData.player2;
+            
+            // Validate the inputs
+            autocomplete1.validateInput();
+            autocomplete2.validateInput();
         }
     }
     
