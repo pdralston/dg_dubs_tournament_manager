@@ -126,27 +126,47 @@ def record_tournament():
         if not date:
             date = datetime.datetime.now().strftime("%Y-%m-%d")
         
+        # Get all valid player names for validation
+        valid_players = list(rating_system.players.keys())
+        
         # Process team results
         team_results = []
-        for i in range(10):  # Support up to 10 teams
+        for i in range(20):  # Support up to 20 teams
             player1 = request.form.get(f'player1_{i}')
             player2 = request.form.get(f'player2_{i}')
             score = request.form.get(f'score_{i}')
             
-            if player1 and player2 and score:
-                try:
-                    score = int(score)
-                    team_results.append(((player1, player2), score))
-                except ValueError:
-                    flash(f"Invalid score for team {player1} & {player2}", "error")
-                    return render_template('record_tournament.html', 
-                                          players=list(rating_system.players.keys()),
-                                          now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
+            # Skip empty rows
+            if not (player1 and player2 and score):
+                continue
+                
+            # Validate player names
+            if player1 != "Ghost Player" and player1 not in valid_players:
+                flash(f"Invalid player name: {player1}", "error")
+                return render_template('record_tournament.html', 
+                                      players=valid_players,
+                                      now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
+                
+            if player2 != "Ghost Player" and player2 not in valid_players:
+                flash(f"Invalid player name: {player2}", "error")
+                return render_template('record_tournament.html', 
+                                      players=valid_players,
+                                      now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
+                
+            try:
+                score = int(score)
+                team_results.append(((player1, player2), score))
+            except ValueError:
+                flash(f"Invalid score for team {player1} & {player2}", "error")
+                return render_template('record_tournament.html', 
+                                      players=valid_players,
+                                      now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
         
-        if not team_results:
-            flash("No valid team results provided", "error")
+        # Check if we have at least 2 teams
+        if len(team_results) < 2:
+            flash("At least 2 teams are required to record a tournament", "error")
             return render_template('record_tournament.html', 
-                                  players=list(rating_system.players.keys()),
+                                  players=valid_players,
                                   now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
         
         try:
@@ -156,7 +176,7 @@ def record_tournament():
         except ValueError as e:
             flash(str(e), "error")
             return render_template('record_tournament.html', 
-                                  players=list(rating_system.players.keys()),
+                                  players=valid_players,
                                   now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
     
     # Check if teams were passed from the generate_teams page

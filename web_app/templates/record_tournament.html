@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Record Tournament - Disc Golf League Rating System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/autocomplete.css') }}">
+    <style>
+        .team-inputs {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .remove-team {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-top: 8px;
+        }
+        
+        .remove-team:hover {
+            background-color: #ff1a1a;
+        }
+        
+        #validation-error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .position {
+            margin-top: 8px;
+            font-weight: bold;
+            width: 24px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -37,9 +81,11 @@
             <h2>Record Tournament Results</h2>
             
             <form method="post" action="{{ url_for('record_tournament') }}">
+                <div id="validation-error"></div>
+                
                 <div class="form-group">
                     <label for="course">Course Name:</label>
-                    <input type="text" id="course" name="course">
+                    <input type="text" id="course" name="course" required>
                 </div>
                 
                 <div class="form-group">
@@ -48,7 +94,7 @@
                 </div>
                 
                 <h3>Team Results</h3>
-                <p class="help-text">Enter teams in order of finish (lowest score first)</p>
+                <p class="help-text">Enter teams in order of finish (lowest score first). At least 2 teams are required.</p>
                 
                 <!-- Store data for JavaScript -->
                 <div id="team-results" 
@@ -56,26 +102,22 @@
                      data-pre-populated-teams='{{ pre_populated_teams|tojson if pre_populated_teams else "[]" }}'
                      data-initial-team-count="5">
                     {% for i in range(5) %}
-                    <div class="team-result">
+                    <div class="team-result" data-index="{{ i }}">
                         <div class="position">{{ i + 1 }}</div>
                         <div class="team-inputs">
-                            <select name="player1_{{ i }}" required>
-                                <option value="">-- Select Player 1 --</option>
-                                {% for player in players %}
-                                <option value="{{ player }}">{{ player }}</option>
-                                {% endfor %}
-                                <option value="Ghost Player">Ghost Player</option>
-                            </select>
+                            <div class="player-input">
+                                <input type="text" name="player1_{{ i }}" placeholder="Player 1" required>
+                            </div>
                             
-                            <select name="player2_{{ i }}" required>
-                                <option value="">-- Select Player 2 --</option>
-                                {% for player in players %}
-                                <option value="{{ player }}">{{ player }}</option>
-                                {% endfor %}
-                                <option value="Ghost Player">Ghost Player</option>
-                            </select>
+                            <div class="player-input">
+                                <input type="text" name="player2_{{ i }}" placeholder="Player 2" required>
+                            </div>
                             
-                            <input type="number" name="score_{{ i }}" placeholder="Score" required>
+                            <div class="score-input">
+                                <input type="number" name="score_{{ i }}" placeholder="Score" required>
+                            </div>
+                            
+                            <button type="button" class="remove-team" title="Remove Team">&times;</button>
                         </div>
                     </div>
                     {% endfor %}
@@ -96,6 +138,8 @@
 
     <!-- Include common script -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Include autocomplete script -->
+    <script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
     <!-- Include page-specific script -->
     <script src="{{ url_for('static', filename='js/record_tournament.js') }}"></script>
 </body>
