@@ -50,7 +50,11 @@
                 <h3>Team Results</h3>
                 <p class="help-text">Enter teams in order of finish (lowest score first)</p>
                 
-                <div id="team-results">
+                <!-- Store data for JavaScript -->
+                <div id="team-results" 
+                     data-players='{{ players|tojson }}'
+                     data-pre-populated-teams='{{ pre_populated_teams|tojson if pre_populated_teams else "[]" }}'
+                     data-initial-team-count="5">
                     {% for i in range(5) %}
                     <div class="team-result">
                         <div class="position">{{ i + 1 }}</div>
@@ -90,66 +94,9 @@
         <p>&copy; 2025 Disc Golf League Rating System</p>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const addTeamButton = document.getElementById('add-team');
-            const teamResults = document.getElementById('team-results');
-            let teamCount = {{ 5 }};
-            
-            addTeamButton.addEventListener('click', function() {
-                const teamDiv = document.createElement('div');
-                teamDiv.className = 'team-result';
-                
-                const position = document.createElement('div');
-                position.className = 'position';
-                position.textContent = teamCount + 1;
-                
-                const inputs = document.createElement('div');
-                inputs.className = 'team-inputs';
-                
-                // Create player 1 select
-                const player1Select = document.createElement('select');
-                player1Select.name = `player1_${teamCount}`;
-                player1Select.required = true;
-                
-                let player1Options = '<option value="">-- Select Player 1 --</option>';
-                {% for player in players %}
-                player1Options += `<option value="{{ player }}">{{ player }}</option>`;
-                {% endfor %}
-                player1Options += '<option value="Ghost Player">Ghost Player</option>';
-                player1Select.innerHTML = player1Options;
-                
-                // Create player 2 select
-                const player2Select = document.createElement('select');
-                player2Select.name = `player2_${teamCount}`;
-                player2Select.required = true;
-                
-                let player2Options = '<option value="">-- Select Player 2 --</option>';
-                {% for player in players %}
-                player2Options += `<option value="{{ player }}">{{ player }}</option>`;
-                {% endfor %}
-                player2Options += '<option value="Ghost Player">Ghost Player</option>';
-                player2Select.innerHTML = player2Options;
-                
-                // Create score input
-                const scoreInput = document.createElement('input');
-                scoreInput.type = 'number';
-                scoreInput.name = `score_${teamCount}`;
-                scoreInput.placeholder = 'Score';
-                scoreInput.required = true;
-                
-                // Add all elements to the DOM
-                inputs.appendChild(player1Select);
-                inputs.appendChild(player2Select);
-                inputs.appendChild(scoreInput);
-                
-                teamDiv.appendChild(position);
-                teamDiv.appendChild(inputs);
-                
-                teamResults.appendChild(teamDiv);
-                teamCount++;
-            });
-        });
-    </script>
+    <!-- Include common script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Include page-specific script -->
+    <script src="{{ url_for('static', filename='js/record_tournament.js') }}"></script>
 </body>
 </html>

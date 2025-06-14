@@ -36,6 +36,12 @@
         <section class="team-results">
             <h2>Generated Teams</h2>
             
+            <!-- Store team data for JavaScript -->
+            <div id="teams-data-container" 
+                 data-teams='[{% for team in teams %}{"player1":"{{ team.players[0] }}","player2":"{{ team.players[1] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'
+                 data-record-url="{{ url_for('record_tournament') }}"
+                 style="display: none;"></div>
+            
             <div class="teams-container">
                 {% for team in teams %}
                 <div class="team-card">
@@ -90,7 +96,7 @@
             </table>
             
             <div class="actions">
-                <a href="{{ url_for('record_tournament') }}" class="button primary">Record Tournament</a>
+                <button id="record-tournament-btn" class="button primary">Record Tournament</button>
                 <a href="{{ url_for('generate_teams') }}" class="button">Generate Different Teams</a>
             </div>
         </section>
@@ -100,6 +106,9 @@
         <p>&copy; 2025 Disc Golf League Rating System</p>
     </footer>
 
+    <!-- Include common script -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Include page-specific script -->
+    <script src="{{ url_for('static', filename='js/team_results.js') }}"></script>
 </body>
 </html>

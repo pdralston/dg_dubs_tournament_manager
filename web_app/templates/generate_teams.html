@@ -36,7 +36,7 @@
         <section class="generate-teams">
             <h2>Generate Balanced Teams</h2>
             
-            <form method="post" action="{{ url_for('generate_teams') }}">
+            <form id="player-selection-form" method="post" action="{{ url_for('generate_teams') }}">
                 <div class="form-group">
                     <label>Select Players:</label>
                     <div class="player-selection">
@@ -69,24 +69,9 @@
         <p>&copy; 2025 Disc Golf League Rating System</p>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectAllButton = document.getElementById('select-all');
-            const deselectAllButton = document.getElementById('deselect-all');
-            const checkboxes = document.querySelectorAll('input[name="players"]');
-            
-            selectAllButton.addEventListener('click', function() {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = true;
-                });
-            });
-            
-            deselectAllButton.addEventListener('click', function() {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-            });
-        });
-    </script>
+    <!-- Include common script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Include page-specific script -->
+    <script src="{{ url_for('static', filename='js/team_generator.js') }}"></script>
 </body>
 </html>
