@@ -2057,6 +2057,16 @@
           "with_ghost": false
         }
       ]
+    },
+    "Leonard Bargas": {
+      "rating": 1000,
+      "tournaments_played": 0,
+      "history": []
+    },
+    "Cole Mediratta": {
+      "rating": 1300,
+      "tournaments_played": 0,
+      "history": []
     }
   },
   "tournaments": [
