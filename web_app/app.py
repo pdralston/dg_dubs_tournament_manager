@@ -159,9 +159,22 @@ def record_tournament():
                                   players=list(rating_system.players.keys()),
                                   now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
     
+    # Check if teams were passed from the generate_teams page
+    teams_data = request.args.get('teams')
+    pre_populated_teams = []
+    
+    if teams_data:
+        import json
+        try:
+            # Parse the JSON string back into a list
+            pre_populated_teams = json.loads(teams_data)
+        except json.JSONDecodeError:
+            flash("Error loading team data", "error")
+    
     return render_template('record_tournament.html', 
                           players=list(rating_system.players.keys()),
-                          now_date=datetime.datetime.now().strftime("%Y-%m-%d"))
+                          now_date=datetime.datetime.now().strftime("%Y-%m-%d"),
+                          pre_populated_teams=pre_populated_teams)
 
 @app.route('/generate_teams', methods=['GET', 'POST'])
 def generate_teams():
