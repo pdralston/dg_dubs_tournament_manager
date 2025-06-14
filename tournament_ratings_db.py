@@ -37,6 +37,15 @@ class TournamentRatingSystemDB:
         else:
             self._load_from_json()
         
+    def _create_case_insensitive_lookup(self) -> Dict[str, str]:
+        """
+        Create a case-insensitive lookup dictionary for player names.
+
+        Returns:
+            Dictionary mapping lowercase player names to their original casing
+        """
+        return {name.lower(): name for name in self.players.keys()}
+
     def _load_from_json(self) -> None:
         """Load player and tournament data from JSON file if it exists."""
         if os.path.exists(self.json_file):
@@ -159,13 +168,43 @@ class TournamentRatingSystemDB:
             
         print(f"Added player {name} with initial rating {initial_rating}")
         
+    def get_ghost_player_rating(self) -> float:
+        """
+        Calculate an appropriate rating for a shost player based on the average of all players.
+
+        Returns:
+            Ghost player rating
+        """
+        if not self.players:
+            return 1000 # Default rating if no players exist
+        
+        # Calculate average rating of all players
+        total_rating = sum(player['rating'] for player in self.players.values())
+        return total_rating/len(self.players)
+
+    def player_exists(self, name: str) -> bool:
+        """
+        Check if player exists (case-insensitive).
+        Args:
+            name: Player name to check
+        Returns:
+            True if player exists, False otherwise.
+        """
+        if name == "Ghost Player":
+            return True
+        
+        player_lookup = self._create_case_insensitive_lookup()
+        return name.lower() in player_lookup
+    
     def calculate_team_rating(self, player1: str, player2: str) -> float:
         """Calculate team rating as the average of individual ratings."""
-        if player1 not in self.players or player2 not in self.players:
-            raise ValueError(f"One or both players not found: {player1}, {player2}")
+        if not self.player_exists(player1):
+             raise ValueError(f"Player not found: {player1}")
+        if not self.player_exists(player2):
+             raise ValueError(f"Player not found: {player2}")
             
-        rating1 = self.players[player1]['rating']
-        rating2 = self.players[player2]['rating']
+        rating1 = self.get_ghost_player_rating() if player1.lower() == "ghost player" else self.players[player1]['rating']
+        rating2 = self.get_ghost_player_rating() if player2.lower() == "ghost player" else self.players[player2]['rating']
         return (rating1 + rating2) / 2
         
     def get_k_factor(self, player: str) -> float:
@@ -298,7 +337,7 @@ class TournamentRatingSystemDB:
             
             # Update individual ratings - skip ghost player
             for player in team:
-                if player == "Ghost Player":
+                if player.lower() == "ghost player":
                     continue
                     
                 k_factor = self.get_k_factor(player)

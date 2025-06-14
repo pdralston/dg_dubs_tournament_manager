@@ -222,7 +222,7 @@ class TournamentManagerDB:
                 all_players.add(p2)
                 
             for player in all_players:
-                if player not in self.rating_system.players:
+                if not self.rating_system.player_exists(player):
                     print(f"Warning: Player '{player}' not found in the system.")
                     return
             
