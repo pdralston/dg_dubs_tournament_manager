@@ -143,8 +143,8 @@
       "history": []
     },
     "Casanova Garcia": {
-      "rating": 1125.1538461538462,
-      "tournaments_played": 4,
+      "rating": 1123.6153846153848,
+      "tournaments_played": 5,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -184,6 +184,16 @@
           "position": 1,
           "expected_position": 1,
           "score": 52,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1125.1538461538462,
+          "new_rating": 1123.6153846153848,
+          "change": -1.5384615384614335,
+          "position": 6,
+          "expected_position": 5,
+          "score": 56,
           "with_ghost": false
         }
       ]
@@ -270,8 +280,8 @@
       "history": []
     },
     "Daviar Afraimi": {
-      "rating": 1150.042735042735,
-      "tournaments_played": 3,
+      "rating": 1296.1965811965813,
+      "tournaments_played": 4,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -302,6 +312,16 @@
           "expected_position": 13,
           "score": 56,
           "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1150.042735042735,
+          "new_rating": 1296.1965811965813,
+          "change": 146.1538461538462,
+          "position": 2,
+          "expected_position": 9,
+          "score": 52,
+          "with_ghost": false
         }
       ]
     },
@@ -321,9 +341,20 @@
       "history": []
     },
     "David Ralston": {
-      "rating": 1000,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1084.6153846153845,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1000,
+          "new_rating": 1084.6153846153845,
+          "change": 84.61538461538453,
+          "position": 3,
+          "expected_position": 6,
+          "score": 53,
+          "with_ghost": false
+        }
+      ]
     },
     "David Risner": {
       "rating": 980.0,
@@ -479,9 +510,20 @@
       "history": []
     },
     "Isaiah Oliver": {
-      "rating": 1300,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1440.0,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1300,
+          "new_rating": 1440.0,
+          "change": 140.0,
+          "position": 2,
+          "expected_position": 7,
+          "score": 52,
+          "with_ghost": false
+        }
+      ]
     },
     "Isiaha Yacap": {
       "rating": 1000,
@@ -499,8 +541,8 @@
       "history": []
     },
     "James Barkes": {
-      "rating": 927.0769230769231,
-      "tournaments_played": 2,
+      "rating": 1005.5384615384615,
+      "tournaments_played": 3,
       "history": [
         {
           "tournament_date": "2025-05-15",
@@ -520,6 +562,16 @@
           "position": 10,
           "expected_position": 3,
           "score": 63,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 927.0769230769231,
+          "new_rating": 1005.5384615384615,
+          "change": 78.46153846153845,
+          "position": 3,
+          "expected_position": 4,
+          "score": 53,
           "with_ghost": false
         }
       ]
@@ -587,8 +639,8 @@
       ]
     },
     "Jeff Aldinger": {
-      "rating": 1176.5982905982905,
-      "tournaments_played": 5,
+      "rating": 1175.3675213675212,
+      "tournaments_played": 6,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -637,6 +689,16 @@
           "change": 66.15384615384619,
           "position": 4,
           "expected_position": 13,
+          "score": 56,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1176.5982905982905,
+          "new_rating": 1175.3675213675212,
+          "change": -1.2307692307692832,
+          "position": 6,
+          "expected_position": 5,
           "score": 56,
           "with_ghost": false
         }
@@ -755,8 +817,8 @@
       ]
     },
     "Jored Sommer": {
-      "rating": 1237.3931623931624,
-      "tournaments_played": 4,
+      "rating": 1297.3931623931624,
+      "tournaments_played": 5,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -796,6 +858,16 @@
           "position": 6,
           "expected_position": 7,
           "score": 58,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1237.3931623931624,
+          "new_rating": 1297.3931623931624,
+          "change": 60.0,
+          "position": 4,
+          "expected_position": 11,
+          "score": 54,
           "with_ghost": false
         }
       ]
@@ -842,8 +914,8 @@
       ]
     },
     "Kelly Conner": {
-      "rating": 901.0,
-      "tournaments_played": 4,
+      "rating": 887.1538461538462,
+      "tournaments_played": 5,
       "history": [
         {
           "tournament_date": "2025-05-08",
@@ -883,6 +955,16 @@
           "position": 11,
           "expected_position": 6,
           "score": 67,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 901.0,
+          "new_rating": 887.1538461538462,
+          "change": -13.846153846153811,
+          "position": 6,
+          "expected_position": 1,
+          "score": 56,
           "with_ghost": false
         }
       ]
@@ -939,9 +1021,20 @@
       "history": []
     },
     "Kody McClelland": {
-      "rating": 1300,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1286.1538461538462,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1300,
+          "new_rating": 1286.1538461538462,
+          "change": -13.846153846153811,
+          "position": 8,
+          "expected_position": 8,
+          "score": 59,
+          "with_ghost": false
+        }
+      ]
     },
     "Liliana Ponce": {
       "rating": 1000,
@@ -1015,8 +1108,8 @@
       "history": []
     },
     "Matt Marquess": {
-      "rating": 1433.8461538461538,
-      "tournaments_played": 1,
+      "rating": 1512.3076923076924,
+      "tournaments_played": 2,
       "history": [
         {
           "tournament_date": "2025-05-29",
@@ -1025,6 +1118,16 @@
           "change": 133.8461538461538,
           "position": 2,
           "expected_position": 5,
+          "score": 53,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1433.8461538461538,
+          "new_rating": 1512.3076923076924,
+          "change": 78.46153846153857,
+          "position": 3,
+          "expected_position": 4,
           "score": 53,
           "with_ghost": false
         }
@@ -1092,8 +1195,8 @@
       "history": []
     },
     "Mike Lloyd": {
-      "rating": 1133.3333333333333,
-      "tournaments_played": 2,
+      "rating": 1279.4871794871794,
+      "tournaments_played": 3,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -1113,6 +1216,16 @@
           "position": 11,
           "expected_position": 6,
           "score": 67,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1133.3333333333333,
+          "new_rating": 1279.4871794871794,
+          "change": 146.1538461538462,
+          "position": 2,
+          "expected_position": 9,
+          "score": 52,
           "with_ghost": false
         }
       ]
@@ -1184,9 +1297,20 @@
       "history": []
     },
     "Nick Garcia": {
-      "rating": 1300,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1384.6153846153845,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1300,
+          "new_rating": 1384.6153846153845,
+          "change": 84.61538461538453,
+          "position": 3,
+          "expected_position": 6,
+          "score": 53,
+          "with_ghost": false
+        }
+      ]
     },
     "Nick Gubatan": {
       "rating": 1000,
@@ -1229,8 +1353,8 @@
       "history": []
     },
     "Phil Nunez": {
-      "rating": 1198.6324786324788,
-      "tournaments_played": 2,
+      "rating": 1421.7094017094018,
+      "tournaments_played": 3,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -1250,6 +1374,16 @@
           "position": 10,
           "expected_position": 3,
           "score": 63,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1198.6324786324788,
+          "new_rating": 1421.7094017094018,
+          "change": 223.0769230769231,
+          "position": 1,
+          "expected_position": 13,
+          "score": 49,
           "with_ghost": false
         }
       ]
@@ -1316,8 +1450,8 @@
       ]
     },
     "Robert Shehee": {
-      "rating": 961.5384615384615,
-      "tournaments_played": 1,
+      "rating": 969.2307692307693,
+      "tournaments_played": 2,
       "history": [
         {
           "tournament_date": "2025-05-29",
@@ -1327,6 +1461,16 @@
           "position": 9,
           "expected_position": 9,
           "score": 62,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 961.5384615384615,
+          "new_rating": 969.2307692307693,
+          "change": 7.692307692307736,
+          "position": 7,
+          "expected_position": 10,
+          "score": 57,
           "with_ghost": false
         }
       ]
@@ -1362,8 +1506,8 @@
       "history": []
     },
     "Scott Clayton": {
-      "rating": 1108.4615384615386,
-      "tournaments_played": 2,
+      "rating": 1113.076923076923,
+      "tournaments_played": 3,
       "history": [
         {
           "tournament_date": "2025-05-22",
@@ -1383,6 +1527,16 @@
           "position": 3,
           "expected_position": 4,
           "score": 54,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1108.4615384615386,
+          "new_rating": 1113.076923076923,
+          "change": 4.615384615384528,
+          "position": 5,
+          "expected_position": 2,
+          "score": 55,
           "with_ghost": false
         }
       ]
@@ -1424,8 +1578,8 @@
       "history": []
     },
     "Steve Kehrer": {
-      "rating": 1310.7692307692307,
-      "tournaments_played": 1,
+      "rating": 1318.4615384615383,
+      "tournaments_played": 2,
       "history": [
         {
           "tournament_date": "2025-05-29",
@@ -1436,12 +1590,22 @@
           "expected_position": 11,
           "score": 59,
           "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1310.7692307692307,
+          "new_rating": 1318.4615384615383,
+          "change": 7.692307692307622,
+          "position": 7,
+          "expected_position": 10,
+          "score": 57,
+          "with_ghost": false
         }
       ]
     },
     "Steve Moravec": {
-      "rating": 1699.2649572649573,
-      "tournaments_played": 5,
+      "rating": 1688.1880341880342,
+      "tournaments_played": 6,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -1492,6 +1656,16 @@
           "expected_position": 1,
           "score": 52,
           "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1699.2649572649573,
+          "new_rating": 1688.1880341880342,
+          "change": -11.076923076923094,
+          "position": 6,
+          "expected_position": 1,
+          "score": 56,
+          "with_ghost": false
         }
       ]
     },
@@ -1536,8 +1710,8 @@
       "history": []
     },
     "Troy Hernstedt": {
-      "rating": 999.5555555555555,
-      "tournaments_played": 3,
+      "rating": 1139.5555555555557,
+      "tournaments_played": 4,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -1567,6 +1741,16 @@
           "position": 7,
           "expected_position": 2,
           "score": 57,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 999.5555555555555,
+          "new_rating": 1139.5555555555557,
+          "change": 140.0000000000001,
+          "position": 2,
+          "expected_position": 7,
+          "score": 52,
           "with_ghost": false
         }
       ]
@@ -1608,8 +1792,8 @@
       "history": []
     },
     "Ryan Liu": {
-      "rating": 994.7692307692307,
-      "tournaments_played": 2,
+      "rating": 980.9230769230769,
+      "tournaments_played": 3,
       "history": [
         {
           "tournament_date": "2025-05-08",
@@ -1630,12 +1814,22 @@
           "expected_position": 11,
           "score": 59,
           "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 994.7692307692307,
+          "new_rating": 980.9230769230769,
+          "change": -13.846153846153811,
+          "position": 8,
+          "expected_position": 8,
+          "score": 59,
+          "with_ghost": false
         }
       ]
     },
     "Clyde Stange": {
-      "rating": 1044.0,
-      "tournaments_played": 2,
+      "rating": 1042.4615384615386,
+      "tournaments_played": 3,
       "history": [
         {
           "tournament_date": "2025-05-15",
@@ -1656,6 +1850,16 @@
           "expected_position": 8,
           "score": 56,
           "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1044.0,
+          "new_rating": 1042.4615384615386,
+          "change": -1.5384615384614335,
+          "position": 8,
+          "expected_position": 12,
+          "score": 59,
+          "with_ghost": false
         }
       ]
     },
@@ -1675,9 +1879,20 @@
       "history": []
     },
     "Manuel Oliver": {
-      "rating": 1000,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1060.0,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1000,
+          "new_rating": 1060.0,
+          "change": 60.0,
+          "position": 4,
+          "expected_position": 11,
+          "score": 54,
+          "with_ghost": false
+        }
+      ]
     },
     "Jason Hamed": {
       "rating": 1000,
@@ -1757,8 +1972,8 @@
       "history": []
     },
     "Johnny Dagnino": {
-      "rating": 1264.4444444444443,
-      "tournaments_played": 1,
+      "rating": 1256.7521367521367,
+      "tournaments_played": 2,
       "history": [
         {
           "tournament_date": "2025-05-01",
@@ -1769,6 +1984,16 @@
           "expected_position": 1,
           "score": 60,
           "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1264.4444444444443,
+          "new_rating": 1256.7521367521367,
+          "change": -7.692307692307622,
+          "position": 6,
+          "expected_position": 3,
+          "score": 56,
+          "with_ghost": true
         }
       ]
     },
@@ -1963,8 +2188,8 @@
       ]
     },
     "Alex Smith": {
-      "rating": 1192.0,
-      "tournaments_played": 1,
+      "rating": 1190.4615384615386,
+      "tournaments_played": 2,
       "history": [
         {
           "tournament_date": "2025-05-15",
@@ -1974,6 +2199,16 @@
           "position": 10,
           "expected_position": 8,
           "score": 63,
+          "with_ghost": false
+        },
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1192.0,
+          "new_rating": 1190.4615384615386,
+          "change": -1.5384615384614335,
+          "position": 8,
+          "expected_position": 12,
+          "score": 59,
           "with_ghost": false
         }
       ]
@@ -2059,14 +2294,36 @@
       ]
     },
     "Leonard Bargas": {
-      "rating": 1000,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1223.076923076923,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1000,
+          "new_rating": 1223.076923076923,
+          "change": 223.0769230769231,
+          "position": 1,
+          "expected_position": 13,
+          "score": 49,
+          "with_ghost": false
+        }
+      ]
     },
     "Cole Mediratta": {
-      "rating": 1300,
-      "tournaments_played": 0,
-      "history": []
+      "rating": 1304.6153846153845,
+      "tournaments_played": 1,
+      "history": [
+        {
+          "tournament_date": "2025-06-12",
+          "old_rating": 1300,
+          "new_rating": 1304.6153846153845,
+          "change": 4.615384615384528,
+          "position": 5,
+          "expected_position": 2,
+          "score": 55,
+          "with_ghost": false
+        }
+      ]
     }
   },
   "tournaments": [
@@ -2602,6 +2859,143 @@
           "position": 11,
           "expected_position": 6,
           "team_rating": 1157.1666666666665
+        }
+      ]
+    },
+    {
+      "date": "2025-06-12",
+      "course": "Kelley Park",
+      "teams": 13,
+      "results": [
+        {
+          "team": [
+            "Phil Nunez",
+            "Leonard Bargas"
+          ],
+          "score": 49,
+          "position": 1,
+          "expected_position": 13,
+          "team_rating": 1099.3162393162393
+        },
+        {
+          "team": [
+            "Isaiah Oliver",
+            "Troy Hernstedt"
+          ],
+          "score": 52,
+          "position": 2,
+          "expected_position": 7,
+          "team_rating": 1149.7777777777778
+        },
+        {
+          "team": [
+            "Daviar Afraimi",
+            "Mike Lloyd"
+          ],
+          "score": 52,
+          "position": 2,
+          "expected_position": 9,
+          "team_rating": 1141.6880341880342
+        },
+        {
+          "team": [
+            "Nick Garcia",
+            "David Ralston"
+          ],
+          "score": 53,
+          "position": 3,
+          "expected_position": 6,
+          "team_rating": 1150.0
+        },
+        {
+          "team": [
+            "Matt Marquess",
+            "James Barkes"
+          ],
+          "score": 53,
+          "position": 3,
+          "expected_position": 4,
+          "team_rating": 1180.4615384615386
+        },
+        {
+          "team": [
+            "Jored Sommer",
+            "Manuel Oliver"
+          ],
+          "score": 54,
+          "position": 4,
+          "expected_position": 11,
+          "team_rating": 1118.696581196581
+        },
+        {
+          "team": [
+            "Cole Mediratta",
+            "Scott Clayton"
+          ],
+          "score": 55,
+          "position": 5,
+          "expected_position": 2,
+          "team_rating": 1204.2307692307693
+        },
+        {
+          "team": [
+            "Jeff Aldinger",
+            "Casanova Garcia"
+          ],
+          "score": 56,
+          "position": 6,
+          "expected_position": 5,
+          "team_rating": 1150.8760683760684
+        },
+        {
+          "team": [
+            "Steve Moravec",
+            "Kelly Conner"
+          ],
+          "score": 56,
+          "position": 6,
+          "expected_position": 1,
+          "team_rating": 1300.1324786324785
+        },
+        {
+          "team": [
+            "Johnny Dagnino",
+            "Ghost Player"
+          ],
+          "score": 56,
+          "position": 6,
+          "expected_position": 3,
+          "team_rating": 1201.3768225238814
+        },
+        {
+          "team": [
+            "Steve Kehrer",
+            "Robert Shehee"
+          ],
+          "score": 57,
+          "position": 7,
+          "expected_position": 10,
+          "team_rating": 1136.1538461538462
+        },
+        {
+          "team": [
+            "Kody McClelland",
+            "Ryan Liu"
+          ],
+          "score": 59,
+          "position": 8,
+          "expected_position": 8,
+          "team_rating": 1147.3846153846152
+        },
+        {
+          "team": [
+            "Alex Smith",
+            "Clyde Stange"
+          ],
+          "score": 59,
+          "position": 8,
+          "expected_position": 12,
+          "team_rating": 1118.0
         }
       ]
     }
