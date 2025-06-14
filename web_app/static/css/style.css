@@ -355,7 +355,7 @@ textarea {
     flex: 1;
 }
 
-/* Generate Teams Page */
+/* Event Registration Page */
 .player-selection {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
