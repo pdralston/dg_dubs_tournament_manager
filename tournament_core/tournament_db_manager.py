@@ -9,6 +9,7 @@ It handles database creation, connection, and all CRUD operations.
 import sqlite3
 import json
 import os
+import datetime
 from typing import Dict, List, Tuple, Optional, Union, Any
 
 
@@ -19,6 +20,27 @@ class TournamentDBManager:
         self.conn = None
         try:
             self.create_tables()
+            
+            # Add Ace Pot methods
+            from .ace_pot_methods import (
+                get_ace_pot_config, update_ace_pot_config, get_ace_pot_balance,
+                add_ace_pot_entry, get_ace_pot_ledger, add_tournament_participant,
+                get_tournament_participants, update_player_club_membership,
+                set_ace_pot_balance, process_ace_pot_payout
+            )
+            
+            # Add methods to the class
+            TournamentDBManager.get_ace_pot_config = get_ace_pot_config
+            TournamentDBManager.update_ace_pot_config = update_ace_pot_config
+            TournamentDBManager.get_ace_pot_balance = get_ace_pot_balance
+            TournamentDBManager.add_ace_pot_entry = add_ace_pot_entry
+            TournamentDBManager.get_ace_pot_ledger = get_ace_pot_ledger
+            TournamentDBManager.add_tournament_participant = add_tournament_participant
+            TournamentDBManager.get_tournament_participants = get_tournament_participants
+            TournamentDBManager.update_player_club_membership = update_player_club_membership
+            TournamentDBManager.set_ace_pot_balance = set_ace_pot_balance
+            TournamentDBManager.process_ace_pot_payout = process_ace_pot_payout
+            
         except Exception as e:
             print(f"Error initializing database: {e}")
             raise
@@ -120,7 +142,8 @@ class TournamentDBManager:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
                 rating REAL NOT NULL,
-                tournaments_played INTEGER NOT NULL DEFAULT 0
+                tournaments_played INTEGER NOT NULL DEFAULT 0,
+                is_club_member BOOLEAN NOT NULL DEFAULT 0
             )
         ''')
         
@@ -130,7 +153,10 @@ class TournamentDBManager:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date TEXT NOT NULL,
                 course TEXT,
-                team_count INTEGER NOT NULL
+                team_count INTEGER NOT NULL,
+                ace_pot_paid BOOLEAN NOT NULL DEFAULT 0,
+                ace_pot_paid_to INTEGER,
+                FOREIGN KEY (ace_pot_paid_to) REFERENCES players (id)
             )
         ''')
         
@@ -167,14 +193,57 @@ class TournamentDBManager:
                 FOREIGN KEY (tournament_id) REFERENCES tournaments (id)
             )
         ''')
+        
+        # Tournament participants table
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS tournament_participants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tournament_id INTEGER NOT NULL,
+                player_id INTEGER NOT NULL,
+                ace_pot_buy_in BOOLEAN NOT NULL DEFAULT 0,
+                FOREIGN KEY (tournament_id) REFERENCES tournaments (id),
+                FOREIGN KEY (player_id) REFERENCES players (id),
+                UNIQUE(tournament_id, player_id)
+            )
+        ''')
+        
+        # Ace pot tracker table
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS ace_pot_tracker (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                description TEXT NOT NULL,
+                amount REAL NOT NULL,
+                balance REAL NOT NULL,
+                tournament_id INTEGER,
+                player_id INTEGER,
+                FOREIGN KEY (tournament_id) REFERENCES tournaments (id),
+                FOREIGN KEY (player_id) REFERENCES players (id)
+            )
+        ''')
+        
+        # Ace pot configuration table
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS ace_pot_config (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                cap_amount REAL NOT NULL DEFAULT 100.0
+            )
+        ''')
+        
+        # Insert default ace pot configuration if it doesn't exist
+        self.conn.execute('''
+            INSERT OR IGNORE INTO ace_pot_config (id, cap_amount)
+            VALUES (1, 100.0)
+        ''')
             
-    def add_player(self, name: str, rating: float) -> int:
+    def add_player(self, name: str, rating: float, is_club_member: bool = False) -> int:
         """
         Add a player to the database.
         
         Args:
             name: Player name
             rating: Initial rating
+            is_club_member: Whether the player is a club member
             
         Returns:
             Player ID
@@ -183,8 +252,8 @@ class TournamentDBManager:
         try:
             cursor = self.conn.cursor()
             cursor.execute(
-                "INSERT INTO players (name, rating, tournaments_played) VALUES (?, ?, ?)",
-                (name, rating, 0)
+                "INSERT INTO players (name, rating, tournaments_played, is_club_member) VALUES (?, ?, ?, ?)",
+                (name, rating, 0, is_club_member)
             )
             player_id = cursor.lastrowid
             self.conn.commit()
@@ -321,7 +390,7 @@ class TournamentDBManager:
             self.close()
             return result
             
-    def add_tournament(self, date: str, course: str, team_count: int) -> int:
+    def add_tournament(self, date: str, course: str, team_count: int, ace_pot_paid: bool = False) -> int:
         """
         Add a tournament to the database.
         
@@ -329,6 +398,7 @@ class TournamentDBManager:
             date: Tournament date
             course: Course name
             team_count: Number of teams
+            ace_pot_paid: Whether the ace pot was paid out
             
         Returns:
             Tournament ID
@@ -341,9 +411,10 @@ class TournamentDBManager:
                 return tournament_id
                 
             cursor = self.conn.cursor()
+            
             cursor.execute(
-                "INSERT INTO tournaments (date, course, team_count) VALUES (?, ?, ?)",
-                (date, course, team_count)
+                "INSERT INTO tournaments (date, course, team_count, ace_pot_paid) VALUES (?, ?, ?, ?)",
+                (date, course, team_count, ace_pot_paid)
             )
             tournament_id = cursor.lastrowid
             self.conn.commit()
@@ -775,3 +846,4 @@ class TournamentDBManager:
         except Exception as e:
             print(f"Error exporting data to JSON: {e}")
             raise
+
