@@ -1,126 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Registration - Disc Golf League Rating System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/event_registration.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Disc Golf League Rating System</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('list_players') }}">Players</a></li>
-                <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
-                <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
-                <li><a href="{{ url_for('event_registration') }}" class="active">Event Registration</a></li>
-                <li><a href="{{ url_for('ace_pot') }}">Ace Pot</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flashes">
-                    {% for category, message in messages %}
-                        <div class="flash {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+{% block title %}Event Registration - Disc Golf League Rating System{% endblock %}
 
-        <section class="event-registration">
-            <h2>Event Registration</h2>
-            
-            <!-- Ace Pot Information -->
-            <div class="ace-pot-info">
-                <h3>Ace Pot Information</h3>
-                <p>The ace pot is a voluntary $1 buy-in. If a player hits an ace during the tournament, they win the current ace pot balance.</p>
-                
-                <div class="ace-pot-balance">
-                    <div class="balance-item">
-                        <div class="balance-label">Current Pot</div>
-                        <div class="balance-value" id="current-pot">${{ ace_pot.current|round(2) }}</div>
-                    </div>
-                    <div class="balance-item">
-                        <div class="balance-label">Reserve</div>
-                        <div class="balance-value" id="reserve-pot">${{ ace_pot.reserve|round(2) }}</div>
-                    </div>
-                    <div class="balance-item">
-                        <div class="balance-label">Total</div>
-                        <div class="balance-value" id="total-pot">${{ ace_pot.total|round(2) }}</div>
-                    </div>
-                    <div class="balance-item projected">
-                        <div class="balance-label">Projected Total</div>
-                        <div class="balance-value" id="projected-pot">${{ ace_pot.total|round(2) }}</div>
-                    </div>
-                </div>
-                <div class="ace-pot-cap">
-                    <span>Ace Pot Cap: ${{ ace_pot_config.cap_amount|round(2) }}</span>
-                </div>
-            </div>
-            
-            <div class="player-search">
-                <input type="text" id="player-search-input" placeholder="Search for players to add...">
-                <div id="search-results" class="autocomplete-items"></div>
-            </div>
-            
-            <form id="event-registration-form" method="post" action="{{ url_for('event_registration') }}">
-                <input type="hidden" name="allow_ghost" value="true">
-                
-                <div class="selected-players">
-                    <h3>Selected Players</h3>
-                    <div id="selected-players-container">
-                        <!-- Selected players will be added here dynamically -->
-                    </div>
-                </div>
-                
-                <div class="add-new-player">
-                    <h3>Add New Player</h3>
-                    <p>If a player is not in the database, you can add them here:</p>
-                    
-                    <div class="form-row">
-                        <input type="text" id="new-player-name" placeholder="Player Name">
-                        <input type="number" id="new-player-rating" placeholder="Initial Rating (default: 1000)" min="0" max="2000">
-                    </div>
-                    
-                    <div class="form-row">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="new-player-club-member">
-                            Club Member
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="new-player-ace-pot">
-                            Ace Pot Buy-in
-                        </label>
-                    </div>
-                    
-                    <button type="button" id="add-new-player-btn" class="button">Add New Player</button>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="button primary">Generate Teams</button>
-                </div>
-            </form>
-        </section>
-    </main>
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/event_registration.css') }}">
+{% endblock %}
 
-    <footer>
-        <p>&copy; 2025 Disc Golf League Rating System</p>
-    </footer>
-
-    <!-- Include common script -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <!-- Include page-specific script -->
-    <script src="{{ url_for('static', filename='js/event_registration.js') }}"></script>
+{% block content %}
+<section class="event-registration">
+    <h2>Event Registration</h2>
     
-    <script>
-        // Initialize with available players data
-        const availablePlayers = {{ players|tojson }};
-    </script>
-</body>
-</html>
+    <!-- Ace Pot Information -->
+    <div class="ace-pot-info">
+        <h3>Ace Pot Information</h3>
+        <p>The ace pot is a voluntary $1 buy-in. If a player hits an ace during the tournament, they win the current ace pot balance.</p>
+        
+        <div class="ace-pot-balance">
+            <div class="balance-item">
+                <div class="balance-label">Current Pot</div>
+                <div class="balance-value" id="current-pot">${{ ace_pot.current|round(2) }}</div>
+            </div>
+            <div class="balance-item">
+                <div class="balance-label">Reserve</div>
+                <div class="balance-value" id="reserve-pot">${{ ace_pot.reserve|round(2) }}</div>
+            </div>
+            <div class="balance-item">
+                <div class="balance-label">Total</div>
+                <div class="balance-value" id="total-pot">${{ ace_pot.total|round(2) }}</div>
+            </div>
+            <div class="balance-item projected">
+                <div class="balance-label">Projected Total</div>
+                <div class="balance-value" id="projected-pot">${{ ace_pot.total|round(2) }}</div>
+            </div>
+        </div>
+        <div class="ace-pot-cap">
+            <span>Ace Pot Cap: ${{ ace_pot_config.cap_amount|round(2) }}</span>
+        </div>
+    </div>
+    
+    <div class="player-search">
+        <input type="text" id="player-search-input" placeholder="Search for players to add...">
+        <div id="search-results" class="autocomplete-items"></div>
+    </div>
+    
+    <form id="event-registration-form" method="post" action="{{ url_for('event_registration') }}">
+        <input type="hidden" name="allow_ghost" value="true">
+        
+        <div class="selected-players">
+            <h3>Selected Players</h3>
+            <div id="selected-players-container">
+                <!-- Selected players will be added here dynamically -->
+            </div>
+        </div>
+        
+        <div class="add-new-player">
+            <h3>Add New Player</h3>
+            <p>If a player is not in the database, you can add them here:</p>
+            
+            <div class="form-row">
+                <input type="text" id="new-player-name" placeholder="Player Name">
+                <input type="number" id="new-player-rating" placeholder="Initial Rating (default: 1000)" min="0" max="2000">
+            </div>
+            
+            <div class="form-row">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="new-player-club-member">
+                    Club Member
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="new-player-ace-pot">
+                    Ace Pot Buy-in
+                </label>
+            </div>
+            
+            <button type="button" id="add-new-player-btn" class="button">Add New Player</button>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="button primary">Generate Teams</button>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block additional_js %}
+<!-- Include page-specific script -->
+<script src="{{ url_for('static', filename='js/event_registration.js') }}"></script>
+
+<script>
+    // Initialize with available players data
+    const availablePlayers = {{ players|tojson }};
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Disc Golf League Rating System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block additional_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>Disc Golf League Rating System</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}" {% if request.path == url_for('index') %}class="active"{% endif %}>Home</a></li>
+                <li><a href="{{ url_for('list_players') }}" {% if request.path == url_for('list_players') %}class="active"{% endif %}>Players</a></li>
+                <li><a href="{{ url_for('list_tournaments') }}" {% if request.path == url_for('list_tournaments') %}class="active"{% endif %}>Tournaments</a></li>
+                <li><a href="{{ url_for('add_player') }}" {% if request.path == url_for('add_player') %}class="active"{% endif %}>Add Player</a></li>
+                <li><a href="{{ url_for('record_tournament') }}" {% if request.path == url_for('record_tournament') %}class="active"{% endif %}>Record Tournament</a></li>
+                <li><a href="{{ url_for('event_registration') }}" {% if request.path == url_for('event_registration') %}class="active"{% endif %}>Event Registration</a></li>
+                <li><a href="{{ url_for('storage_settings') }}" {% if request.path == url_for('storage_settings') %}class="active"{% endif %}>Storage Settings</a></li>
+                <li><a href="{{ url_for('ace_pot') }}" {% if request.path == url_for('ace_pot') %}class="active"{% endif %}>Ace Pot</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Disc Golf League Rating System</p>
+    </footer>
+
+    <!-- Include common script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block additional_js %}{% endblock %}
+</body>
+</html>
