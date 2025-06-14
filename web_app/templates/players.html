@@ -1,80 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Players - Disc Golf League Rating System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Disc Golf League Rating System</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('list_players') }}" class="active">Players</a></li>
-                <li><a href="{{ url_for('list_tournaments') }}">Tournaments</a></li>
-                <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
-                <li><a href="{{ url_for('event_registration') }}">Event Registration</a></li>
-                <li><a href="{{ url_for('ace_pot') }}">Ace Pot</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flashes">
-                    {% for category, message in messages %}
-                        <div class="flash {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+{% block title %}Players - Disc Golf League Rating System{% endblock %}
 
-        <section class="players">
-            <h2>Player Ratings</h2>
-            
-            <div class="actions">
-                <a href="{{ url_for('add_player') }}" class="button">Add New Player</a>
-            </div>
-            <div class="search-container mb-3">
-                <input type="text" id="playerSearchInput" class="form-control" placeholder="Search for players...">
-            </div>
-            <table class="player-table">
-                <thead>
-                    <tr>
-                        <th>Player</th>
-                        <th>Rating</th>
-                        <th>Tournaments</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for player in players %}
-                    <tr>
-                        <td>{{ player.name }}</td>
-                        <td>{{ player.rating|round(1) }}</td>
-                        <td>{{ player.tournaments_played }}</td>
-                        <td>
-                            <a href="{{ url_for('player_details', name=player.name) }}" class="button small">Details</a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4">No players found. <a href="{{ url_for('add_player') }}">Add a player</a> to get started.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Disc Golf League Rating System</p>
-    </footer>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
-</body>
-</html>
+{% block content %}
+<section class="players">
+    <h2>Players</h2>
+    
+    <div class="actions">
+        <a href="{{ url_for('add_player') }}" class="button">Add New Player</a>
+    </div>
+    
+    <table class="player-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Rating</th>
+                <th>Tournaments</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td>{{ player.name }}</td>
+                <td>{{ player.rating|round|int }}</td>
+                <td>{{ player.tournaments_played }}</td>
+                <td>
+                    <a href="{{ url_for('player_details', name=player.name) }}" class="button small">Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

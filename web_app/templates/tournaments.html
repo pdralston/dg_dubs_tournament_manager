@@ -1,96 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournaments - Disc Golf League Rating System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Disc Golf League Rating System</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('list_players') }}">Players</a></li>
-                <li><a href="{{ url_for('list_tournaments') }}" class="active">Tournaments</a></li>
-                <li><a href="{{ url_for('record_tournament') }}">Record Tournament</a></li>
-                <li><a href="{{ url_for('event_registration') }}">Event Registration</a></li>
-                <li><a href="{{ url_for('ace_pot') }}">Ace Pot</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flashes">
-                    {% for category, message in messages %}
-                        <div class="flash {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+{% block title %}Tournaments - Disc Golf League Rating System{% endblock %}
 
-        <section class="tournaments">
-            <h2>Tournament History</h2>
-            
-            <div class="actions">
-                <a href="{{ url_for('record_tournament') }}" class="button">Record New Tournament</a>
-            </div>
-            
-            {% if tournaments %}
-                {% for tournament in tournaments %}
-                <div class="tournament-card">
-                    <div class="tournament-header">
-                        <h3>Tournament - {{ tournament.date }}</h3>
-                        <div class="tournament-meta">
-                            <span class="course">Course: {{ tournament.course or 'Not specified' }}</span>
-                            <span class="teams">Teams: {{ tournament.teams }}</span>
-                        </div>
-                    </div>
-                    
-                    <table class="results-table">
-                        <thead>
-                            <tr>
-                                <th>Position</th>
-                                <th>Team</th>
-                                <th>Score</th>
-                                <th>Expected Position</th>
-                                <th>Team Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for result in tournament.results %}
-                            <tr>
-                                <td>{{ result.position }}</td>
-                                <td>
-                                    {% if result.team[1] == "Ghost Player" %}
-                                    <a href="{{ url_for('player_details', name=result.team[0]) }}">{{ result.team[0] }}</a> & Ghost Player
-                                    {% else %}
-                                    <a href="{{ url_for('player_details', name=result.team[0]) }}">{{ result.team[0] }}</a> & 
-                                    <a href="{{ url_for('player_details', name=result.team[1]) }}">{{ result.team[1] }}</a>
-                                    {% endif %}
-                                </td>
-                                <td>{{ result.score }}</td>
-                                <td>{{ result.expected_position|round(1) }}</td>
-                                <td>{{ result.team_rating|round(1) }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p>No tournaments recorded yet. <a href="{{ url_for('record_tournament') }}">Record a tournament</a> to get started.</p>
-            {% endif %}
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Disc Golf League Rating System</p>
-    </footer>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
-</html>
+{% block content %}
+<section class="tournaments">
+    <h2>Tournaments</h2>
+    
+    <div class="actions">
+        <a href="{{ url_for('record_tournament') }}" class="button">Record New Tournament</a>
+    </div>
+    
+    {% if tournaments %}
+    <table class="tournament-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Course</th>
+                <th>Teams</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tournament in tournaments %}
+            <tr>
+                <td>{{ tournament.date }}</td>
+                <td>{{ tournament.course or 'Unknown' }}</td>
+                <td>{{ tournament.teams }}</td>
+                <td>
+                    <a href="#" class="button small">Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="no-data">No tournaments recorded yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
