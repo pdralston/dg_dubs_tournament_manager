@@ -15,8 +15,10 @@
                 <li><a href="{{ url_for('index') }}" {% if request.path == url_for('index') %}class="active"{% endif %}>Home</a></li>
                 <li><a href="{{ url_for('list_players') }}" {% if request.path == url_for('list_players') %}class="active"{% endif %}>Players</a></li>
                 <li><a href="{{ url_for('list_tournaments') }}" {% if request.path == url_for('list_tournaments') %}class="active"{% endif %}>Tournaments</a></li>
+                <li><a href="{{ url_for('add_player') }}" {% if request.path == url_for('add_player') %}class="active"{% endif %}>Add Player</a></li>
                 <li><a href="{{ url_for('record_tournament') }}" {% if request.path == url_for('record_tournament') %}class="active"{% endif %}>Record Tournament</a></li>
                 <li><a href="{{ url_for('event_registration') }}" {% if request.path == url_for('event_registration') %}class="active"{% endif %}>Event Registration</a></li>
+                <li><a href="{{ url_for('storage_settings') }}" {% if request.path == url_for('storage_settings') %}class="active"{% endif %}>Storage Settings</a></li>
                 <li><a href="{{ url_for('ace_pot') }}" {% if request.path == url_for('ace_pot') %}class="active"{% endif %}>Ace Pot</a></li>
             </ul>
         </nav>
