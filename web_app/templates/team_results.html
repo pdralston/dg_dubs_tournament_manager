@@ -37,7 +37,7 @@
             
             <!-- Store team data for JavaScript -->
             <div id="teams-data-container" 
-                 data-teams='[{% for team in teams %}{"player1":"{{ team.players[0] }}","player2":"{{ team.players[1] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'
+                 data-teams='{{ teams|tojson|safe }}'
                  data-record-url="{{ url_for('record_tournament') }}"
                  style="display: none;"></div>
             
