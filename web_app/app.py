@@ -27,14 +27,6 @@ for blueprint in all_blueprints:
 # Initialize the rating system
 rating_system = TournamentRatingSystem()
 
-@app.template_filter('player_rating')
-def player_rating(player_name):
-    """Get a player's rating."""
-    try:
-        return rating_system.get_player(player_name)['rating']
-    except (ValueError, KeyError):
-        return 0
-
 @app.route('/')
 def index():
     """Home page with links to main features."""
@@ -114,8 +106,7 @@ def event_registration():
             flash("Select at least 2 players", "error")
             return render_template('event_registration.html', 
                                   players=list(rating_system.players.keys()),
-                                  ace_pot=rating_system.ace_pot_manager.get_balance(),
-                                  ace_pot_config=rating_system.ace_pot_manager.get_config())
+                                  ace_pot=rating_system.ace_pot_manager.get_balance())
         
         # Process new players
         for player_name in selected_players:
@@ -326,17 +317,14 @@ def storage_settings():
                           db_file=rating_system.db_file,
                           json_file=rating_system.json_file)
 
-@app.route('/ace_pot')
-def ace_pot():
-    """Ace pot tracker page."""
-    ace_pot_balance = rating_system.ace_pot_manager.get_balance()
-    ace_pot_config = rating_system.ace_pot_manager.get_config()
-    ace_pot_ledger = rating_system.ace_pot_manager.get_ledger()
-    
-    return render_template('ace_pot.html',
-                          ace_pot=ace_pot_balance,
-                          ace_pot_config=ace_pot_config,
-                          ledger=ace_pot_ledger)
+# Ace Pot Routes
+@app.template_filter('player_rating')
+def player_rating(player_name):
+    """Get a player's rating."""
+    try:
+        return rating_system.get_player(player_name)['rating']
+    except (ValueError, KeyError):
+        return 0
 
 @app.route('/update_ace_pot_config', methods=['POST'])
 def update_ace_pot_config():
@@ -377,3 +365,14 @@ def set_ace_pot_balance():
 
 if __name__ == '__main__':
     app.run(debug=True)
+@app.route('/ace_pot')
+def ace_pot():
+    """Ace pot tracker page."""
+    ace_pot_balance = rating_system.ace_pot_manager.get_balance()
+    ace_pot_config = rating_system.ace_pot_manager.get_config()
+    ace_pot_ledger = rating_system.ace_pot_manager.get_ledger()
+    
+    return render_template('ace_pot.html',
+                          ace_pot=ace_pot_balance,
+                          ace_pot_config=ace_pot_config,
+                          ledger=ace_pot_ledger)
