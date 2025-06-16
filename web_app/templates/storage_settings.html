@@ -2,10 +2,6 @@
 
 {% block title %}Storage Settings - Disc Golf League Rating System{% endblock %}
 
-{% block additional_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/storage_settings.css') }}">
-{% endblock %}
-
 {% block content %}
 <section class="storage-settings">
     <h2>Storage Settings</h2>
@@ -48,4 +44,28 @@
         </form>
     </div>
 </section>
+{% endblock %}
+
+{% block additional_css %}
+<style>
+    .current-settings {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    .storage-options {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    
+    .help-text {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 5px;
+        margin-left: 25px;
+    }
+</style>
 {% endblock %}
