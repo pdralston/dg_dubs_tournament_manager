@@ -108,7 +108,8 @@ def event_registration():
                                   players=list(rating_system.players.keys()),
                                   ace_pot=rating_system.ace_pot_manager.get_balance())
         
-        # Process new players
+        # First, process all new players to ensure they're in the database
+        new_players_added = []
         for player_name in selected_players:
             is_new_player = request.form.get(f'is_new_player_{player_name}') == 'true'
             if is_new_player:
@@ -116,17 +117,37 @@ def event_registration():
                 is_club_member = request.form.get(f'club_member_{player_name}') == 'on'
                 
                 try:
-                    rating_system.add_player(player_name, rating, is_club_member)
+                    # Check if player already exists
+                    if player_name.lower() in [p.lower() for p in rating_system.players.keys()]:
+                        print(f"Player {player_name} already exists, skipping add")
+                    else:
+                        print(f"Adding new player {player_name} with rating {rating}")
+                        rating_system.add_player(player_name, rating, is_club_member)
+                        new_players_added.append(player_name)
                 except ValueError as e:
                     flash(str(e), "error")
                     return render_template('event_registration.html', 
                                           players=list(rating_system.players.keys()),
                                           ace_pot=rating_system.ace_pot_manager.get_balance(),
                                           ace_pot_config=rating_system.ace_pot_manager.get_config())
-            else:
-                # Update existing player club membership
+        
+        # If new players were added, reload the player list to ensure they're in memory
+        if new_players_added:
+            print(f"Added {len(new_players_added)} new players: {', '.join(new_players_added)}")
+            # Force a reload of player data from the database
+            if rating_system.use_db:
+                rating_system._load_from_db()
+        
+        # Now process club membership for existing players
+        for player_name in selected_players:
+            is_new_player = request.form.get(f'is_new_player_{player_name}') == 'true'
+            if not is_new_player:  # Only update existing players
                 is_club_member = request.form.get(f'club_member_{player_name}') == 'on'
-                rating_system.update_player_club_membership(player_name, is_club_member)
+                try:
+                    rating_system.update_player_club_membership(player_name, is_club_member)
+                except Exception as e:
+                    print(f"Error updating club membership for {player_name}: {e}")
+                    # Continue processing, don't stop for club membership errors
             
             # Process ace pot buy-ins
             ace_pot_buy_ins = []
