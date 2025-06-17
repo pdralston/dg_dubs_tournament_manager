@@ -127,9 +127,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Check if player already exists
+            // Check if player already exists in available players
             if (availablePlayers.some(player => player.name.toLowerCase() === name.toLowerCase())) {
                 alert(`Player "${name}" already exists. Please select them from the search results.`);
+                return;
+            }
+            
+            // Check if player already exists in selected players
+            if (selectedPlayers.has(name)) {
+                alert(`Player "${name}" is already selected.`);
                 return;
             }
             
@@ -144,6 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add to selected players
             addSelectedPlayer(newPlayer, newPlayerAcePot.checked);
+            
+            // Also add to availablePlayers array so it can be found in future searches
+            availablePlayers.push(newPlayer);
             
             // Clear form
             newPlayerName.value = '';

@@ -60,13 +60,11 @@ class TournamentDBManager:
                     except:
                         pass
                         
-            print(f"Connecting to database: {self.db_file}")
             self.conn = sqlite3.connect(self.db_file)
             # Enable foreign keys
             self.conn.execute("PRAGMA foreign_keys = ON")
             # Return rows as dictionaries
             self.conn.row_factory = sqlite3.Row
-            print("Database connection established successfully")
         except sqlite3.Error as e:
             print(f"Database connection error: {e}")
             self.conn = None
@@ -76,7 +74,6 @@ class TournamentDBManager:
         if self.conn:
             try:
                 self.conn.close()
-                print("Database connection closed")
             except Exception as e:
                 print(f"Error closing database connection: {e}")
             finally:
@@ -145,8 +142,7 @@ class TournamentDBManager:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
                 rating REAL NOT NULL,
-                tournaments_played INTEGER NOT NULL DEFAULT 0,
-                is_club_member BOOLEAN NOT NULL DEFAULT 0
+                tournaments_played INTEGER NOT NULL DEFAULT 0
             )
         ''')
         
@@ -246,7 +242,7 @@ class TournamentDBManager:
         Args:
             name: Player name
             rating: Initial rating
-            is_club_member: Whether the player is a club member
+            is_club_member: Whether the player is a club member (stored in memory only)
             
         Returns:
             Player ID
@@ -255,8 +251,8 @@ class TournamentDBManager:
         try:
             cursor = self.conn.cursor()
             cursor.execute(
-                "INSERT INTO players (name, rating, tournaments_played, is_club_member) VALUES (?, ?, ?, ?)",
-                (name, rating, 0, is_club_member)
+                "INSERT INTO players (name, rating, tournaments_played) VALUES (?, ?, ?)",
+                (name, rating, 0)
             )
             player_id = cursor.lastrowid
             self.conn.commit()

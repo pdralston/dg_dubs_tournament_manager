@@ -271,13 +271,19 @@ class TournamentRatingSystem:
         
         if self.use_db:
             try:
-                self.db_manager.add_player(name, initial_rating, is_club_member)
+                player_id = self.db_manager.add_player(name, initial_rating, is_club_member)
+                if player_id is None:
+                    print(f"Warning: Failed to add player {name} to database")
             except Exception as e:
                 print(f"Error adding player to database: {e}")
-                print("Exiting due to database error.")
-                sys.exit(1)
+                import traceback
+                print(traceback.format_exc())
+                # Don't exit, just log the error
             
         print(f"Added player {name} with initial rating {initial_rating}")
+        
+        # Save data to ensure it's persisted
+        self.save_data()
         
     def update_player_club_membership(self, name: str, is_club_member: bool) -> None:
         """
@@ -297,14 +303,18 @@ class TournamentRatingSystem:
         # Get original player name with correct casing
         player_name = self.get_player_name(name)
         
-        # Update player in database
-        if self.use_db:
-            success = self.db_manager.update_player_club_membership(player_name, is_club_member)
-            if not success:
-                print(f"Warning: Failed to update club membership for {player_name} in database")
-        
-        # Update player in memory
+        # Update player in memory first
         self.players[player_name]['is_club_member'] = is_club_member
+        
+        # Update player in database if using DB
+        if self.use_db:
+            try:
+                success = self.db_manager.update_player_club_membership(player_name, is_club_member)
+                if not success:
+                    print(f"Warning: Failed to update club membership for {player_name} in database")
+            except Exception as e:
+                print(f"Error updating club membership: {e}")
+                # Just log the error, don't raise it
         
         # Save data if using JSON
         if not self.use_db:

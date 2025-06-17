@@ -342,14 +342,23 @@ def update_player_club_membership(self, player_name: str, is_club_member: bool) 
             print("Warning: Database connection failed in update_player_club_membership")
             return success
             
+        # Check if is_club_member column exists
         cursor = self.conn.cursor()
-        cursor.execute(
-            "UPDATE players SET is_club_member = ? WHERE name = ?",
-            (is_club_member, player_name)
-        )
+        cursor.execute("PRAGMA table_info(players)")
+        columns = [column[1] for column in cursor.fetchall()]
         
-        self.conn.commit()
-        success = True
+        if 'is_club_member' in columns:
+            cursor.execute(
+                "UPDATE players SET is_club_member = ? WHERE name = ?",
+                (is_club_member, player_name)
+            )
+            self.conn.commit()
+            success = True
+        else:
+            # Column doesn't exist, but we'll consider this a success
+            # since we're just storing this in memory for now
+            print("Note: is_club_member column doesn't exist in players table. Skipping database update.")
+            success = True
     except sqlite3.Error as e:
         print(f"Error updating player club membership: {e}")
         if self.conn:
