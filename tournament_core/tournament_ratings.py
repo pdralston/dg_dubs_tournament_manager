@@ -260,8 +260,7 @@ class TournamentRatingSystem:
         """
         # Check if player exists (case-insensitive)
         if self.player_exists(name):
-            print(f"Player {name} already exists.")
-            return
+            raise ValueError(f"Player {name} already exists")
             
         self.players[name] = {
             'rating': initial_rating,
