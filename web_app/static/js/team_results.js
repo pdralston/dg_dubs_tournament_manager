@@ -6,7 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const teamsContainer = document.getElementById('teams-data-container');
     if (!teamsContainer) return;
     
-    const teamsData = JSON.parse(teamsContainer.dataset.teams || '[]');
+    let teamsData;
+    try {
+        teamsData = JSON.parse(teamsContainer.dataset.teams || '[]');
+        console.log('Teams data loaded:', teamsData);
+    } catch (error) {
+        console.error('Error parsing teams data:', error);
+        teamsData = [];
+    }
     
     // Handle record tournament button click
     const recordTournamentBtn = document.getElementById('record-tournament-btn');

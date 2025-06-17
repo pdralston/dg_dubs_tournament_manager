@@ -5,7 +5,7 @@ Disc Golf League Tournament Rating System - Web Application
 This module provides a web interface for the tournament rating system.
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import os
 import datetime
 import sys
@@ -129,32 +129,38 @@ def event_registration():
                 rating_system.update_player_club_membership(player_name, is_club_member)
             
             # Process ace pot buy-ins
-            ace_pot_buy_in = request.form.get(f'ace_pot_{player_name}') == 'on'
-            if ace_pot_buy_in:
-                # This will be handled when recording the tournament
-                pass
-        
-        try:
-            teams = rating_system.generate_balanced_teams(selected_players, allow_ghost=True)
-            predictions = rating_system.predict_tournament_outcome([tuple(team) for team in teams])
+            ace_pot_buy_ins = []
+            for player_name in selected_players:
+                ace_pot_buy_in = request.form.get(f'ace_pot_{player_name}') == 'on'
+                if ace_pot_buy_in:
+                    ace_pot_buy_ins.append(player_name)
             
-            # Format for template
-            team_data = []
-            for i, team in enumerate(teams):
-                team_tuple = tuple(team)
-                team_data.append({
-                    'players': team,
-                    'rating': rating_system.calculate_team_rating(team[0], team[1]),
-                    'expected_position': predictions[team_tuple].get('expected_position', 0)
-                })
+            # Store ace pot buy-ins in session for later processing
+            if ace_pot_buy_ins:
+                session['ace_pot_buy_ins'] = ace_pot_buy_ins
+                print(f"Stored ace pot buy-ins for {len(ace_pot_buy_ins)} players in session")
             
-            return render_template('team_results.html', teams=team_data)
-        except ValueError as e:
-            flash(str(e), "error")
-            return render_template('event_registration.html', 
-                                  players=list(rating_system.players.keys()),
-                                  ace_pot=rating_system.ace_pot_manager.get_balance(),
-                                  ace_pot_config=rating_system.ace_pot_manager.get_config())
+            try:
+                teams = rating_system.generate_balanced_teams(selected_players, allow_ghost=True)
+                predictions = rating_system.predict_tournament_outcome([tuple(team) for team in teams])
+                
+                # Format for template
+                team_data = []
+                for i, team in enumerate(teams):
+                    team_tuple = tuple(team)
+                    team_data.append({
+                        'players': team,
+                        'rating': rating_system.calculate_team_rating(team[0], team[1]),
+                        'expected_position': predictions[team_tuple].get('expected_position', 0)
+                    })
+                
+                return render_template('team_results.html', teams=team_data)
+            except ValueError as e:
+                flash(str(e), "error")
+                return render_template('event_registration.html', 
+                                      players=list(rating_system.players.keys()),
+                                      ace_pot=rating_system.ace_pot_manager.get_balance(),
+                                      ace_pot_config=rating_system.ace_pot_manager.get_config())
     
     # Get all players with their ratings
     players = []
@@ -198,14 +204,14 @@ def record_tournament():
                 continue
                 
             # Validate player names
-            if player1 != "Ghost Player" and player1 not in valid_players:
+            if player1 != "Ghost Player" and not any(p.lower() == player1.lower() for p in valid_players):
                 flash(f"Invalid player name: {player1}", "error")
                 return render_template('record_tournament.html', 
                                       players=valid_players,
                                       now_date=datetime.datetime.now().strftime("%Y-%m-%d"),
                                       ace_pot=rating_system.ace_pot_manager.get_balance())
                 
-            if player2 != "Ghost Player" and player2 not in valid_players:
+            if player2 != "Ghost Player" and not any(p.lower() == player2.lower() for p in valid_players):
                 flash(f"Invalid player name: {player2}", "error")
                 return render_template('record_tournament.html', 
                                       players=valid_players,
@@ -254,10 +260,27 @@ def record_tournament():
                 else:
                     flash(f"Ace pot paid to {', '.join(ace_pot_recipients)}", "success")
             
+            # Process ace pot buy-ins from the event registration
+            ace_pot_buy_ins = session.get('ace_pot_buy_ins', [])
+            if ace_pot_buy_ins:
+                print(f"Processing batch ace pot buy-ins for {len(ace_pot_buy_ins)} players")
+                result = rating_system.ace_pot_manager.process_batch_buy_ins(tournament_id, ace_pot_buy_ins)
+                
+                # Clear the session data
+                session.pop('ace_pot_buy_ins', None)
+                
+                if result['success'] > 0:
+                    flash(f"Added ${result['amount']:.2f} to ace pot from {result['success']} players", "success")
+                if result['failure'] > 0:
+                    flash(f"Failed to process ace pot buy-in for {result['failure']} players", "warning")
+            
             flash(f"Tournament recorded with {len(team_results)} teams", "success")
             return redirect(url_for('list_tournaments'))
-        except ValueError as e:
-            flash(str(e), "error")
+        except Exception as e:
+            import traceback
+            print(f"Error recording tournament: {str(e)}")
+            print(traceback.format_exc())
+            flash(f"Error recording tournament: {str(e)}", "error")
             return render_template('record_tournament.html', 
                                   players=valid_players,
                                   now_date=datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -272,7 +295,10 @@ def record_tournament():
         try:
             # Parse the JSON string back into a list
             pre_populated_teams = json.loads(teams_data)
-        except json.JSONDecodeError:
+            print(f"Successfully loaded pre-populated teams: {pre_populated_teams}")
+        except json.JSONDecodeError as e:
+            print(f"Error parsing teams data: {e}")
+            print(f"Raw teams data: {teams_data}")
             flash("Error loading team data", "error")
     
     return render_template('record_tournament.html', 

@@ -60,11 +60,13 @@ class TournamentDBManager:
                     except:
                         pass
                         
+            print(f"Connecting to database: {self.db_file}")
             self.conn = sqlite3.connect(self.db_file)
             # Enable foreign keys
             self.conn.execute("PRAGMA foreign_keys = ON")
             # Return rows as dictionaries
             self.conn.row_factory = sqlite3.Row
+            print("Database connection established successfully")
         except sqlite3.Error as e:
             print(f"Database connection error: {e}")
             self.conn = None
@@ -74,6 +76,7 @@ class TournamentDBManager:
         if self.conn:
             try:
                 self.conn.close()
+                print("Database connection closed")
             except Exception as e:
                 print(f"Error closing database connection: {e}")
             finally:
@@ -412,12 +415,27 @@ class TournamentDBManager:
                 
             cursor = self.conn.cursor()
             
-            cursor.execute(
-                "INSERT INTO tournaments (date, course, team_count, ace_pot_paid) VALUES (?, ?, ?, ?)",
-                (date, course, team_count, ace_pot_paid)
-            )
+            # Check if ace_pot_paid column exists
+            cursor.execute("PRAGMA table_info(tournaments)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if 'ace_pot_paid' in columns:
+                # Use the column if it exists
+                cursor.execute(
+                    "INSERT INTO tournaments (date, course, team_count, ace_pot_paid) VALUES (?, ?, ?, ?)",
+                    (date, course, team_count, ace_pot_paid)
+                )
+            else:
+                # Skip the column if it doesn't exist
+                print("Warning: ace_pot_paid column not found in tournaments table. Inserting without it.")
+                cursor.execute(
+                    "INSERT INTO tournaments (date, course, team_count) VALUES (?, ?, ?)",
+                    (date, course, team_count)
+                )
+                
             tournament_id = cursor.lastrowid
             self.conn.commit()
+            print(f"Tournament added successfully with ID: {tournament_id}")
         except sqlite3.Error as e:
             print(f"Error adding tournament: {e}")
             if self.conn:
@@ -479,8 +497,11 @@ class TournamentDBManager:
             )
             team_id = cursor.lastrowid
             self.conn.commit()
+            print(f"Team result added successfully with ID: {team_id} for players {player1} and {player2}")
         except sqlite3.Error as e:
             print(f"Error adding team result: {e}")
+            import traceback
+            print(traceback.format_exc())
             if self.conn:
                 try:
                     self.conn.rollback()
@@ -773,12 +794,24 @@ class TournamentDBManager:
             
         try:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT id FROM players WHERE name = ?", (name,))
+            # Use case-insensitive search
+            cursor.execute("SELECT id FROM players WHERE LOWER(name) = LOWER(?)", (name,))
             result = cursor.fetchone()
             return result[0] if result else None
         except sqlite3.Error as e:
             print(f"Error getting player ID for {name}: {e}")
             return None
+            
+    def commit_transaction(self):
+        """Explicitly commit any pending transactions."""
+        if self.conn:
+            try:
+                self.conn.commit()
+                print("Transaction committed successfully")
+            except sqlite3.Error as e:
+                print(f"Error committing transaction: {e}")
+                self.conn.rollback()
+                raise
             
     def export_to_json(self, json_file: str) -> None:
         """

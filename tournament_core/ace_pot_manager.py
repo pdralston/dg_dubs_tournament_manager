@@ -6,7 +6,7 @@ This module provides functionality for managing the ace pot tracker.
 """
 
 import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from .tournament_db_manager import TournamentDBManager
 
 
@@ -137,3 +137,73 @@ class AcePotManager:
         )
         
         return participant_id is not None
+        
+    def process_batch_buy_ins(self, tournament_id: int, player_names: List[str]) -> Dict[str, Any]:
+        """
+        Process a batch of ace pot buy-ins for a tournament.
+        
+        Args:
+            tournament_id: Tournament ID
+            player_names: List of player names who bought in
+            
+        Returns:
+            Dictionary with success count, failure count, and total amount added
+        """
+        if not player_names:
+            return {'success': 0, 'failure': 0, 'amount': 0.0}
+            
+        # Get tournament date
+        tournament_date = None
+        try:
+            self.db_manager.connect()
+            cursor = self.db_manager.conn.cursor()
+            cursor.execute(
+                "SELECT date FROM tournaments WHERE id = ?",
+                (tournament_id,)
+            )
+            result = cursor.fetchone()
+            tournament_date = result['date'] if result else datetime.datetime.now().strftime("%Y-%m-%d")
+        except Exception as e:
+            print(f"Error getting tournament date: {e}")
+            tournament_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        finally:
+            self.db_manager.close()
+        
+        # Add a single entry for all buy-ins
+        amount = len(player_names) * 1.0  # $1 per player
+        description = f"Ace pot buy-ins: {len(player_names)} players"
+        
+        entry_id = self.add_entry(
+            description=description,
+            amount=amount,
+            date=tournament_date,
+            tournament_id=tournament_id
+        )
+        
+        # Add participants
+        success_count = 0
+        failure_count = 0
+        
+        for player_name in player_names:
+            try:
+                participant_id = self.db_manager.add_tournament_participant(
+                    tournament_id=tournament_id,
+                    player_name=player_name,
+                    ace_pot_buy_in=True,
+                    skip_ace_pot_entry=True  # Skip individual entries since we added a batch entry
+                )
+                
+                if participant_id is not None:
+                    success_count += 1
+                else:
+                    failure_count += 1
+            except Exception as e:
+                print(f"Error adding participant {player_name}: {e}")
+                failure_count += 1
+        
+        return {
+            'success': success_count,
+            'failure': failure_count,
+            'amount': amount,
+            'entry_id': entry_id
+        }

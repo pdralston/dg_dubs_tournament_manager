@@ -204,7 +204,7 @@ def get_ace_pot_ledger(self) -> List[Dict[str, Any]]:
         self.close()
         return entries
         
-def add_tournament_participant(self, tournament_id: int, player_name: str, ace_pot_buy_in: bool = False) -> int:
+def add_tournament_participant(self, tournament_id: int, player_name: str, ace_pot_buy_in: bool = False, skip_ace_pot_entry: bool = False) -> int:
     """
     Add a participant to a tournament.
     
@@ -212,6 +212,7 @@ def add_tournament_participant(self, tournament_id: int, player_name: str, ace_p
         tournament_id: Tournament ID
         player_name: Player name
         ace_pot_buy_in: Whether the player bought into the ace pot
+        skip_ace_pot_entry: Whether to skip adding an ace pot entry (for batch processing)
         
     Returns:
         Participant ID
@@ -242,8 +243,8 @@ def add_tournament_participant(self, tournament_id: int, player_name: str, ace_p
         participant_id = cursor.lastrowid
         self.conn.commit()
         
-        # If player bought into ace pot, add entry to ace pot tracker
-        if ace_pot_buy_in:
+        # If player bought into ace pot and we're not skipping the entry, add entry to ace pot tracker
+        if ace_pot_buy_in and not skip_ace_pot_entry:
             # Get tournament date
             cursor.execute(
                 "SELECT date FROM tournaments WHERE id = ?",

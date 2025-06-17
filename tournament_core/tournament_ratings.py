@@ -126,6 +126,8 @@ class TournamentRatingSystem:
                     'team_rating': result['team_rating']
                 })
                 
+            # Add ID to tournament data
+            tournament_data['id'] = tournament['id']
             self.tournaments.append(tournament_data)
         
     def _save_to_json(self) -> None:
@@ -383,6 +385,10 @@ class TournamentRatingSystem:
         Returns:
             Tournament ID if using database, None otherwise
         """
+        # Add debug logging
+        print(f"Recording tournament: {date} at {course_name} with {len(team_results)} teams")
+        print(f"Team results: {team_results}")
+        
         if date is None:
             date = datetime.datetime.now().strftime("%Y-%m-%d")
             
@@ -408,6 +414,7 @@ class TournamentRatingSystem:
         
         # Create tournament record
         tournament = {
+            'id': len(self.tournaments) + 1,  # Add an ID to the tournament
             'date': date,
             'course': course_name,
             'teams': len(teams),
@@ -417,15 +424,21 @@ class TournamentRatingSystem:
         # Add tournament to database if using DB
         tournament_id = None
         if self.use_db:
-            tournament_id = self.db_manager.add_tournament(
-                date, 
-                course_name, 
-                len(teams),
-                ace_pot_paid
-            )
-            if tournament_id is None:
-                print("Error: Failed to add tournament to database")
-                return None
+            try:
+                tournament_id = self.db_manager.add_tournament(
+                    date, 
+                    course_name, 
+                    len(teams),
+                    ace_pot_paid
+                )
+                if tournament_id is None:
+                    print("Error: Failed to add tournament to database")
+                    return None
+            except Exception as e:
+                print(f"Error adding tournament to database: {e}")
+                import traceback
+                print(traceback.format_exc())
+                raise
         
         for position, (team, score) in self.resolve_tournament_positions(team_results):
             player1, player2 = team
@@ -465,12 +478,17 @@ class TournamentRatingSystem:
             
             # Add team result to database if using DB
             if self.use_db and tournament_id is not None:
-                team_id = self.db_manager.add_team_result(
-                    tournament_id, player1, player2, position, 
-                    expected_position, score, team_rating
-                )
-                if team_id is None:
-                    print(f"Warning: Failed to add team result to database for {player1} & {player2}")
+                try:
+                    team_id = self.db_manager.add_team_result(
+                        tournament_id, player1, player2, position, 
+                        expected_position, score, team_rating
+                    )
+                    if team_id is None:
+                        print(f"Warning: Failed to add team result to database for {player1} & {player2}")
+                except Exception as e:
+                    print(f"Error adding team result to database for {player1} & {player2}: {e}")
+                    import traceback
+                    print(traceback.format_exc())
             
             # Update individual ratings - skip ghost player
             for player in [player1, player2]:
@@ -518,6 +536,16 @@ class TournamentRatingSystem:
         # Add tournament to history
         self.tournaments.append(tournament)
         print(f"Tournament recorded with {len(teams)} teams")
+        
+        # Ensure database transaction is committed if using DB
+        if self.use_db and tournament_id is not None:
+            try:
+                self.db_manager.commit_transaction()
+                print(f"Tournament transaction committed successfully with ID: {tournament_id}")
+            except Exception as e:
+                print(f"Error committing tournament transaction: {e}")
+                import traceback
+                print(traceback.format_exc())
         
         # Save data
         self.save_data()
