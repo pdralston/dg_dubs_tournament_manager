@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Disc Golf League Rating System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>Disc Golf League Rating System</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Home</a></li>
+                <li><a href="{{ url_for('list_players') }}" {% if request.endpoint == 'list_players' %}class="active"{% endif %}>Players</a></li>
+                <li><a href="{{ url_for('list_tournaments') }}" {% if request.endpoint == 'list_tournaments' %}class="active"{% endif %}>Tournaments</a></li>
+                <li><a href="{{ url_for('event_registration') }}" {% if request.endpoint == 'event_registration' %}class="active"{% endif %}>Event Registration</a></li>
+                <li><a href="{{ url_for('ace_pot') }}" {% if request.endpoint == 'ace_pot' %}class="active"{% endif %}>Ace Pot</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Disc Golf League Rating System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
