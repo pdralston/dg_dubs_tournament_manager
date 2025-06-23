@@ -391,7 +391,7 @@ class TournamentDBManager:
             
     def add_tournament(self, date: str, course: str, team_count: int, ace_pot_paid: bool = False) -> int:
         """
-        Add a tournament to the database.
+        Add a tournament to the database with duplicate prevention.
         
         Args:
             date: Tournament date
@@ -400,7 +400,7 @@ class TournamentDBManager:
             ace_pot_paid: Whether the ace pot was paid out
             
         Returns:
-            Tournament ID
+            Tournament ID (existing if duplicate found, new if created)
         """
         tournament_id = None
         try:
@@ -410,6 +410,18 @@ class TournamentDBManager:
                 return tournament_id
                 
             cursor = self.conn.cursor()
+            
+            # Check for existing tournament with same date and course
+            cursor.execute(
+                "SELECT id FROM tournaments WHERE date = ? AND course = ?",
+                (date, course)
+            )
+            existing = cursor.fetchone()
+            
+            if existing:
+                tournament_id = existing[0]
+                print(f"Tournament already exists for {date} at {course} (ID: {tournament_id}). Skipping duplicate creation.")
+                return tournament_id
             
             # Check if ace_pot_paid column exists
             cursor.execute("PRAGMA table_info(tournaments)")
