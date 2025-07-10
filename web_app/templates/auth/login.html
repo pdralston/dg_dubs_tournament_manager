@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Disc Golf League Rating System{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .form-group label {
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-group input {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #0056b3;
+        box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+    }
+    
+    .login-button {
+        background-color: #0056b3;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .login-button:hover {
+        background-color: #004494;
+    }
+    
+    .login-info {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #e6f3ff;
+        border-radius: 4px;
+        border-left: 4px solid #0056b3;
+    }
+    
+    .login-info h4 {
+        margin: 0 0 10px 0;
+        color: #0056b3;
+    }
+    
+    .login-info p {
+        margin: 5px 0;
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .public-access {
+        text-align: center;
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f0f8ff;
+        border-radius: 4px;
+    }
+    
+    .public-access a {
+        color: #0056b3;
+        text-decoration: none;
+    }
+    
+    .public-access a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2>Tournament Organizer Login</h2>
+    
+    <form class="login-form" method="post">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required autocomplete="username">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        
+        <button type="submit" class="login-button">Login</button>
+    </form>
+    
+    <div class="login-info">
+        <h4>Tournament Organizers</h4>
+        <p>Login to access tournament management features:</p>
+        <ul>
+            <li>Add and manage players</li>
+            <li>Record tournament results</li>
+            <li>Manage ace pot</li>
+            <li>Generate balanced teams</li>
+        </ul>
+    </div>
+    
+    <div class="public-access">
+        <p><strong>Public Access Available</strong></p>
+        <p>You can view <a href="{{ url_for('list_players') }}">players</a>, 
+           <a href="{{ url_for('list_tournaments') }}">tournaments</a>, and 
+           <a href="{{ url_for('ace_pot') }}">ace pot</a> without logging in.</p>
+    </div>
+</div>
+{% endblock %}
