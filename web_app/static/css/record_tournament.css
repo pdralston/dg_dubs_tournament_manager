@@ -69,11 +69,6 @@
     font-size: 16px;
 }
 
-.player-input input.invalid {
-    border-color: #ff4d4d;
-    background-color: #fff0f0;
-}
-
 .score-input {
     width: 80px;
 }
