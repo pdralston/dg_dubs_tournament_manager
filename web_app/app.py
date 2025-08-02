@@ -5,7 +5,7 @@ Disc Golf League Tournament Rating System - Web Application
 This module provides a web interface for the tournament rating system.
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 import os
 import datetime
 import sys
@@ -14,18 +14,134 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from tournament_core import TournamentRatingSystem
 
+# Import authentication
+from auth import AuthManager, login_required, is_authenticated, get_current_user
+
 # Import API blueprints
 from api import all_blueprints
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_testing')
+app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_testing_change_in_production')
+
+# Initialize the rating system and auth manager
+rating_system = TournamentRatingSystem()
+auth_manager = AuthManager(rating_system.db_file if rating_system.use_db else 'tournament_data.db')
+
+# Make auth manager available to the app
+app.auth_manager = auth_manager
 
 # Register API blueprints
 for blueprint in all_blueprints:
     app.register_blueprint(blueprint)
 
-# Initialize the rating system
-rating_system = TournamentRatingSystem()
+# Context processor to make current_user available in all templates
+@app.context_processor
+def inject_user():
+    return dict(current_user=get_current_user())
+
+# Authentication routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page and authentication handler."""
+    # Redirect if already authenticated
+    if is_authenticated():
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        if not username or not password:
+            flash('Please enter both username and password.', 'error')
+            return render_template('auth/login.html')
+        
+        # Get client info for security logging
+        ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+        
+        # Authenticate user
+        success, result = auth_manager.authenticate_user(username, password, ip_address)
+        
+        if success:
+            # Store session info
+            session['session_token'] = result['session_token']
+            session['user_id'] = result['user_id']
+            session['username'] = result['username']
+            session['role'] = result['role']
+            
+            flash(f'Welcome back, {result["username"]}!', 'success')
+            
+            # Redirect to next page or home
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('index'))
+        else:
+            flash(result, 'error')
+    
+    return render_template('auth/login.html')
+
+@app.route('/logout')
+def logout():
+    """Logout handler."""
+    if 'session_token' in session:
+        auth_manager.logout_user(session['session_token'])
+    
+    session.clear()
+    flash('You have been logged out successfully.', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/register', methods=['GET', 'POST'])
+@login_required
+def register():
+    """User registration page (admin only)."""
+    current_user = get_current_user()
+    if not current_user or current_user['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        role = request.form.get('role', 'organizer')
+        
+        # Validation
+        if not username or not password:
+            flash('Username and password are required.', 'error')
+            return render_template('auth/register.html')
+        
+        if len(username) < 3:
+            flash('Username must be at least 3 characters long.', 'error')
+            return render_template('auth/register.html')
+        
+        if len(password) < 8:
+            flash('Password must be at least 8 characters long.', 'error')
+            return render_template('auth/register.html')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('auth/register.html')
+        
+        if role not in ['organizer', 'admin']:
+            role = 'organizer'
+        
+        # Create user
+        success, message = auth_manager.create_user(username, password, role)
+        
+        if success:
+            flash(f'User "{username}" created successfully with role "{role}".', 'success')
+            return redirect(url_for('register'))
+        else:
+            flash(message, 'error')
+    
+    return render_template('auth/register.html')
+
+@app.route('/profile')
+@login_required
+def profile():
+    """User profile page."""
+    current_user = get_current_user()
+    return render_template('auth/profile.html', user=current_user)
 
 @app.route('/')
 def index():
@@ -68,6 +184,7 @@ def player_details(name):
         return redirect(url_for('list_players'))
 
 @app.route('/add_player', methods=['GET', 'POST'])
+@login_required
 def add_player():
     """Add a new player."""
     if request.method == 'POST':
@@ -96,6 +213,7 @@ def generate_teams():
     return redirect(url_for('event_registration'))
 
 @app.route('/event_registration', methods=['GET', 'POST'])
+@login_required
 def event_registration():
     """Event registration and team generation."""
     if request.method == 'POST':
@@ -201,6 +319,7 @@ def event_registration():
                           ace_pot_config=rating_system.ace_pot_manager.get_config())
 
 @app.route('/record_tournament', methods=['GET', 'POST'])
+@login_required
 def record_tournament():
     """Record a new tournament."""
     if request.method == 'POST':
@@ -378,6 +497,7 @@ def ace_pot():
                           ledger=ace_pot_ledger)
 
 @app.route('/update_ace_pot_config', methods=['POST'])
+@login_required
 def update_ace_pot_config():
     """Update ace pot configuration."""
     cap_amount = request.form.get('cap_amount')
@@ -396,6 +516,7 @@ def update_ace_pot_config():
     return redirect(url_for('ace_pot'))
 
 @app.route('/set_ace_pot_balance', methods=['POST'])
+@login_required
 def set_ace_pot_balance():
     """Set ace pot balance."""
     new_balance = request.form.get('new_balance')

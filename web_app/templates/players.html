@@ -6,9 +6,11 @@
 <section class="players">
     <h2>Player Ratings</h2>
     
+    {% if current_user %}
     <div class="actions">
         <a href="{{ url_for('add_player') }}" class="button">Add New Player</a>
     </div>
+    {% endif %}
     <div class="search-container mb-3">
         <input type="text" id="playerSearchInput" class="form-control" placeholder="Search for players...">
     </div>
