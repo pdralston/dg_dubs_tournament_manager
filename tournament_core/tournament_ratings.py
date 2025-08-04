@@ -330,11 +330,11 @@ class TournamentRatingSystem:
         tournaments_played = player_data['tournaments_played']
         
         if tournaments_played < 5:
-            return 40  # New players - ratings change quickly
+            return 10  # New players - ratings change quickly
         elif tournaments_played < 15:
-            return 32  # Intermediate players
+            return 5  # Intermediate players
         else:
-            return 24  # Experienced players - ratings change more slowly
+            return 1  # Experienced players - ratings change more slowly
     
     def predict_tournament_outcome(self, teams: List[Tuple[str, str]]) -> Dict[Tuple[str, str], Dict[str, Any]]:
         """
@@ -510,7 +510,8 @@ class TournamentRatingSystem:
                 
                 # Rating adjustment based on position difference
                 # Normalize by number of teams to keep adjustments reasonable
-                adjustment = k_factor * position_diff / len(teams)
+                tournament_bonus = 1 + (len(teams) - 4) * 0.05  # 5% bonus per team above 4
+                adjustment = k_factor * (position_diff + overall_modifier) * tournament_bonus
                 new_rating = old_rating + adjustment
                 
                 # Update player data
