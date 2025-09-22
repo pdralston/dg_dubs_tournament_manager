@@ -8,6 +8,7 @@ This module provides a web interface for the tournament rating system.
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 import os
 import datetime
+import sqlite3
 import sys
 
 # Add project root to Python path
@@ -15,10 +16,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from tournament_core import TournamentRatingSystem
 
 # Import authentication
-from auth import AuthManager, login_required, is_authenticated, get_current_user
+from web_app.auth import AuthManager, login_required, is_authenticated, get_current_user
 
 # Import API blueprints
-from api import all_blueprints
+from web_app.api import all_blueprints
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_testing_change_in_production')
@@ -29,6 +30,75 @@ auth_manager = AuthManager(rating_system.db_file if rating_system.use_db else 't
 
 # Make auth manager available to the app
 app.auth_manager = auth_manager
+
+def ensure_admin_user():
+    """Create admin user if none exists, using environment variables."""
+    try:
+        admin_user = os.environ.get('ADMIN_USERNAME')
+        admin_pass = os.environ.get('ADMIN_PASSWORD')
+        
+        # Skip if environment variables not set
+        if not admin_user or not admin_pass:
+            return
+        
+        # Check if any admin users exist
+        conn = sqlite3.connect(auth_manager.db_file)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+        admin_count = cursor.fetchone()[0]
+        conn.close()
+        
+        # Create admin user if none exist
+        if admin_count == 0:
+            success, message = auth_manager.create_user(admin_user, admin_pass, 'admin')
+            if success:
+                print(f"Admin user '{admin_user}' created successfully")
+            else:
+                print(f"Failed to create admin user: {message}")
+        
+    except Exception as e:
+        print(f"Error in admin user creation: {e}")
+
+def restore_database_if_requested():
+    """Restore database from backup if RESTORE_FROM_BACKUP environment variable is set."""
+    try:
+        restore_flag = os.environ.get('RESTORE_FROM_BACKUP', '').lower()
+        
+        if restore_flag not in ['true', '1', 'yes']:
+            return
+        
+        backup_file = 'data_backup.sql'
+        if not os.path.exists(backup_file):
+            print(f"Backup file {backup_file} not found - skipping restoration")
+            return
+        
+        # Remove existing database
+        if os.path.exists(auth_manager.db_file):
+            os.remove(auth_manager.db_file)
+            print(f"Removed existing database: {auth_manager.db_file}")
+        
+        # Restore from backup
+        import subprocess
+        result = subprocess.run(['sqlite3', auth_manager.db_file, f'.read {backup_file}'], 
+                              capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print(f"Database restored from {backup_file}")
+            # Reload data from the restored database
+            if rating_system.use_db:
+                rating_system._load_from_db()
+                print("Reloaded data from restored database")
+        else:
+            print(f"Failed to restore database: {result.stderr}")
+        
+    except Exception as e:
+        print(f"Error in database restoration: {e}")
+
+# Restore database if requested (before admin creation)
+restore_database_if_requested()
+
+# Ensure admin user exists on startup
+ensure_admin_user()
 
 # Register API blueprints
 for blueprint in all_blueprints:
