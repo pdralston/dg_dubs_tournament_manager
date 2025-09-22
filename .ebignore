@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.DS_Store
+*.log
+tournament_data.db
+tournament_data.json
+example_*.sh
