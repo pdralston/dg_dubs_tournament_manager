@@ -7,5 +7,6 @@ and predicts team performance in tournament-style play.
 
 from .tournament_ratings import TournamentRatingSystem
 from .tournament_db_manager import TournamentDBManager
+from .models import db
 
 __version__ = '1.0.0'
