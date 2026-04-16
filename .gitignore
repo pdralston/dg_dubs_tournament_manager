@@ -135,6 +135,14 @@ pip-selfcheck.json
 *.pem
 *.key
 
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Environment files with credentials
+.env
+database/.env
+
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
