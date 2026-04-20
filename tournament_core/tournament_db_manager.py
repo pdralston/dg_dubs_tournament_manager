@@ -76,16 +76,9 @@ class TournamentDBManager:
     # ── Tournaments ──────────────────────────────────────────────────
 
     def add_tournament(self, date: str, course: str, team_count: int, ace_pot_paid: bool = False) -> Optional[int]:
-        # Duplicate check
-        existing = Tournament.query.filter_by(date=date, course=course).first()
-        if existing:
-            print(f"Tournament already exists for {date} at {course} (ID: {existing.tournament_id}).")
-            return existing.tournament_id
-
         t = Tournament(date=date, course=course, team_count=team_count, ace_pot_paid=ace_pot_paid)
         db.session.add(t)
         db.session.commit()
-        print(f"Tournament added successfully with ID: {t.tournament_id}")
         return t.tournament_id
 
     def get_tournaments(self) -> List[Dict[str, Any]]:
@@ -97,6 +90,7 @@ class TournamentDBManager:
                 'date': t.date.isoformat() if hasattr(t.date, 'isoformat') else str(t.date),
                 'course': t.course,
                 'team_count': t.team_count,
+                'status': t.status or 'Completed',
                 'ace_pot_paid': t.ace_pot_paid,
                 'results': [],
             }
@@ -111,6 +105,7 @@ class TournamentDBManager:
                     'expected_position': float(team.expected_position),
                     'score': team.score,
                     'team_rating': float(team.team_rating),
+                    'payout': float(team.payout) if team.payout else 0,
                 })
             result.append(td)
         return result
@@ -290,7 +285,7 @@ class TournamentDBManager:
         )
 
         t.ace_pot_paid = True
-        t.ace_pot_paid_to = player.player_id
+        t.ace_pot_paid_to = player_name
         db.session.commit()
         return True
 

@@ -71,6 +71,7 @@ class TournamentRatingSystem:
                     'expected_position': result['expected_position'],
                     'score': result['score'],
                     'team_rating': result['team_rating'],
+                    'payout': result.get('payout', 0),
                 })
             self.tournaments.append(td)
 
@@ -267,17 +268,14 @@ class TournamentRatingSystem:
 
     # ── Team generation ──────────────────────────────────────────────
 
-    def generate_balanced_teams(self, players: List[str], allow_ghost: bool = False) -> List[Tuple[str, str]]:
+    def generate_balanced_teams(self, players: List[str]) -> List[Tuple[str, str]]:
         for p in players:
             if not self.player_exists(p):
                 raise ValueError(f"Player {p} not found")
         players = [self.get_player_name(p) for p in players]
 
         if len(players) % 2 == 1:
-            if allow_ghost:
-                players.append("Ghost Player")
-            else:
-                raise ValueError("Odd number of players and ghost player not allowed")
+            players.append("Ghost Player")
 
         sorted_players = sorted(
             players,
