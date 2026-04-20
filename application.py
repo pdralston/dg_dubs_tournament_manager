@@ -1,4 +1,4 @@
-from web_app.app import app
+from backend.app import app
 
 # Elastic Beanstalk expects the WSGI application to be named 'application'
 application = app

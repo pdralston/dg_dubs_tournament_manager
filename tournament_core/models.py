@@ -1,4 +1,4 @@
-"""SQLAlchemy models for the DG Dubs tournament rating system."""
+"""SQLAlchemy models for the DG-Dubs tournament rating system."""
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -14,6 +14,8 @@ class Player(db.Model):
     rating = db.Column(db.Numeric(8, 2), nullable=False, default=1000.00)
     tournaments_played = db.Column(db.Integer, nullable=False, default=0)
     is_club_member = db.Column(db.Boolean, default=False)
+    seasonal_cash = db.Column(db.Numeric(8, 2), nullable=False, default=0.00)
+    lifetime_cash = db.Column(db.Numeric(8, 2), nullable=False, default=0.00)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     history = db.relationship('PlayerHistory', backref='player', lazy='dynamic')
@@ -27,9 +29,9 @@ class Tournament(db.Model):
     date = db.Column(db.Date, nullable=False)
     course = db.Column(db.String(100))
     team_count = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Enum('Pending', 'Scheduled', 'Completed'), default='Scheduled')
+    status = db.Column(db.Enum('Pending', 'In Progress', 'Completed'), default='Completed')
     ace_pot_paid = db.Column(db.Boolean, default=False)
-    ace_pot_paid_to = db.Column(db.Integer, db.ForeignKey('players.player_id'), nullable=True)
+    ace_pot_paid_to = db.Column(db.String(500), nullable=True)  # comma-separated player names
     season_id = db.Column(db.Integer, db.ForeignKey('seasons.season_id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -50,6 +52,7 @@ class Team(db.Model):
     expected_position = db.Column(db.Numeric(6, 2), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     team_rating = db.Column(db.Numeric(8, 2), nullable=False)
+    payout = db.Column(db.Numeric(8, 2), nullable=False, default=0.00)
 
     player1 = db.relationship('Player', foreign_keys=[player1_id])
     player2 = db.relationship('Player', foreign_keys=[player2_id])
@@ -124,7 +127,7 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     salt = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), default='organizer')
+    role = db.Column(db.String(50), default='director')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)

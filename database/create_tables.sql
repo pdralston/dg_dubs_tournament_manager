@@ -1,4 +1,4 @@
--- DG Dubs Database Schema
+-- DG-Dubs Database Schema
 -- Run against the existing RDS instance to create the dg_dubs schema
 
 CREATE DATABASE IF NOT EXISTS dg_dubs;
@@ -10,6 +10,8 @@ CREATE TABLE players (
     rating DECIMAL(8,2) NOT NULL DEFAULT 1000.00,
     tournaments_played INT NOT NULL DEFAULT 0,
     is_club_member BOOLEAN DEFAULT FALSE,
+    seasonal_cash DECIMAL(8,2) NOT NULL DEFAULT 0.00,
+    lifetime_cash DECIMAL(8,2) NOT NULL DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -18,11 +20,10 @@ CREATE TABLE tournaments (
     date DATE NOT NULL,
     course VARCHAR(100),
     team_count INT NOT NULL,
-    status ENUM('Pending', 'Scheduled', 'Completed') DEFAULT 'Scheduled',
+    status ENUM('Pending', 'In Progress', 'Completed') DEFAULT 'Completed',
     ace_pot_paid BOOLEAN DEFAULT FALSE,
-    ace_pot_paid_to INT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ace_pot_paid_to) REFERENCES players(player_id)
+    ace_pot_paid_to VARCHAR(500) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE teams (
@@ -35,6 +36,7 @@ CREATE TABLE teams (
     expected_position DECIMAL(6,2) NOT NULL,
     score INT NOT NULL,
     team_rating DECIMAL(8,2) NOT NULL,
+    payout DECIMAL(8,2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (tournament_id) REFERENCES tournaments(tournament_id),
     FOREIGN KEY (player1_id) REFERENCES players(player_id),
     FOREIGN KEY (player2_id) REFERENCES players(player_id)
