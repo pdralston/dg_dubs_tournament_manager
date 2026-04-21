@@ -147,3 +147,5 @@ database/.env
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+database/prod_backups/
+docs/DEPLOYMENT.md
