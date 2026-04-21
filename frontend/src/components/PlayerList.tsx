@@ -14,6 +14,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ userRole, onPlayerSelect }) => 
   const [newName, setNewName] = useState('');
   const [newRating, setNewRating] = useState('1000');
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const canEdit = userRole === 'admin' || userRole === 'director';
 
@@ -83,6 +84,8 @@ const PlayerList: React.FC<PlayerListProps> = ({ userRole, onPlayerSelect }) => 
         </form>
       )}
 
+      <input type="text" placeholder="Search players..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="search-input" aria-label="Search players" />
+
       <table className="data-table">
         <thead>
           <tr>
@@ -92,7 +95,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ userRole, onPlayerSelect }) => 
           </tr>
         </thead>
         <tbody>
-          {players.map((p, i) => (
+          {players.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map((p, i) => (
             <tr key={p.name} onClick={() => onPlayerSelect(p.name)} className="clickable-row">
               <td>{i + 1}</td>
               <td>{p.name}</td>

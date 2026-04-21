@@ -25,6 +25,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_testing_change_in_production')
 CORS(app, supports_credentials=True, origins=[
     'http://localhost:3000', 'http://127.0.0.1:3000',
+    'https://dg-rater.com',
 ])
 
 # Database configuration

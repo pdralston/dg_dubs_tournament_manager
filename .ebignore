@@ -1,4 +1,5 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 .git/
@@ -7,3 +8,6 @@ __pycache__/
 tournament_data.db
 tournament_data.json
 example_*.sh
+frontend/
+scripts/
+docs/
