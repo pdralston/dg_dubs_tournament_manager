@@ -15,27 +15,9 @@ def _rs():
 @players_bp.route('/api/players', methods=['GET'])
 def get_players():
     rs = _rs()
-    # Compute average place from current season history
-    players = []
-    for n, d in rs.players.items():
-        p = Player.query.filter_by(name=n).first()
-        current_history = [e for e in d.get('history', []) if _is_current_season_entry(e, n)]
-        avg_place = sum(e['position'] for e in current_history) / len(current_history) if current_history else None
-        players.append({
-            'name': n, 'rating': d['rating'], 'tournaments_played': d['tournaments_played'],
-            'seasonal_cash': float(p.seasonal_cash) if p else 0,
-            'lifetime_cash': float(p.lifetime_cash) + (float(p.seasonal_cash) if p else 0) if p else 0,
-            'average_place': round(avg_place, 1) if avg_place else None,
-        })
+    players = [{'name': n, 'rating': d['rating']} for n, d in rs.players.items()]
     players.sort(key=lambda x: x['rating'], reverse=True)
     return jsonify(players)
-
-
-def _is_current_season_entry(entry, player_name):
-    """Check if a history entry belongs to the current season (unarchived tournament)."""
-    # Current season tournaments have no season_id
-    t = Tournament.query.filter_by(date=entry['tournament_date'], season_id=None).first()
-    return t is not None
 
 
 @players_bp.route('/api/players/<name>', methods=['GET'])
