@@ -4,6 +4,7 @@ API endpoints for player management.
 
 from flask import Blueprint, jsonify, request, current_app
 from tournament_core.models import db, Player, PlayerHistory, Tournament, Season
+from backend.auth import login_required
 
 players_bp = Blueprint('players_api', __name__)
 
@@ -70,6 +71,7 @@ def get_player(name):
 
 
 @players_bp.route('/api/players', methods=['POST'])
+@login_required
 def add_player():
     data = request.get_json()
     if not data or 'name' not in data:

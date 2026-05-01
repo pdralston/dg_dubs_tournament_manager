@@ -929,3 +929,38 @@ main {
 .delete-button:hover {
   background: #cc0000;
 }
+
+/* ── User Management Table ────────────────────────── */
+.user-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.user-edit-input {
+  width: 150px;
+}
+
+.user-edit-password {
+  width: 120px;
+}
+
+.user-role-select {
+  padding: 8px;
+  background: #0f0f1a;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  border-radius: 4px;
+}
+
+.create-user-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 15px;
+  align-items: end;
+}
