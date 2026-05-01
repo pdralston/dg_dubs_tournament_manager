@@ -453,7 +453,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                 <td>{t.teams}</td>
                 {canEdit && (
                   <td>
-                    {t.status === 'Pending' || t.status === 'In Progress' && (
+                    {(t.status === 'Pending' || t.status === 'In Progress') && (
                       <button className="delete-button" onClick={(e) => { e.stopPropagation(); handleDelete(t.tournament_id); }}>Delete</button>
                     )}
                   </td>
