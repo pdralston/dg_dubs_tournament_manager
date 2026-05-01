@@ -7,8 +7,49 @@ Uses SQLAlchemy models backed by MySQL.
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+from functools import wraps
 
+from flask import session, jsonify
 from tournament_core.models import db, User, UserSession
+
+
+def _validate_session_or_fail():
+    """Validate session token against DB. Returns (info, error_response)."""
+    from flask import current_app
+    token = session.get('session_token')
+    if not token:
+        return None, (jsonify({'error': 'Authentication required'}), 401)
+    valid, info = current_app.auth_manager.validate_session(token)
+    if not valid:
+        session.clear()
+        return None, (jsonify({'error': 'Authentication required'}), 401)
+    return info, None
+
+
+def login_required(f):
+    """Decorator that requires an authenticated admin or director."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        info, err = _validate_session_or_fail()
+        if err:
+            return err
+        if info.get('role') not in ('admin', 'director'):
+            return jsonify({'error': 'Insufficient permissions'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+
+def admin_required(f):
+    """Decorator that requires an admin user."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        info, err = _validate_session_or_fail()
+        if err:
+            return err
+        if info.get('role') != 'admin':
+            return jsonify({'error': 'Admin required'}), 403
+        return f(*args, **kwargs)
+    return decorated
 
 
 class AuthManager:

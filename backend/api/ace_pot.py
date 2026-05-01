@@ -1,6 +1,7 @@
 """API endpoints for ace pot management."""
 
 from flask import Blueprint, jsonify, request, current_app
+from backend.auth import login_required
 
 ace_pot_bp = Blueprint('ace_pot_api', __name__)
 
@@ -20,6 +21,7 @@ def get_config():
 
 
 @ace_pot_bp.route('/api/ace-pot/config', methods=['PUT'])
+@login_required
 def update_config():
     data = request.get_json()
     if not data or 'cap_amount' not in data:
@@ -34,6 +36,7 @@ def get_ledger():
 
 
 @ace_pot_bp.route('/api/ace-pot/balance', methods=['PUT'])
+@login_required
 def set_balance():
     data = request.get_json()
     if not data or 'amount' not in data:
@@ -43,6 +46,7 @@ def set_balance():
 
 
 @ace_pot_bp.route('/api/ace-pot/tournament', methods=['POST'])
+@login_required
 def process_tournament_ace_pot():
     """Process ace pot buy-ins and optional payout for a tournament."""
     data = request.get_json()

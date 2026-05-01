@@ -434,7 +434,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
               <th>Course</th>
               <th>Status</th>
               <th>Teams</th>
-              {userRole === 'admin' && <th></th>}
+              {canEdit && <th></th>}
             </tr>
           </thead>
           <tbody>

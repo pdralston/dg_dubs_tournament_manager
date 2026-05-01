@@ -5,6 +5,7 @@ API endpoints for tournament management.
 from flask import Blueprint, jsonify, request, current_app
 import datetime
 from tournament_core.models import db, Tournament, TournamentParticipant, Player, Team
+from backend.auth import login_required
 
 tournaments_bp = Blueprint('tournaments_api', __name__)
 
@@ -71,6 +72,7 @@ def get_tournament(tid):
 
 
 @tournaments_bp.route('/api/tournaments/pending', methods=['POST'])
+@login_required
 def create_pending():
     """Create a pending tournament with course/date."""
     data = request.get_json()
@@ -88,6 +90,7 @@ def create_pending():
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>', methods=['PATCH'])
+@login_required
 def update_tournament(tid):
     t = Tournament.query.get(tid)
     if not t or t.status != 'Pending':
@@ -102,6 +105,7 @@ def update_tournament(tid):
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>/players', methods=['POST'])
+@login_required
 def add_participant(tid):
     """Add a player to a pending tournament."""
     t = Tournament.query.get(tid)
@@ -133,6 +137,7 @@ def add_participant(tid):
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>/players/<player_name>', methods=['DELETE'])
+@login_required
 def remove_participant(tid, player_name):
     """Remove a player from a pending tournament."""
     rs = _rs()
@@ -148,6 +153,7 @@ def remove_participant(tid, player_name):
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>/generate', methods=['POST'])
+@login_required
 def generate_teams(tid):
     """Generate teams for a pending tournament and set status to In Progress."""
     t = Tournament.query.get(tid)
@@ -183,6 +189,7 @@ def generate_teams(tid):
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>/record', methods=['POST'])
+@login_required
 def record_results(tid):
     """Record scores for an in-progress tournament, completing it."""
     t = Tournament.query.get(tid)
@@ -314,6 +321,7 @@ def record_results(tid):
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>/payouts', methods=['POST'])
+@login_required
 def apply_manual_payouts(tid):
     """Apply manually specified payouts (for tie resolution)."""
     t = Tournament.query.get(tid)
@@ -349,6 +357,7 @@ def apply_manual_payouts(tid):
 
 
 @tournaments_bp.route('/api/tournaments/<int:tid>', methods=['DELETE'])
+@login_required
 def delete_tournament(tid):
     t = Tournament.query.get(tid)
     if not t:

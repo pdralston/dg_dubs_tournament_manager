@@ -1,7 +1,8 @@
 """API endpoints for authentication."""
 
 from flask import Blueprint, jsonify, request, session, current_app
-from tournament_core.models import User
+from tournament_core.models import User, db
+from backend.auth import login_required, admin_required
 
 auth_api_bp = Blueprint('auth_api', __name__)
 
@@ -51,9 +52,8 @@ def me():
 
 
 @auth_api_bp.route('/api/auth/users', methods=['GET'])
+@admin_required
 def list_users():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
     users = User.query.all()
     return jsonify([{
         'user_id': u.id, 'username': u.username, 'role': u.role,
@@ -63,9 +63,8 @@ def list_users():
 
 
 @auth_api_bp.route('/api/auth/users', methods=['POST'])
+@admin_required
 def create_user():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
     data = request.get_json()
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'error': 'Username and password required'}), 400
@@ -82,14 +81,13 @@ def create_user():
 
 
 @auth_api_bp.route('/api/auth/users/<int:user_id>', methods=['PUT'])
+@login_required
 def update_user(user_id):
     from tournament_core.models import User, db
 
     # Directors can only edit themselves
     if session.get('role') == 'director' and session.get('user_id') != user_id:
         return jsonify({'error': 'Directors can only edit their own profile'}), 403
-    if session.get('role') not in ('admin', 'director'):
-        return jsonify({'error': 'Authentication required'}), 401
 
     user = User.query.get(user_id)
     if not user:
@@ -118,3 +116,20 @@ def update_user(user_id):
 
     db.session.commit()
     return jsonify({'user_id': user.id, 'username': user.username, 'role': user.role})
+
+
+@auth_api_bp.route('/api/auth/users/<int:user_id>', methods=['DELETE'])
+@admin_required
+def delete_user(user_id):
+    if session.get('user_id') == user_id:
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    from tournament_core.models import UserSession
+    UserSession.query.filter_by(user_id=user_id).delete()
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': f'User {user.username} deleted'})

@@ -3,6 +3,7 @@
 from flask import Blueprint, jsonify, request, session, current_app
 from tournament_core.models import db, Player, Tournament, Team, Season, PlayerHistory, \
     TournamentParticipant, AcePotTracker
+from backend.auth import admin_required
 from sqlalchemy import func
 from datetime import datetime
 
@@ -10,10 +11,8 @@ archive_bp = Blueprint('archive_api', __name__)
 
 
 @archive_bp.route('/api/archive/preview', methods=['GET'])
+@admin_required
 def preview():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
-
     # Current season = tournaments with no season_id
     tournaments = Tournament.query.filter_by(season_id=None).filter(
         Tournament.status == 'Completed'
@@ -46,10 +45,8 @@ def preview():
 
 
 @archive_bp.route('/api/archive', methods=['POST'])
+@admin_required
 def perform_archive():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
-
     data = request.get_json()
     season_name = data.get('season_name', '').strip() if data else ''
     if not season_name:

@@ -111,6 +111,18 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
     } catch { setError('Network error'); }
   };
 
+  const handleDelete = async (u: ManagedUser) => {
+    if (!window.confirm(`Delete user "${u.username}"? This cannot be undone.`)) return;
+    setError(''); setSuccess('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/users/${u.user_id}`, {
+        method: 'DELETE', credentials: 'include'
+      });
+      if (res.ok) { setSuccess(`User "${u.username}" deleted`); fetchUsers(); }
+      else { const d = await res.json(); setError(d.error || 'Failed to delete user'); }
+    } catch { setError('Network error'); }
+  };
+
   // ── Archive ───────────────────────────────────────
   const loadArchivePreview = async () => {
     setArchiveLoading(true);
@@ -171,7 +183,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
       {adminTab === 'users' && (
         <>
           {isAdmin && (
-            <div className="page-header" style={{ marginTop: '15px' }}>
+            <div className="page-header">
               <h3>Users</h3>
               <button className="action-button" onClick={() => { setShowCreateForm(!showCreateForm); setEditingId(null); }}>
                 {showCreateForm ? 'Cancel' : '+ Add User'}
@@ -182,7 +194,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
           {showCreateForm && isAdmin && (
             <form className="new-player-form" onSubmit={handleCreate}>
               <h3>Create User</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px', alignItems: 'end' }}>
+              <div className="create-user-grid">
                 <div className="form-group">
                   <label htmlFor="new-user">Username:</label>
                   <input id="new-user" type="text" value={newUsername} onChange={e => setNewUsername(e.target.value)} required minLength={3} />
@@ -218,10 +230,10 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
                   <tr key={u.user_id}>
                     {editingId === u.user_id ? (
                       <>
-                        <td><input type="text" className="score-input" style={{ width: '150px' }} value={editUsername} onChange={e => setEditUsername(e.target.value)} /></td>
+                        <td><input type="text" className="score-input user-edit-input" value={editUsername} onChange={e => setEditUsername(e.target.value)} /></td>
                         <td>
                           {isAdmin ? (
-                            <select value={editRole} onChange={e => setEditRole(e.target.value)} style={{ padding: '8px', background: '#0f0f1a', color: '#e0e0e0', border: '1px solid #333', borderRadius: '4px' }}>
+                            <select className="user-role-select" value={editRole} onChange={e => setEditRole(e.target.value)}>
                               <option value="director">Director</option>
                               <option value="admin">Admin</option>
                             </select>
@@ -229,10 +241,10 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
                         </td>
                         {isAdmin && <td>{u.is_active ? 'Active' : 'Inactive'}</td>}
                         <td>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <input type="password" className="score-input" style={{ width: '120px' }} placeholder="New password" value={editPassword} onChange={e => setEditPassword(e.target.value)} autoComplete="new-password" />
-                            <button className="action-button" style={{ padding: '5px 12px', fontSize: '12px' }} onClick={handleSave}>Save</button>
-                            <button className="action-button secondary" style={{ padding: '5px 12px', fontSize: '12px' }} onClick={() => setEditingId(null)}>Cancel</button>
+                          <div className="user-actions">
+                            <input type="password" className="score-input user-edit-password" placeholder="New password" value={editPassword} onChange={e => setEditPassword(e.target.value)} autoComplete="new-password" />
+                            <button className="action-button btn-sm" onClick={handleSave}>Save</button>
+                            <button className="action-button secondary btn-sm" onClick={() => setEditingId(null)}>Cancel</button>
                           </div>
                         </td>
                       </>
@@ -242,9 +254,14 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
                         <td>{u.role}</td>
                         {isAdmin && <td>{u.is_active ? 'Active' : 'Inactive'}</td>}
                         <td>
-                          {(isAdmin || u.user_id === currentUser.user_id) && (
-                            <button className="action-button secondary" style={{ padding: '5px 12px', fontSize: '12px' }} onClick={() => startEdit(u)}>Edit</button>
-                          )}
+                          <div className="user-actions">
+                            {(isAdmin || u.user_id === currentUser.user_id) && (
+                              <button className="action-button secondary btn-sm" onClick={() => startEdit(u)}>Edit</button>
+                            )}
+                            {isAdmin && u.user_id !== currentUser.user_id && (
+                              <button className="action-button secondary btn-sm" onClick={() => handleDelete(u)}>Delete</button>
+                            )}
+                          </div>
                         </td>
                       </>
                     )}
