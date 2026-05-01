@@ -7,7 +7,7 @@ backed by MySQL via Flask-SQLAlchemy.
 """
 
 import datetime
-import math
+import random
 from typing import Dict, List, Tuple, Optional, Any
 
 from .tournament_db_manager import TournamentDBManager
@@ -279,10 +279,15 @@ class TournamentRatingSystem:
 
         sorted_players = sorted(
             players,
-            key=lambda p: self.get_player(p)['rating'] if p != "Ghost Player" else 0,
+            key=lambda p: self.get_player(p)['rating'] if p != "Ghost Player" else 1000,
             reverse=True,
         )
         teams = []
+        if len(sorted_players) > 6:
+            pros, ams = [list(x) for x in zip(*[(sorted_players.pop(0), sorted_players.pop(-1)) for _ in range(3)])]
+            random.shuffle(ams)
+            while pros:
+                teams.append((pros.pop(0), ams.pop(0)))
         while sorted_players:
             p1 = sorted_players.pop(0)
             p2 = sorted_players.pop(-1) if sorted_players else "Ghost Player"
