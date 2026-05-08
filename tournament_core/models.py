@@ -48,9 +48,9 @@ class Team(db.Model):
     player1_id = db.Column(db.Integer, db.ForeignKey('players.player_id'), nullable=False)
     player2_id = db.Column(db.Integer, db.ForeignKey('players.player_id'), nullable=True)
     is_ghost_team = db.Column(db.Boolean, default=False)
-    position = db.Column(db.Integer, nullable=False)
+    position = db.Column(db.Integer, nullable=True)
     expected_position = db.Column(db.Numeric(6, 2), nullable=False)
-    score = db.Column(db.Integer, nullable=False)
+    score = db.Column(db.Integer, nullable=True)
     team_rating = db.Column(db.Numeric(8, 2), nullable=False)
     payout = db.Column(db.Numeric(8, 2), nullable=False, default=0.00)
 
