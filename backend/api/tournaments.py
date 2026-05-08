@@ -463,6 +463,7 @@ def delete_tournament(tid):
     if not t:
         return jsonify({'error': 'Not found'}), 404
     TournamentParticipant.query.filter_by(tournament_id=tid).delete()
+    Team.query.filter_by(tournament_id=tid).delete()
     db.session.delete(t)
     db.session.commit()
     return jsonify({'message': 'Deleted'})
