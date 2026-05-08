@@ -220,15 +220,8 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
         const data: TournamentDetail = await res.json();
         setDetail(data);
         if (data.status === 'In Progress' && !generatedTeams) {
-          // Re-generate team display from participants
-          const pRes = await fetch(`${API_BASE_URL}/api/teams`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ players: data.participants.map(p => p.name) })
-          });
-          if (pRes.ok) {
-            const teams: GeneratedTeam[] = await pRes.json();
+          const teams: GeneratedTeam[] = (data as any).generated_teams || [];
+          if (teams.length > 0) {
             setGeneratedTeams(teams);
             setTeamScores(teams.map(t => ({ player1: t.player1, player2: t.player2, score: '' })));
           }

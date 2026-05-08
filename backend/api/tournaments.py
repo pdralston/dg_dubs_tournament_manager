@@ -58,6 +58,20 @@ def get_tournament(tid):
 
     ace_pot_recipient = t.ace_pot_paid_to if t.ace_pot_paid else None
 
+    # Include persisted team pairings (for In Progress tournaments)
+    generated_teams = []
+    if t.status == 'In Progress':
+        db_teams = Team.query.filter_by(tournament_id=tid).order_by(Team.expected_position).all()
+        for team in db_teams:
+            p1 = Player.query.get(team.player1_id)
+            p2 = Player.query.get(team.player2_id) if team.player2_id else None
+            generated_teams.append({
+                'player1': p1.name if p1 else 'Unknown',
+                'player2': p2.name if p2 else 'Ghost Player',
+                'team_rating': float(team.team_rating),
+                'expected_position': float(team.expected_position),
+            })
+
     return jsonify({
         'tournament_id': tid,
         'date': t.date.isoformat() if hasattr(t.date, 'isoformat') else str(t.date),
@@ -66,6 +80,7 @@ def get_tournament(tid):
         'status': t.status or 'Completed',
         'participants': players,
         'results': mem['results'] if mem else [],
+        'generated_teams': generated_teams,
         'ace_pot_paid': t.ace_pot_paid,
         'ace_pot_recipient': ace_pot_recipient,
     })
@@ -176,6 +191,19 @@ def generate_teams(tid):
         predictions = rs.predict_tournament_outcome([tuple(team) for team in teams])
         t.team_count = len(teams)
         t.status = 'In Progress'
+
+        # Persist generated teams
+        for team in teams:
+            p1_id = rs.db_manager._get_player_id_safe(team[0])
+            p2_id = rs.db_manager._get_player_id_safe(team[1]) if team[1] != 'Ghost Player' else None
+            team_rating = rs.calculate_team_rating(team[0], team[1])
+            expected_pos = predictions[tuple(team)].get('expected_position', 0)
+            db.session.add(Team(
+                tournament_id=tid, player1_id=p1_id, player2_id=p2_id,
+                is_ghost_team=(team[1] == 'Ghost Player'),
+                expected_position=expected_pos, team_rating=team_rating,
+            ))
+
         db.session.commit()
 
         results = [{
@@ -228,93 +256,165 @@ def record_results(tid):
     if first_payout < second_payout:
         first_payout, second_payout = second_payout, first_payout
 
-    # Check for manual payout overrides (from tie resolution modal)
-    manual_payouts = data.get('manual_payouts')  # list of {player1, player2, payout}
+    manual_payouts = data.get('manual_payouts')
 
     rs = _rs()
-    course = t.course
-    date = t.date.isoformat() if hasattr(t.date, 'isoformat') else str(t.date)
 
     try:
-        # Delete the pending shell — record_tournament creates its own DB entry
-        TournamentParticipant.query.filter_by(tournament_id=tid).delete()
-        db.session.delete(t)
-        db.session.commit()
+        # Resolve positions (handles ties)
+        positions = rs.resolve_tournament_positions(formatted)
+        predictions = rs.predict_tournament_outcome([team for team, _ in formatted])
 
-        new_tid = rs.record_tournament(formatted, course, date)
+        # Update existing Team records with position and score
+        db_teams = Team.query.filter_by(tournament_id=tid).all()
+        team_lookup = {}
+        for team in db_teams:
+            p1 = Player.query.get(team.player1_id)
+            p2 = Player.query.get(team.player2_id) if team.player2_id else None
+            key = (p1.name if p1 else '', p2.name if p2 else 'Ghost Player')
+            team_lookup[key] = team
 
-        if new_tid:
-            teams = Team.query.filter_by(tournament_id=new_tid).order_by(Team.position).all()
+        # Build in-memory tournament record for rs.tournaments
+        tournament_record = {
+            'id': tid,
+            'date': t.date.isoformat() if hasattr(t.date, 'isoformat') else str(t.date),
+            'course': t.course,
+            'teams': len(formatted),
+            'results': [],
+        }
 
-            if manual_payouts:
-                # Apply manually specified payouts
-                for mp in manual_payouts:
-                    for team in teams:
+        for position, (team, score) in positions:
+            player1, player2 = team
+            # Normalize names
+            if player1 != "Ghost Player":
+                player1 = rs.get_player_name(player1)
+            if player2 != "Ghost Player":
+                player2 = rs.get_player_name(player2)
+
+            team_rating = rs.calculate_team_rating(player1, player2)
+            expected_position = predictions[team]['expected_position']
+            position_diff = expected_position - position
+
+            midpoint = len(formatted) / 2
+            max_diff = len(formatted) - midpoint
+            mid_diff = midpoint - position
+            overall_modifier = mid_diff * abs(mid_diff / max_diff)
+
+            tournament_record['results'].append({
+                'team': [player1, player2], 'score': score, 'position': position,
+                'expected_position': expected_position, 'team_rating': team_rating,
+            })
+
+            # Update the existing Team row
+            db_team = team_lookup.get((player1, player2))
+            if db_team:
+                db_team.position = position
+                db_team.score = score
+                db_team.team_rating = team_rating
+                db_team.expected_position = expected_position
+
+            # Update player ratings
+            for player in [player1, player2]:
+                if player == "Ghost Player":
+                    continue
+                k_factor = rs.get_k_factor(player)
+                player_data = rs.get_player(player)
+                old_rating = player_data['rating']
+                tournament_bonus = 1 + (len(formatted) - 4) * 0.05
+                adjustment = k_factor * (position_diff + overall_modifier) * tournament_bonus
+                new_rating = old_rating + adjustment
+
+                player_data['rating'] = new_rating
+                player_data['tournaments_played'] += 1
+                player_data['history'].append({
+                    'tournament_date': t.date.isoformat() if hasattr(t.date, 'isoformat') else str(t.date),
+                    'old_rating': old_rating, 'new_rating': new_rating,
+                    'change': new_rating - old_rating, 'position': position,
+                    'expected_position': expected_position, 'score': score,
+                    'with_ghost': "Ghost Player" in [player1, player2],
+                })
+
+                rs.db_manager.update_player_rating(player, new_rating)
+                rs.db_manager.increment_player_tournaments(player)
+                rs.db_manager.add_player_history(
+                    player, tid, old_rating, new_rating,
+                    position, expected_position, score,
+                    "Ghost Player" in [player1, player2],
+                )
+
+        # Mark tournament completed
+        t.status = 'Completed'
+        rs.tournaments.append(tournament_record)
+
+        # Handle payouts
+        teams = Team.query.filter_by(tournament_id=tid).order_by(Team.position).all()
+
+        if manual_payouts:
+            for mp in manual_payouts:
+                for team in teams:
+                    p1 = Player.query.get(team.player1_id)
+                    p2 = Player.query.get(team.player2_id) if team.player2_id else None
+                    p1_name = p1.name if p1 else ''
+                    p2_name = p2.name if p2 else 'Ghost Player'
+                    if p1_name == mp['player1'] and p2_name == mp['player2']:
+                        amt = float(mp['payout'])
+                        team.payout = amt
+                        if amt > 0:
+                            is_ghost = not team.player2_id
+                            per_player = amt if is_ghost else amt / 2
+                            if p1:
+                                p1.seasonal_cash = float(p1.seasonal_cash) + per_player
+                            if not is_ghost and p2:
+                                p2.seasonal_cash = float(p2.seasonal_cash) + per_player
+                        break
+        else:
+            from collections import Counter
+            position_counts = Counter(team.position for team in teams)
+            paid_positions = [1, 2] if len(formatted) < 3 else [1, 2, 3]
+            has_tie = any(position_counts.get(p, 0) > 1 for p in paid_positions)
+
+            if has_tie:
+                db.session.commit()
+                rs.load_data()
+                payout_teams = []
+                for team in teams:
+                    if team.position in paid_positions:
                         p1 = Player.query.get(team.player1_id)
                         p2 = Player.query.get(team.player2_id) if team.player2_id else None
-                        p1_name = p1.name if p1 else ''
-                        p2_name = p2.name if p2 else 'Ghost Player'
-                        if p1_name == mp['player1'] and p2_name == mp['player2']:
-                            amt = float(mp['payout'])
-                            team.payout = amt
-                            if amt > 0:
-                                is_ghost = not team.player2_id
-                                per_player = amt if is_ghost else amt / 2
-                                if p1:
-                                    p1.seasonal_cash = float(p1.seasonal_cash) + per_player
-                                if not is_ghost and p2:
-                                    p2.seasonal_cash = float(p2.seasonal_cash) + per_player
-                            break
-            else:
-                # Check for ties in paid positions
-                from collections import Counter
-                position_counts = Counter(team.position for team in teams)
-                paid_positions = [1, 2] if len(formatted) < 3 else [1, 2, 3]
-                has_tie = any(position_counts.get(p, 0) > 1 for p in paid_positions)
+                        payout_teams.append({
+                            'player1': p1.name if p1 else 'Unknown',
+                            'player2': p2.name if p2 else 'Ghost Player',
+                            'position': team.position, 'score': team.score,
+                        })
+                return jsonify({
+                    'message': f'Tournament recorded with {len(formatted)} teams',
+                    'tournament_id': tid,
+                    'needs_manual_payout': True,
+                    'pot': pot, 'first_payout': first_payout,
+                    'second_payout': second_payout, 'third_payout': third_payout,
+                    'tied_teams': payout_teams,
+                }), 201
 
-                if has_tie:
-                    db.session.commit()
-                    rs.load_data()
-                    payout_teams = []
-                    for team in teams:
-                        if team.position in paid_positions:
-                            p1 = Player.query.get(team.player1_id)
-                            p2 = Player.query.get(team.player2_id) if team.player2_id else None
-                            payout_teams.append({
-                                'player1': p1.name if p1 else 'Unknown',
-                                'player2': p2.name if p2 else 'Ghost Player',
-                                'position': team.position, 'score': team.score,
-                            })
-                    return jsonify({
-                        'message': f'Tournament recorded with {len(formatted)} teams',
-                        'tournament_id': new_tid,
-                        'needs_manual_payout': True,
-                        'pot': pot, 'first_payout': first_payout,
-                        'second_payout': second_payout, 'third_payout': third_payout,
-                        'tied_teams': payout_teams,
-                    }), 201
+            for team in teams:
+                payout_amount = {1: first_payout, 2: second_payout, 3: third_payout}.get(team.position, 0)
+                if payout_amount > 0:
+                    team.payout = payout_amount
+                    is_ghost = team.is_ghost_team or not team.player2_id
+                    per_player = payout_amount if is_ghost else payout_amount / 2
+                    p1 = Player.query.get(team.player1_id)
+                    if p1:
+                        p1.seasonal_cash = float(p1.seasonal_cash) + per_player
+                    if not is_ghost and team.player2_id:
+                        p2 = Player.query.get(team.player2_id)
+                        if p2:
+                            p2.seasonal_cash = float(p2.seasonal_cash) + per_player
 
-                # No ties — auto-apply
-                for team in teams:
-                    payout_amount = {1: first_payout, 2: second_payout, 3: third_payout}.get(team.position, 0)
-                    if payout_amount > 0:
-                        team.payout = payout_amount
-                        is_ghost = team.is_ghost_team or not team.player2_id
-                        per_player = payout_amount if is_ghost else payout_amount / 2
-                        p1 = Player.query.get(team.player1_id)
-                        if p1:
-                            p1.seasonal_cash = float(p1.seasonal_cash) + per_player
-                        if not is_ghost and team.player2_id:
-                            p2 = Player.query.get(team.player2_id)
-                            if p2:
-                                p2.seasonal_cash = float(p2.seasonal_cash) + per_player
-
-            db.session.commit()
-            rs.load_data()
+        db.session.commit()
+        rs.load_data()
 
         return jsonify({
             'message': f'Tournament recorded with {len(formatted)} teams',
-            'tournament_id': new_tid,
+            'tournament_id': tid,
         }), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
