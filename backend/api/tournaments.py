@@ -468,6 +468,20 @@ def delete_tournament(tid):
     db.session.commit()
     return jsonify({'message': 'Deleted'})
 
+@tournaments_bp.route('/api/tournaments/<int:tid>/reset', methods=['POST'])
+@login_required
+def reset_tournament(tid):
+    t = Tournament.query.get(tid)
+    if not t:
+        return jsonify({'error': 'Not found'}), 404
+    if t.status != 'In Progress':
+        return jsonify({'error': 'Invalid status, Tournament must be in progress to edit'}), 403
+    Team.query.filter_by(tournament_id=tid).delete()
+    t.team_count = 0
+    t.status = 'Pending'
+    db.session.commit()
+    return jsonify({'message': 'Teams Reset'})
+
 
 @tournaments_bp.route('/api/predict', methods=['POST'])
 def predict_tournament():
