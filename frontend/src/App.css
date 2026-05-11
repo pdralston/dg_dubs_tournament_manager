@@ -675,6 +675,7 @@ main {
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 30px;
+  margin-top: 15px;
   background-color: #0f0f1a;
 }
 
@@ -920,6 +921,18 @@ main {
   color: white;
   border: none;
   padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reset-button {
+  background: #e3f307;
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 5px 12px;
+  margin-left: 5px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;

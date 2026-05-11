@@ -134,9 +134,9 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: player.name, ace_pot_buy_in: false })
+        body: JSON.stringify({ name: player.name, ace_pot_buy_in: true })
       });
-      setSelectedPlayers(prev => [...prev, { name: player.name, rating: player.rating, ace_pot: false }]);
+      setSelectedPlayers(prev => [{ name: player.name, rating: player.rating, ace_pot: true }, ...prev]);
     } catch { setError('Failed to add player'); }
   };
 
@@ -186,6 +186,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
   };
 
   const handleGenerate = async () => {
+    if (!window.confirm('Generate teams and start this tournament?')) return;
     if (!course.trim()) { setError('Course name is required'); return; }
     const tid = pendingIdRef.current;
     if (!tid) { setError('Tournament not initialized'); return; }
@@ -395,6 +396,12 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
     fetchTournaments();
   };
 
+  const handleReset = async (tid: number) => {
+    if (!window.confirm('Reset this tournament?')) return;
+    await fetch(`${API_BASE_URL}/api/tournaments/${tid}/reset`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    editPending(tid);
+  };
+
   const backToList = () => {
     setView('list');
     setDetail(null);
@@ -449,6 +456,9 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                     {(t.status === 'Pending' || t.status === 'In Progress') && (
                       <button className="delete-button" onClick={(e) => { e.stopPropagation(); handleDelete(t.tournament_id); }}>Delete</button>
                     )}
+                    {(t.status === 'In Progress') && (
+                      <button className="reset-button" onClick={(e) => { e.stopPropagation(); handleReset(t.tournament_id); }}>Reset</button>
+                    )}
                   </td>
                 )}
               </tr>
@@ -479,8 +489,26 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
               <label htmlFor="tc-date">Tournament Date:</label>
               <input id="tc-date" type="date" value={date} onChange={e => { setDate(e.target.value); updatePendingField('date', e.target.value); }} />
             </div>
+            <button className="create-tournament-button" onClick={handleGenerate} disabled={submitting || selectedPlayers.length < 2 || !course.trim()}>
+              {submitting ? 'Generating...' : 'Generate Teams'}
+            </button>
           </div>
-
+          {showNewPlayer && (
+            <div className="new-player-form">
+              <h3>Register New Player</h3>
+              <form onSubmit={handleNewPlayer}>
+                <input type="text" placeholder="Player Name" value={newPlayer.name} onChange={e => setNewPlayer({ ...newPlayer, name: e.target.value })} required />
+                <select value={newPlayer.rating} onChange={e => setNewPlayer({ ...newPlayer, rating: e.target.value })}>
+                  <option value="1300">A Player (1300)</option>
+                  <option value="1000">B Player (1000)</option>
+                </select>
+                <div className="form-buttons">
+                  <button type="submit">Add Player</button>
+                  <button type="button" onClick={() => setShowNewPlayer(false)}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
           <div className="players-section">
             <div className="available-players">
               <h3>Available Players</h3>
@@ -514,29 +542,6 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                 ))}
               </div>
             </div>
-          </div>
-
-          {showNewPlayer && (
-            <div className="new-player-form">
-              <h3>Register New Player</h3>
-              <form onSubmit={handleNewPlayer}>
-                <input type="text" placeholder="Player Name" value={newPlayer.name} onChange={e => setNewPlayer({ ...newPlayer, name: e.target.value })} required />
-                <select value={newPlayer.rating} onChange={e => setNewPlayer({ ...newPlayer, rating: e.target.value })}>
-                  <option value="1300">A Player (1300)</option>
-                  <option value="1000">B Player (1000)</option>
-                </select>
-                <div className="form-buttons">
-                  <button type="submit">Add Player</button>
-                  <button type="button" onClick={() => setShowNewPlayer(false)}>Cancel</button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          <div className="create-section">
-            <button className="create-tournament-button" onClick={handleGenerate} disabled={submitting || selectedPlayers.length < 2 || !course.trim()}>
-              {submitting ? 'Generating...' : 'Generate Teams'}
-            </button>
           </div>
         </div>
       </div>
