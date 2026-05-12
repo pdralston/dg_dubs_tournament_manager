@@ -301,7 +301,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
                   <div className="login-modal">
                     <h2>Archive Season</h2>
                     {archivePreview && (
-                      <table className="data-table" style={{ marginBottom: '15px' }}>
+                      <table className="data-table archive-preview-table">
                         <tbody>
                           <tr><td>Season Span</td><td>{archivePreview.start_date} — {archivePreview.end_date}</td></tr>
                           <tr><td>Events</td><td>{archivePreview.event_count}</td></tr>
@@ -362,7 +362,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
                 const second = payoutSettings.second_place;
                 const first = pot - second - third;
                 return (
-                  <table className="data-table" style={{ maxWidth: '300px' }}>
+                  <table className="data-table payout-preview-table">
                     <tbody>
                       <tr><td>Total pot</td><td>${pot.toFixed(2)}</td></tr>
                       <tr><td>1st place</td><td>${first.toFixed(2)}</td></tr>
@@ -374,7 +374,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
               })()}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+            <div className="button-row">
               <button className="action-button" onClick={savePayoutDefaults}>Save as Default</button>
               {isCustomPayout && (
                 <button className="action-button secondary" onClick={resetPayoutDefaults}>Reset to Original Default</button>

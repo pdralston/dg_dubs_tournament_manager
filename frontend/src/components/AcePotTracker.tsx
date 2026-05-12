@@ -75,7 +75,7 @@ const AcePotTracker: React.FC<AcePotTrackerProps> = ({ userRole }) => {
       {error && <div className="error-message" role="alert">{error}</div>}
 
       {balance && (
-        <div className="ace-pot-summary">
+        <div className="ace-pot-balance-cards">
           <div className="stat-card">
             <span className="stat-label">Total Balance</span>
             <span className="stat-value">${balance.total?.toFixed(2)}</span>

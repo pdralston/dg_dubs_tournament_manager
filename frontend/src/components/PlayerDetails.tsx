@@ -175,7 +175,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ playerName, onBack }) => 
                 🎯 Ace Pot awarded to <strong>{tournamentModal.ace_pot_recipient}</strong>
               </div>
             )}
-            <button className="action-button" style={{ marginTop: '15px' }} onClick={() => setTournamentModal(null)}>Close</button>
+            <button className="action-button modal-close-button" onClick={() => setTournamentModal(null)}>Close</button>
           </div>
         </div>
       )}

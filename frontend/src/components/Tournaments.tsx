@@ -474,7 +474,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
 
   if (view === 'create') {
     return (
-      <div className="tournament-creation">
+      <div className="page-content tournament-creation">
         <button className="back-button" onClick={backToList}>← Back to Tournaments</button>
         <div className="page-header"><h2>Create Tournament</h2></div>
         {error && <div className="error-message" role="alert">{error}</div>}
@@ -526,7 +526,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
 
             <div className="selected-players">
               <h3>Tournament Players ({selectedPlayers.length})</h3>
-              <div className="ace-pot-summary">Ace Pot Buy-ins: {acePotCount} (${acePotCount}.00)</div>
+              <div className="ace-pot-buy-in-summary">Ace Pot Buy-ins: {acePotCount} (${acePotCount}.00)</div>
               <div className="player-list">
                 {selectedPlayers.map(p => (
                   <div key={p.name} className="player-item selected">
@@ -661,7 +661,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                           ))}
                         </tbody>
                       </table>
-                      <div className="modal-buttons" style={{ marginTop: '15px' }}>
+                      <div className="modal-buttons button-row">
                         <button onClick={() => { const tid = tieModal.tournament_id; setTieModal(null); finishRecord(tid); }}>Skip Payouts</button>
                         <button onClick={submitManualPayouts} disabled={submitting}>
                           {submitting ? 'Applying...' : 'Apply Payouts'}
