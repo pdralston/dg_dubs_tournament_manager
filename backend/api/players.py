@@ -83,3 +83,19 @@ def add_player():
         return jsonify({'name': name, 'rating': rating, 'tournaments_played': 0}), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+
+
+@players_bp.route('/api/players/<name>', methods=['PUT'])
+@login_required
+def rename_player(name):
+    data = request.get_json()
+    if not data or 'new_name' not in data:
+        return jsonify({'error': 'new_name is required'}), 400
+    new_name = data['new_name'].strip()
+    if not new_name:
+        return jsonify({'error': 'New name cannot be empty'}), 400
+    try:
+        _rs().rename_player(name, new_name)
+        return jsonify({'name': new_name, 'old_name': name}), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400

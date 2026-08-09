@@ -345,6 +345,15 @@ main {
   font-weight: 700;
 }
 
+.edit-button {
+  background-color: transparent;
+  border: none;
+}
+
+.edit-button:hover { 
+  background-color: buttonface;
+}
+
 .btn-sm {
   padding: 5px 12px;
   font-size: 12px;

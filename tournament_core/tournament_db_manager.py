@@ -65,6 +65,18 @@ class TournamentDBManager:
             for p in players
         ]
 
+    def update_player_name(self, old_name: str, new_name: str) -> bool:
+        """Rename a player. Returns False if old_name not found or new_name already exists."""
+        player = Player.query.filter(db.func.lower(Player.name) == old_name.lower()).first()
+        if not player:
+            return False
+        existing = Player.query.filter(db.func.lower(Player.name) == new_name.lower()).first()
+        if existing and existing.player_id != player.player_id:
+            raise ValueError(f"Player '{new_name}' already exists")
+        player.name = new_name
+        db.session.commit()
+        return True
+
     def update_player_club_membership(self, player_name: str, is_club_member: bool) -> bool:
         player = Player.query.filter(db.func.lower(Player.name) == player_name.lower()).first()
         if not player:
