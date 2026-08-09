@@ -116,6 +116,26 @@ class TournamentRatingSystem:
         }
         print(f"Added player {name} with initial rating {initial_rating}")
 
+    def rename_player(self, old_name: str, new_name: str):
+        """Rename a player. Updates both in-memory dict and database."""
+        if not self.player_exists(old_name):
+            raise ValueError(f"Player '{old_name}' not found")
+        if not new_name or not new_name.strip():
+            raise ValueError("New name cannot be empty")
+        new_name = new_name.strip()
+        # Check if new name already exists (different player)
+        if self.player_exists(new_name):
+            existing = self.get_player_name(new_name)
+            canonical_old = self.get_player_name(old_name)
+            if existing != canonical_old:
+                raise ValueError(f"Player '{new_name}' already exists")
+
+        canonical_old = self.get_player_name(old_name)
+        self.db_manager.update_player_name(canonical_old, new_name)
+        # Update in-memory dict
+        player_data = self.players.pop(canonical_old)
+        self.players[new_name] = player_data
+
     def update_player_club_membership(self, name: str, is_club_member: bool):
         if not self.player_exists(name):
             raise ValueError(f"Player {name} not found")
