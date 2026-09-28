@@ -1,105 +1,56 @@
-# Disc Golf League Tournament Rating System - Project Context
+# Project Context — DG-Rater
 
-## Current State of the Project
+Quick orientation for anyone (or future-you) picking this project up. For
+detail, see `README.md` (setup/API) and
+`docs/DG-Rater-2.0-Org-Governance-Design.md` (architecture & roadmap).
 
-We've developed a tournament-style rating system for a doubles disc golf league with the following components:
+## What this is
 
-### 1. Core System
+A multi-app disc-golf platform under the **DG-Rater** umbrella, served by one
+Flask backend on a single Elastic Beanstalk instance, backed by one shared
+AWS RDS MySQL instance:
 
-**Tournament-Style Rating System** (`tournament_ratings.py`, `tournament_manager.py`)
-   - Designed for format where all teams compete simultaneously
-   - Teams ranked by total throws (lowest score wins)
-   - Position-based rating adjustments
-   - Ghost player support for odd numbers of players
-   - Optional SQLite database support (`tournament_ratings_db.py`, `tournament_manager_db.py`, `tournament_db_manager.py`)
+- **DG-Dubs** — doubles tournament rating system. Live at https://dg-rater.com.
+- **DG-Tags** — bag-tag tracking. API live; standalone frontend still in dev.
+- **DG-Putt** — putting league. Live at https://putt.dg-rater.com, currently a
+  *separate* project/repo (`../puttingLeague/`) and EB env; consolidation into
+  this backend is planned (design doc Phase 2), not yet done.
 
-### 2. Key Features Implemented
+## Current state (as of 2026-09-27)
 
-- Individual player ratings
-- Team rating calculations
-- Tournament outcome predictions
-- Rating adjustments based on expected vs. actual outcomes
-- Balanced team generation
-- Detailed player history tracking
-- Tournament history recording
-- Ghost player support for odd numbers of players
-- Optional SQLite database storage
+- **Org-level governance (Phase 1) is DEPLOYED to prod.** All domain data is
+  scoped to an organization via an `org_id` column on tenant tables, with a
+  `before_flush` hook that stamps org ownership on writes. Authorization is
+  per-org / per-app via `org_memberships` (roles: admin / director / viewer;
+  plus a `users.is_superuser` platform bypass).
+- The single existing org is **Silicon Valley Disc Golf Club (SVDGC,
+  `org_id=1`)**; all pre-existing data was backfilled to it.
+- Schema is managed by **Alembic / Flask-Migrate** (migrations under
+  `migrations/`). `db.create_all()` is only used for the SQLite test DB.
+- The **URL direction** is path-based, org-first: `dg-rater.com/<org>/<app>`
+  (e.g. `/svdgc/tags`). Not all frontends serve this yet.
 
-### 3. Command-Line Interfaces
+## Layout
 
-- `tournament_manager.py` - For tournament-style system with JSON storage
-- `tournament_manager_db.py` - For tournament-style system with optional database support
+- `backend/app.py` — Flask app factory (`create_app`).
+- `backend/models/` — SQLAlchemy models: `platform.py` (User, Org,
+  OrgMembership, TenantMixin, sessions, PII log), `dubs.py`, `tags.py`.
+- `backend/shared/` — `auth.py` (auth + `require_role`), `org_context.py`
+  (resolve current org), `scoping.py` (org stamping/query helper).
+- `backend/apps/dubs/`, `backend/apps/tags/` — per-app routes + services.
+- `frontend/` (DG-Dubs SPA), `tags-frontend/` (DG-Tags SPA) — React + TS (CRA;
+  migration to Vite planned).
+- `migrations/` — Alembic migration chain.
+- `tests/` — pytest suite (SQLite in-memory).
 
-### 4. Example Scripts
+## Known follow-ups (see design doc §11a for the full list)
 
-- `example_tournament.sh` - Demonstrates the tournament-style system
-- `example_ghost_player.sh` - Demonstrates the ghost player feature
-- `example_db_storage.sh` - Demonstrates the database storage feature
-
-## Next Steps
-
-### 1. Web Interface Development
-
-- Create a simple web interface for easier management
-- Implement Flask/Django backend to expose API endpoints
-- Develop frontend for player management, tournament recording, and statistics
-
-### 2. Enhanced Analytics
-
-- Add statistical analysis of player performance
-- Implement trend visualization for player ratings
-- Calculate player improvement rates and projections
-
-### 3. Course-Specific Adjustments
-
-- Add course difficulty ratings
-- Implement course-specific performance tracking
-- Adjust expected scores based on course difficulty
-
-### 4. Mobile App Integration
-
-- Design a mobile-friendly interface
-- Create API endpoints for mobile app consumption
-- Implement real-time score entry during tournaments
-
-### 5. Advanced Features
-
-- **Handicap System**: Implement a handicap system for more balanced competition
-- **Team Consistency Tracking**: Analyze how consistently teams perform
-- **Player Compatibility Scores**: Determine which players perform best together
-- **Tournament Scheduling**: Add functionality to schedule and manage tournaments
-- **Weather Impact Analysis**: Track how weather conditions affect scores
-
-### 6. Documentation and Testing
-
-- Create comprehensive user documentation
-- Implement unit tests for core functionality
-- Add integration tests for system components
-
-## Technical Debt and Improvements
-
-1. **Error Handling**:
-   - Improve error messages and exception handling
-   - Add input validation for all user inputs
-
-2. **Performance Optimization**:
-   - Optimize data handling for larger datasets
-   - Implement caching for frequently accessed data
-
-3. **Security Enhancements**:
-   - Add user authentication for multi-user environments
-   - Implement proper input sanitization
-
-## Current Working Directory
-
-All project files are located in:
-```
-/Users/pdralsto/workplaces/disc_golf_league
-```
-
-## How to Continue Development
-
-1. Select a next step from the list above
-2. Begin implementation with the existing codebase as a foundation
-
-The most recent work was adding ghost player support for odd numbers of players, which is now fully implemented.
+- Optional hardening: prod DB secrets are plaintext EB env vars (readable by
+  anyone with EB/CFN read on the account). Moving them to SSM/Secrets Manager
+  is a low-priority nice-to-have, not urgent for a solo project. (Command-line
+  exposure during the deploy was on a private machine — not a concern.)
+- In-memory `TournamentRatingSystem` (DG-Dubs read cache) is single-org; must
+  be made per-org before onboarding a 2nd org.
+- Migrate tenant read call-sites to org-scoped queries when multi-org lands.
+- CRA → Vite before the path-based frontend deploy.
+- Phase 2: fold DG-Putt into this backend (rename its tables `putt_*`).
