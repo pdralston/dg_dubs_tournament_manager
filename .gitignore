@@ -149,3 +149,9 @@ database/.env
 !.elasticbeanstalk/*.global.yml
 database/prod_backups/
 docs/DEPLOYMENT.md
+
+# Windows "mark of the web" NTFS metadata (WSL/Windows)
+*:Zone.Identifier
+
+# Editor config (personal)
+.vscode/
