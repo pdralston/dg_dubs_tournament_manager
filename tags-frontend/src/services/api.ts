@@ -80,7 +80,6 @@ export const members = {
     udisc_name?: string;
     current_tag?: number;
     email?: string;
-    phone?: string;
     shipping_address?: string;
     payment_method?: string;
   }) => request<{ member_id: number; name: string; udisc_name: string | null; current_tag: number | null }>(

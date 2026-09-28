@@ -41,13 +41,11 @@ class TestTagMemberManagement:
         resp = director_client.post('/api/tags/members', json={
             'name': 'Bob Baker',
             'email': 'bob@example.com',
-            'phone': '555-1234',
             'shipping_address': '123 Fairway Dr',
         })
         assert resp.status_code == 201
         data = resp.json
         assert 'email' not in data
-        assert 'phone' not in data
         assert 'shipping_address' not in data
 
     def test_create_member_requires_name(self, director_client):
@@ -71,14 +69,12 @@ class TestTagMemberManagement:
         for m in members:
             assert 'email' not in m
             assert 'shipping_address' not in m
-            assert 'phone' not in m
 
     def test_list_members_admin_sees_pii(self, admin_client):
         """Admin can see PII in member list."""
         admin_client.post('/api/tags/members', json={
             'name': 'Diana Duke',
             'email': 'diana@example.com',
-            'phone': '555-9999',
             'shipping_address': '456 Disc Ln',
         })
         resp = admin_client.get('/api/tags/members')
@@ -86,7 +82,6 @@ class TestTagMemberManagement:
         members = resp.json
         diana = next(m for m in members if m['name'] == 'Diana Duke')
         assert diana['email'] == 'diana@example.com'
-        assert diana['phone'] == '555-9999'
         assert diana['shipping_address'] == '456 Disc Ln'
 
     def test_director_cannot_read_pii(self, director_client):

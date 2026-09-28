@@ -37,7 +37,6 @@ class MemberContactInfo(db.Model):
         primary_key=True
     )
     email = db.Column(db.String(255), nullable=True)
-    phone = db.Column(db.String(50), nullable=True)
     shipping_address = db.Column(db.Text, nullable=True)
     payment_method = db.Column(db.String(50), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

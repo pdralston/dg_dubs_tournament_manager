@@ -40,7 +40,6 @@ def get_members():
         # Admin-only: include PII
         if role == 'admin' and m.contact_info:
             entry['email'] = m.contact_info.email
-            entry['phone'] = m.contact_info.phone
             entry['shipping_address'] = m.contact_info.shipping_address
             entry['payment_method'] = m.contact_info.payment_method
             _log_pii_access(m.member_id, 'view')
@@ -107,15 +106,13 @@ def create_member():
 
     # Store PII in separate table
     email = data.get('email')
-    phone = data.get('phone')
     shipping_address = data.get('shipping_address')
     payment_method = data.get('payment_method')
 
-    if email or phone or shipping_address or payment_method:
+    if email or shipping_address or payment_method:
         contact = MemberContactInfo(
             member_id=member.member_id,
             email=email,
-            phone=phone,
             shipping_address=shipping_address,
             payment_method=payment_method,
         )
@@ -162,8 +159,6 @@ def update_member(member_id):
             db.session.add(contact)
         if 'email' in data:
             contact.email = data['email']
-        if 'phone' in data:
-            contact.phone = data['phone']
         if 'shipping_address' in data:
             contact.shipping_address = data['shipping_address']
         if 'payment_method' in data:
@@ -430,11 +425,10 @@ def import_registrations(event_id):
             db.session.flush()
 
             # Store PII
-            if entry.get('email') or entry.get('phone') or entry.get('shipping_address'):
+            if entry.get('email') or entry.get('shipping_address'):
                 contact = MemberContactInfo(
                     member_id=member.member_id,
                     email=entry.get('email'),
-                    phone=entry.get('phone'),
                     shipping_address=entry.get('shipping_address'),
                 )
                 db.session.add(contact)

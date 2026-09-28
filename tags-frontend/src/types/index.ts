@@ -16,7 +16,6 @@ export interface TagMember {
   is_active: boolean;
   // PII fields — only present for admin
   email?: string;
-  phone?: string;
   shipping_address?: string;
   payment_method?: string;
 }

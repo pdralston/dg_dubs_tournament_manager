@@ -602,7 +602,6 @@ def parse_registration_csv(file_content: str) -> List[Dict[str, Any]]:
             'name': name,
             'division': division,
             'email': row.get('Email', '').strip() or None,
-            'phone': row.get('Phone', '').strip() or None,
             'shipping_address': shipping_address or None,
             'pdga_number': row.get('PDGA#', '').strip() or None,
             'previous_tag': prev_tag,
