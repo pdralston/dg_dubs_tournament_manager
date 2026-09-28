@@ -5,14 +5,14 @@ rating history, ace pot, and seasons.
 """
 
 from datetime import datetime
-from .platform import db
+from .platform import db, TenantMixin
 
 
-class Player(db.Model):
+class Player(TenantMixin, db.Model):
     __tablename__ = 'players'
 
     player_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     rating = db.Column(db.Numeric(8, 2), nullable=False, default=1000.00)
     tournaments_played = db.Column(db.Integer, nullable=False, default=0)
     is_club_member = db.Column(db.Boolean, default=False)
@@ -20,11 +20,15 @@ class Player(db.Model):
     lifetime_cash = db.Column(db.Numeric(8, 2), nullable=False, default=0.00)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    __table_args__ = (
+        db.UniqueConstraint('org_id', 'name', name='uq_players_org_name'),
+    )
+
     history = db.relationship('PlayerHistory', backref='player', lazy='dynamic')
     participations = db.relationship('TournamentParticipant', backref='player', lazy='dynamic')
 
 
-class Tournament(db.Model):
+class Tournament(TenantMixin, db.Model):
     __tablename__ = 'tournaments'
 
     tournament_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -42,7 +46,7 @@ class Tournament(db.Model):
     ace_pot_entries = db.relationship('AcePotTracker', backref='tournament', lazy='dynamic')
 
 
-class Team(db.Model):
+class Team(TenantMixin, db.Model):
     __tablename__ = 'teams'
 
     team_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -60,7 +64,7 @@ class Team(db.Model):
     player2 = db.relationship('Player', foreign_keys=[player2_id])
 
 
-class PlayerHistory(db.Model):
+class PlayerHistory(TenantMixin, db.Model):
     __tablename__ = 'player_history'
 
     history_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -76,7 +80,7 @@ class PlayerHistory(db.Model):
     tournament = db.relationship('Tournament', backref='player_histories')
 
 
-class TournamentParticipant(db.Model):
+class TournamentParticipant(TenantMixin, db.Model):
     __tablename__ = 'tournament_participants'
 
     participant_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -89,7 +93,7 @@ class TournamentParticipant(db.Model):
     )
 
 
-class AcePotTracker(db.Model):
+class AcePotTracker(TenantMixin, db.Model):
     __tablename__ = 'ace_pot_tracker'
 
     entry_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -103,14 +107,14 @@ class AcePotTracker(db.Model):
     player = db.relationship('Player', backref='ace_pot_entries')
 
 
-class AcePotConfig(db.Model):
+class AcePotConfig(TenantMixin, db.Model):
     __tablename__ = 'ace_pot_config'
 
     id = db.Column(db.Integer, primary_key=True, default=1)
     cap_amount = db.Column(db.Numeric(10, 2), nullable=False, default=100.00)
 
 
-class Season(db.Model):
+class Season(TenantMixin, db.Model):
     __tablename__ = 'seasons'
 
     season_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

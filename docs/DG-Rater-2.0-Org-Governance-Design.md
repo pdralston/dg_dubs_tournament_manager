@@ -322,12 +322,22 @@ RDS snapshot before any schema change.**
   `dgputt` schema after a retention window.
 
 ### Phase 2.5 — Frontend consolidation to single distribution
+- **Prerequisite — migrate frontends CRA → Vite.** Create React App was
+  deprecated by the React team (Feb 2025) and `react-scripts` is effectively
+  unmaintained. All three SPAs (`frontend/`, `tags-frontend/`, DG-Putt's) are
+  CRA-based. Migrate each to Vite *before* wiring path-based serving, because
+  Vite's `base` option configures the sub-path (`/svdgc/<app>/`) far more
+  cleanly than CRA's `homepage`, so doing CRA path-prefixing first would be
+  throwaway work. Migration is mechanical: new `index.html` entry, rename
+  `REACT_APP_*` env vars to `VITE_*`, swap `react-scripts` for `vite` +
+  `@vitejs/plugin-react`, set `base` per app. This is an independent workstream
+  from the governance backend and does not block Phase 1.
 - Provision (if not already) the single frontend: reuse S3 `dg-rater-com` +
   CloudFront `E1X7Y3M3J92BY0` (the existing dg-rater.com distribution).
-- Build each CRA with its path prefix: Dubs `homepage=/svdgc/dubs` (or root
-  during interim), Tags `homepage=/svdgc/tags`, Putt `homepage=/svdgc/putt`,
-  each with the React Router `basename` set to match. Sync builds into the
-  bucket under those prefixes.
+- Build each app with its path prefix via Vite `base`: Dubs
+  `base=/svdgc/dubs/` (or root during interim), Tags `base=/svdgc/tags/`, Putt
+  `base=/svdgc/putt/`, each with the React Router `basename` set to match. Sync
+  builds into the bucket under those prefixes.
 - Add a landing/directory page at `/` and CloudFront SPA-routing behaviors so
   each `/<org>/<app>/*` path falls back to that app's `index.html`.
 - 301-redirect `putt.dg-rater.com` → `dg-rater.com/svdgc/putt` (CloudFront
@@ -400,15 +410,70 @@ Resolved:
   belongs to Silicon Valley Disc Golf Club (`org_id=1, slug='svdgc'`). (§8)
 - **Putt table naming on merge:** rename to `putt_*`; do not share
   `tournaments`/`teams`/`seasons` across apps. (§7)
+- **Migrations tooling:** Alembic (Flask-Migrate) adopted. `db.create_all()` is
+  now gated to SQLite/tests only; migrations are authoritative for MySQL.
+- **Branch strategy:** DG-Tags merged to `main`; Phase 1 governance built on
+  `org-governance-phase1` branched off `main`.
+- **Read-scoping strategy:** writes are org-stamped now via a `before_flush`
+  hook (correct ownership from day one); read call sites keep plain `.query`
+  for Phase 1 (correct because single-org) and migrate to `tenant_query` /
+  a global filter when org #2 arrives. See Follow-ups.
 
 Open:
-1. Introduce Alembic now (recommended) vs. hand-written SQL migrations.
-2. Confirm the behavior of `RESTORE_FROM_BACKUP=true` on `production` before
+1. Confirm the behavior of `RESTORE_FROM_BACKUP=true` on `production` before
    any redeploy.
-3. Timing/window for DB password + SECRET_KEY rotation (forces re-login).
-4. Sequencing: ship DG-Tags on the current path-based approach first (it needs
-   no new subdomain infra), then start 2.0 Phases — vs. doing governance first.
-   Recommended: ship Tags first from a known-good baseline.
+2. Timing/window for DB password + SECRET_KEY rotation (forces re-login).
+3. Production migration must also `DROP COLUMN phone` on `member_contact_info`
+   (leftover from before the phone-field removal) — include in the prod cutover.
+
+## 11a. Phase 1 Status (implemented on `org-governance-phase1`)
+
+Done and validated locally (50/50 Tags tests pass; migration chain applied to a
+faithful reproduction of prod's starting state via `scripts/prod_rehearsal.sh`):
+- Governance models: `Organization`, `OrgMembership`, `User.is_superuser`.
+- **Prod-ready Alembic chain (3 migrations, in order):**
+  1. `185e089a4a4b` — create `organizations` + `org_memberships`, add
+     `users.is_superuser`, seed SVDGC org (org_id=1).
+  2. `a1b2c3d4e5f6` — create all 7 DG-Tags tables **org-scoped from the start**
+     (org_id + composite uniques baked in). Prod has no tag tables yet, so this
+     creates them fresh.
+  3. `b2f1c3a4d5e6` — add `org_id` to the 8 **DG-Dubs** tables (which hold prod
+     data), backfill to SVDGC, backfill one membership per user, re-scope
+     `players.name` → `(org_id, name)`. All additive/data-safe.
+- `TenantMixin` on all tenant models; org context resolution
+  (`backend/shared/org_context.py`); scoping layer with `before_flush`
+  stamping + cross-org write block (`backend/shared/scoping.py`).
+- Org/app-aware `require_role` + `resolve_membership_role`; back-compat
+  `login_required`/`admin_required` routed through membership; Tags PII gating
+  moved off the raw session cookie to DB-validated membership.
+
+### Production migration runbook (when deploying Phase 1)
+Prod `dg_dubs` today = only the 10 DG-Dubs + auth tables (verified 2026-09-27);
+no tag tables, no governance tables, no `org_id`, no `alembic_version`, no
+`phone` column anywhere. The chain above is built for exactly this state.
+1. **Snapshot RDS** (manual snapshot) before anything.
+2. Run migrations from a properly-authed context (the EB instance, or a host
+   whose IP the RDS security group + MySQL `admin@host` grant allows — note a
+   home IP was denied 2026-09-27).
+3. `flask db upgrade` (applies the 3 migrations). MySQL DDL is non-transactional,
+   so a failure can half-apply — the snapshot is the recovery path.
+4. Verify: `alembic_version = b2f1c3a4d5e6`, SVDGC org present, existing players
+   all `org_id=1`, one membership per user.
+Re-run `scripts/prod_rehearsal.sh` locally anytime to re-validate the path.
+
+### Follow-ups (deferred, not blocking Phase 1)
+- **In-memory `rating_system` is not multi-tenant.** DG-Dubs serves reads from
+  a process-global `TournamentRatingSystem` loaded once at boot. Phase 1 treats
+  it as SVDGC's (Option A). Before onboarding a 2nd org, refactor it to be
+  per-org (keyed by `org_id`, or built per-request) — otherwise orgs would
+  share one rating cache. DG-Dubs *writes* already stamp `org_id` via the flush
+  hook, so the DB is correctly owned; only the in-memory read cache is
+  single-org.
+- **Read call-site scoping.** Migrate tenant reads to `tenant_query` (or add a
+  global scoped-session filter) when multi-org lands.
+- **CRA → Vite** frontend migration before path-based deploy (see §8 Phase 2.5).
+- **SQLAlchemy `Query.get()` legacy warnings** throughout Tags code — cleanup
+  to `db.session.get()` at some point.
 
 ## 12. Appendix — Confirmed Inventory Snapshot (2026-09-27)
 
