@@ -5,10 +5,10 @@ tag distribution history, inventory management, and PII contact info.
 """
 
 from datetime import datetime
-from .platform import db
+from .platform import db, TenantMixin
 
 
-class TagMember(db.Model):
+class TagMember(TenantMixin, db.Model):
     """A member of the bag tag club/organization."""
     __tablename__ = 'tag_members'
 
@@ -42,7 +42,7 @@ class MemberContactInfo(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class TagEvent(db.Model):
+class TagEvent(TenantMixin, db.Model):
     """A bag tag event (annual or monthly)."""
     __tablename__ = 'tag_events'
 
@@ -76,7 +76,7 @@ class TagEvent(db.Model):
         return new_status in self.VALID_TRANSITIONS.get(self.status, [])
 
 
-class TagRegistration(db.Model):
+class TagRegistration(TenantMixin, db.Model):
     """A player/non-player registration for an event."""
     __tablename__ = 'tag_registrations'
 
@@ -96,7 +96,7 @@ class TagRegistration(db.Model):
     )
 
 
-class TagHistory(db.Model):
+class TagHistory(TenantMixin, db.Model):
     """Historical record of tag assignments from finalized events."""
     __tablename__ = 'tag_history'
 
@@ -110,18 +110,22 @@ class TagHistory(db.Model):
     position = db.Column(db.Integer, nullable=True)
 
 
-class TagInventory(db.Model):
+class TagInventory(TenantMixin, db.Model):
     """Organization-level tag inventory for a season (year)."""
     __tablename__ = 'tag_inventory'
 
     inventory_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    season_year = db.Column(db.Integer, nullable=False, unique=True)
+    season_year = db.Column(db.Integer, nullable=False)
     total_tags = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    __table_args__ = (
+        db.UniqueConstraint('org_id', 'season_year', name='uq_tag_inventory_org_season'),
+    )
 
-class TagUnavailable(db.Model):
+
+class TagUnavailable(TenantMixin, db.Model):
     """Individual tag numbers that have been removed from circulation."""
     __tablename__ = 'tag_unavailable'
 
@@ -132,5 +136,8 @@ class TagUnavailable(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        db.UniqueConstraint('season_year', 'tag_number', name='uq_season_tag_unavailable'),
+        db.UniqueConstraint(
+            'org_id', 'season_year', 'tag_number',
+            name='uq_tag_unavailable_org_season_tag',
+        ),
     )

@@ -1,5 +1,6 @@
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
 Flask-WTF==1.1.1
 Flask-Cors==6.0.2
 Werkzeug==2.3.7

@@ -12,10 +12,27 @@ from backend.models import (
     db, TagMember, MemberContactInfo, TagEvent, TagRegistration,
     TagHistory, TagInventory, TagUnavailable, PiiAccessLog,
 )
-from backend.shared.auth import login_required, admin_required
+from backend.shared.auth import login_required, admin_required, resolve_membership_role
 from . import services
 
 tags_bp = Blueprint('tags_api', __name__, url_prefix='/api/tags')
+
+
+def _current_tags_role() -> str:
+    """DB-validated role of the current user within the current org for the
+    'tags' app. Returns 'viewer' when unauthenticated or without membership.
+
+    Replaces the previous reliance on the raw session cookie 'role' value so
+    PII/visibility gating is validated against org membership.
+    """
+    from flask import current_app
+    token = session.get('session_token')
+    if not token:
+        return 'viewer'
+    valid, info = current_app.auth_manager.validate_session(token)
+    if not valid:
+        return 'viewer'
+    return resolve_membership_role(info['user_id'], 'tags') or 'viewer'
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -26,7 +43,7 @@ tags_bp = Blueprint('tags_api', __name__, url_prefix='/api/tags')
 def get_members():
     """List all active members. PII is excluded for non-admin users."""
     members = TagMember.query.filter_by(is_active=True).order_by(TagMember.name).all()
-    role = session.get('role', 'Viewer')
+    role = _current_tags_role()
 
     result = []
     for m in members:
@@ -151,7 +168,7 @@ def update_member(member_id):
         member.is_active = data['is_active']
 
     # PII updates — admin only
-    role = session.get('role', 'Viewer')
+    role = _current_tags_role()
     if role == 'admin':
         contact = MemberContactInfo.query.get(member_id)
         if not contact:
@@ -200,7 +217,7 @@ def get_events():
     List events. Unauthenticated users only see scheduled/in_progress/complete.
     Admins/TDs see all including pending.
     """
-    role = session.get('role', 'Viewer')
+    role = _current_tags_role()
     query = TagEvent.query.order_by(TagEvent.date.desc())
 
     if role not in ('admin', 'director'):
@@ -264,7 +281,7 @@ def get_event(event_id):
         return jsonify({'error': 'Event not found'}), 404
 
     # Check visibility
-    role = session.get('role', 'Viewer')
+    role = _current_tags_role()
     if event.status == 'pending' and role not in ('admin', 'director'):
         return jsonify({'error': 'Event not found'}), 404
 

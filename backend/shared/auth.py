@@ -1,8 +1,14 @@
 """
-Shared authentication module.
+Shared authentication & authorization module.
 
-Provides AuthManager class, login_required and admin_required decorators.
-Shared across all apps (DG-Dubs, DG-Tags, etc.).
+Provides:
+  * AuthManager — password hashing, sessions.
+  * Org/app-aware authorization: resolve a user's role within the current org
+    for a given app, and the ``require_role`` decorator.
+  * Back-compat ``login_required`` / ``admin_required`` decorators, now routed
+    through the org-scoped membership check.
+
+Shared across all apps (DG-Dubs, DG-Tags, DG-Putt).
 """
 
 import hashlib
@@ -11,7 +17,11 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import session, jsonify
-from backend.models import db, User, UserSession
+from backend.models import db, User, UserSession, OrgMembership
+from backend.shared.org_context import current_org_id
+
+# Role ranking for "at least this role" comparisons.
+_ROLE_RANK = {'viewer': 0, 'director': 1, 'admin': 2}
 
 
 def _validate_session_or_fail():
@@ -27,27 +37,81 @@ def _validate_session_or_fail():
     return info, None
 
 
+def resolve_membership_role(user_id: int, app: str):
+    """Return the effective role (str) for ``user_id`` in the current org for
+    ``app``, or None if the user has no qualifying membership.
+
+    Superusers implicitly get 'admin' in any org/app. An app-specific
+    membership takes precedence over a wildcard ('*') membership; the higher
+    role wins if both exist.
+    """
+    user = User.query.filter_by(id=user_id, is_active=True).first()
+    if not user:
+        return None
+    if user.is_superuser:
+        return 'admin'
+
+    oid = current_org_id()
+    memberships = OrgMembership.query.filter(
+        OrgMembership.user_id == user_id,
+        OrgMembership.org_id == oid,
+        OrgMembership.app.in_((app, '*')),
+    ).all()
+    if not memberships:
+        return None
+    # Highest-ranked role among matching memberships.
+    return max((m.role for m in memberships), key=lambda r: _ROLE_RANK.get(r, -1))
+
+
+def require_role(app: str, role: str = 'viewer'):
+    """Decorator: require the caller to hold at least ``role`` in the current
+    org for ``app``.
+
+    Usage:
+        @require_role(app='tags', role='director')
+        @require_role(app='dubs', role='admin')
+    """
+    needed = _ROLE_RANK.get(role, 0)
+
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            info, err = _validate_session_or_fail()
+            if err:
+                return err
+            effective = resolve_membership_role(info['user_id'], app)
+            if effective is None or _ROLE_RANK.get(effective, -1) < needed:
+                return jsonify({'error': 'Insufficient permissions'}), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
 def login_required(f):
-    """Decorator that requires an authenticated admin or director."""
+    """Back-compat: requires an authenticated admin or director in the current
+    org (any app, via wildcard membership).
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         info, err = _validate_session_or_fail()
         if err:
             return err
-        if info.get('role') not in ('admin', 'director'):
+        effective = resolve_membership_role(info['user_id'], '*')
+        if effective not in ('admin', 'director'):
             return jsonify({'error': 'Insufficient permissions'}), 403
         return f(*args, **kwargs)
     return decorated
 
 
 def admin_required(f):
-    """Decorator that requires an admin user."""
+    """Back-compat: requires an admin in the current org."""
     @wraps(f)
     def decorated(*args, **kwargs):
         info, err = _validate_session_or_fail()
         if err:
             return err
-        if info.get('role') != 'admin':
+        effective = resolve_membership_role(info['user_id'], '*')
+        if effective != 'admin':
             return jsonify({'error': 'Admin required'}), 403
         return f(*args, **kwargs)
     return decorated
