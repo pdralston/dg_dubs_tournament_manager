@@ -35,7 +35,24 @@ tags.dg-rater.com                  dg-rater.com
 - **DG-Tags Frontend** — React 19 + TypeScript (CRA) at `tags-frontend/`
 - **Backend** — Flask + SQLAlchemy + PyMySQL, app factory pattern
 - **Database** — MySQL (AWS RDS), shared instance
-- **Auth** — Session-based, roles: Admin / Director / Viewer
+- **Auth** — Session-based (PBKDF2). Authorization is **org- and app-scoped**
+  via memberships (roles: Admin / Director / Viewer), plus a superuser bypass.
+- **Migrations** — Alembic / Flask-Migrate (`migrations/`). `create_all()` is
+  used only for the SQLite test database.
+
+## Multi-Org Governance
+
+All domain data is scoped to an **organization** (`org_id` on every tenant
+table). Users hold per-org, per-app roles via `org_memberships`, so the same
+identity can be an admin of one org's app and a viewer elsewhere. A
+`before_flush` hook stamps `org_id` on writes; reads are org-filtered as
+multi-org support rolls out.
+
+Today there is a single org — **Silicon Valley Disc Golf Club (SVDGC)** — and
+all existing data belongs to it. The target URL scheme is path-based and
+org-first: `dg-rater.com/<org>/<app>` (e.g. `/svdgc/tags`). See
+`docs/DG-Rater-2.0-Org-Governance-Design.md` for the full design, migration
+history, and roadmap (DG-Putt consolidation, frontend consolidation, hardening).
 
 ## Features
 

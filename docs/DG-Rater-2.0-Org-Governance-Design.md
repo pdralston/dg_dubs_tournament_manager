@@ -426,17 +426,21 @@ Open:
 3. Production migration must also `DROP COLUMN phone` on `member_contact_info`
    (leftover from before the phone-field removal) — include in the prod cutover.
 
-## 11a. Phase 1 Status (implemented on `org-governance-phase1`)
+## 11a. Phase 1 Status — DEPLOYED TO PROD 2026-09-27
 
-Done and validated locally (50/50 Tags tests pass; migration chain applied to a
-faithful reproduction of prod's starting state via `scripts/prod_rehearsal.sh`):
+Merged to `main` and deployed to the `production` EB env on 2026-09-27.
+Prod DB migrated (snapshot-gated, migrate-first, zero downtime) and verified.
+
+Validated locally (50/50 Tags tests pass; migration chain rehearsed against a
+faithful reproduction of prod's starting state via `scripts/prod_rehearsal.sh`)
+AND in prod (see as-executed record below):
 - Governance models: `Organization`, `OrgMembership`, `User.is_superuser`.
 - **Prod-ready Alembic chain (3 migrations, in order):**
   1. `185e089a4a4b` — create `organizations` + `org_memberships`, add
      `users.is_superuser`, seed SVDGC org (org_id=1).
   2. `a1b2c3d4e5f6` — create all 7 DG-Tags tables **org-scoped from the start**
-     (org_id + composite uniques baked in). Prod has no tag tables yet, so this
-     creates them fresh.
+     (org_id + composite uniques baked in). Prod had no tag tables yet, so this
+     created them fresh.
   3. `b2f1c3a4d5e6` — add `org_id` to the 8 **DG-Dubs** tables (which hold prod
      data), backfill to SVDGC, backfill one membership per user, re-scope
      `players.name` → `(org_id, name)`. All additive/data-safe.
@@ -446,20 +450,44 @@ faithful reproduction of prod's starting state via `scripts/prod_rehearsal.sh`):
 - Org/app-aware `require_role` + `resolve_membership_role`; back-compat
   `login_required`/`admin_required` routed through membership; Tags PII gating
   moved off the raw session cookie to DB-validated membership.
+- App-factory boot seeds the admin *and* grants it a default-org membership
+  (otherwise a fresh-env admin would 403 on every route).
 
-### Production migration runbook (when deploying Phase 1)
-Prod `dg_dubs` today = only the 10 DG-Dubs + auth tables (verified 2026-09-27);
-no tag tables, no governance tables, no `org_id`, no `alembic_version`, no
-`phone` column anywhere. The chain above is built for exactly this state.
-1. **Snapshot RDS** (manual snapshot) before anything.
-2. Run migrations from a properly-authed context (the EB instance, or a host
-   whose IP the RDS security group + MySQL `admin@host` grant allows — note a
-   home IP was denied 2026-09-27).
-3. `flask db upgrade` (applies the 3 migrations). MySQL DDL is non-transactional,
-   so a failure can half-apply — the snapshot is the recovery path.
-4. Verify: `alembic_version = b2f1c3a4d5e6`, SVDGC org present, existing players
-   all `org_id=1`, one membership per user.
-Re-run `scripts/prod_rehearsal.sh` locally anytime to re-validate the path.
+### As-executed prod deployment record (2026-09-27)
+Prod `dg_dubs` before: only the 10 DG-Dubs + auth tables; no tag tables,
+governance tables, `org_id`, `alembic_version`, or `phone` column.
+
+Steps actually run:
+1. Manual RDS snapshot `dgputt-db-pre-phase1-20260927` (Status: available).
+   NOTE: `dgputt-db` is the SHARED instance — this snapshot also captures the
+   DG-Putt `dgputt` schema; a restore rolls back both apps.
+2. Migrations run **from the local machine** against prod RDS (home IP + the
+   real `admin` password authenticate fine — an earlier "access denied" was a
+   placeholder-password mistake, NOT a network/IP restriction). Set
+   `DATABASE_URL=mysql+pymysql://admin:<pw>@dgputt-db...:3306/dg_dubs`,
+   `flask db upgrade` while the OLD backend was still running (additive schema
+   is backward-compatible → no downtime window).
+3. Verified: `flask db current` = `b2f1c3a4d5e6`; SVDGC org seeded; 4 prod users
+   (admin→admin, DRoc101/kelly/lechuga→director) each got `(org 1, '*', role)`
+   membership; `players` all `org_id=1`; all 20 tables present.
+4. Merged `org-governance-phase1` → `main`; `eb deploy` from project root
+   (`.elasticbeanstalk/` is at ROOT for D-Rater; note DG-Putt's is under
+   `backend/`). Deploy completed successfully.
+5. Prod smoke tests PASSED: `GET /api/tags/standings` → `[]` (Tags API live);
+   `GET /api/players` → real data (Dubs reads OK); live login as admin/director
+   works under org-membership auth (existing users not locked out).
+
+Re-run `scripts/prod_rehearsal.sh` locally anytime to re-validate the path
+(script is NOT tracked in git — local-only).
+
+### Post-deploy loose ends
+- **Optional secrets hardening (low priority).** `DB_PASSWORD` / `ADMIN_PASSWORD`
+  are plaintext EB env vars (and are the same value); moving them to SSM /
+  Secrets Manager would add encryption-at-rest + auditing. Not urgent for a
+  solo project. Command-line exposure during the 2026-09-27 deploy was on a
+  private personal machine (WSL only) and is not itself a reason to rotate.
+- Delete snapshot `dgputt-db-pre-phase1-20260927` after a few clean days.
+- EB platform version is behind the recommended one (pre-existing nag).
 
 ### Follow-ups (deferred, not blocking Phase 1)
 - **In-memory `rating_system` is not multi-tenant.** DG-Dubs serves reads from
