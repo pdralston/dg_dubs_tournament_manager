@@ -3,10 +3,14 @@ Shared authentication & authorization module.
 
 Provides:
   * AuthManager — password hashing, sessions.
-  * Org/app-aware authorization: resolve a user's role within the current org
-    for a given app, and the ``require_role`` decorator.
-  * Back-compat ``login_required`` / ``admin_required`` decorators, now routed
-    through the org-scoped membership check.
+  * Two-axis authorization (§13):
+      - App axis: ``resolve_membership_role`` + ``require_role`` gate access
+        within a single app (admin/director; absence = viewer).
+      - Governance axis: ``resolve_org_role`` + ``require_org_role`` gate
+        org-wide owner/manager powers. A governance role derives app-admin on
+        every subscribed app.
+  * Back-compat ``login_required`` / ``admin_required`` decorators, routed
+    through the governance + membership checks (no wildcard).
 
 Shared across all apps (DG-Dubs, DG-Tags, DG-Putt).
 """
@@ -17,11 +21,26 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import session, jsonify
-from backend.models import db, User, UserSession, OrgMembership
+from backend.models import db, User, UserSession, OrgMembership, OrgRole
 from backend.shared.org_context import current_org_id
 
-# Role ranking for "at least this role" comparisons.
-_ROLE_RANK = {'viewer': 0, 'director': 1, 'admin': 2}
+# App-axis role ranking for "at least this role" comparisons (§13).
+# 'viewer' is no longer a grantable role — absence of a membership *is* viewer.
+_ROLE_RANK = {'director': 0, 'admin': 1}
+
+# Governance-axis ranking (owner outranks manager).
+_ORG_ROLE_RANK = {'manager': 0, 'owner': 1}
+
+
+def subscribed_apps(org_id: int):
+    """Apps an org is entitled to use.
+
+    Stub for the deferred entitlements work (§13.8 / future
+    ``org_app_subscriptions``): returns all apps for every org for now. This is
+    the single seam the derived-admin rule reads, so nothing else changes when
+    real subscriptions land.
+    """
+    return ('dubs', 'tags', 'putt')
 
 
 def _validate_session_or_fail():
@@ -37,13 +56,25 @@ def _validate_session_or_fail():
     return info, None
 
 
-def resolve_membership_role(user_id: int, app: str):
-    """Return the effective role (str) for ``user_id`` in the current org for
-    ``app``, or None if the user has no qualifying membership.
+def resolve_org_role(user_id: int):
+    """Return the governance role ('owner'/'manager') for ``user_id`` in the
+    current org, or None. Superusers are not special-cased here (they are
+    handled at the app-role layer)."""
+    oid = current_org_id()
+    row = OrgRole.query.filter_by(org_id=oid, user_id=user_id).first()
+    return row.role if row else None
 
-    Superusers implicitly get 'admin' in any org/app. An app-specific
-    membership takes precedence over a wildcard ('*') membership; the higher
-    role wins if both exist.
+
+def resolve_membership_role(user_id: int, app: str):
+    """Return the effective app-axis role (str) for ``user_id`` in the current
+    org for ``app``, or None if the user has no qualifying access.
+
+    Resolution order (§13.5):
+      1. Superuser → 'admin' (platform bypass, unchanged).
+      2. A governance role (owner/manager) in the current org derives 'admin'
+         on every *subscribed* app — no per-app membership row required.
+      3. Otherwise the explicit ``org_memberships`` row for that app
+         (admin/director), or None.
     """
     user = User.query.filter_by(id=user_id, is_active=True).first()
     if not user:
@@ -52,20 +83,22 @@ def resolve_membership_role(user_id: int, app: str):
         return 'admin'
 
     oid = current_org_id()
-    memberships = OrgMembership.query.filter(
-        OrgMembership.user_id == user_id,
-        OrgMembership.org_id == oid,
-        OrgMembership.app.in_((app, '*')),
-    ).all()
-    if not memberships:
-        return None
-    # Highest-ranked role among matching memberships.
-    return max((m.role for m in memberships), key=lambda r: _ROLE_RANK.get(r, -1))
+
+    # (2) Derived app-admin for governance-tier users on subscribed apps.
+    if resolve_org_role(user_id) is not None and app in subscribed_apps(oid):
+        return 'admin'
+
+    # (3) Explicit per-app membership.
+    m = OrgMembership.query.filter_by(
+        org_id=oid, user_id=user_id, app=app,
+    ).first()
+    return m.role if m else None
 
 
-def require_role(app: str, role: str = 'viewer'):
+def require_role(app: str, role: str = 'director'):
     """Decorator: require the caller to hold at least ``role`` in the current
-    org for ``app``.
+    org for ``app``. There is no viewer gate anymore — public endpoints drop
+    the decorator entirely.
 
     Usage:
         @require_role(app='tags', role='director')
@@ -87,33 +120,70 @@ def require_role(app: str, role: str = 'viewer'):
     return decorator
 
 
+def require_org_role(role: str = 'manager'):
+    """Decorator: require the caller to hold at least the governance role
+    ``role`` (owner > manager) in the current org. Superusers bypass.
+
+    Scaffolding for future ``/api/org/*`` governance endpoints (§13.8); not yet
+    attached to any route.
+    """
+    needed = _ORG_ROLE_RANK.get(role, 0)
+
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            info, err = _validate_session_or_fail()
+            if err:
+                return err
+            user = User.query.filter_by(id=info['user_id'], is_active=True).first()
+            if user and user.is_superuser:
+                return f(*args, **kwargs)
+            effective = resolve_org_role(info['user_id'])
+            if effective is None or _ORG_ROLE_RANK.get(effective, -1) < needed:
+                return jsonify({'error': 'Insufficient permissions'}), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
 def login_required(f):
-    """Back-compat: requires an authenticated admin or director in the current
-    org (any app, via wildcard membership).
+    """Back-compat: requires an authenticated user with *some* access in the
+    current org — a governance role or any app membership (§13.5).
     """
     @wraps(f)
     def decorated(*args, **kwargs):
         info, err = _validate_session_or_fail()
         if err:
             return err
-        effective = resolve_membership_role(info['user_id'], '*')
-        if effective not in ('admin', 'director'):
+        uid = info['user_id']
+        user = User.query.filter_by(id=uid, is_active=True).first()
+        has_access = bool(
+            (user and user.is_superuser)
+            or resolve_org_role(uid) is not None
+            or OrgMembership.query.filter_by(
+                org_id=current_org_id(), user_id=uid,
+            ).first() is not None
+        )
+        if not has_access:
             return jsonify({'error': 'Insufficient permissions'}), 403
         return f(*args, **kwargs)
     return decorated
 
 
 def admin_required(f):
-    """Back-compat: requires an admin in the current org."""
+    """Back-compat: requires an org-admin equivalent in the current org — a
+    superuser or any governance-tier (owner/manager) holder (§13.5).
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         info, err = _validate_session_or_fail()
         if err:
             return err
-        effective = resolve_membership_role(info['user_id'], '*')
-        if effective != 'admin':
-            return jsonify({'error': 'Admin required'}), 403
-        return f(*args, **kwargs)
+        uid = info['user_id']
+        user = User.query.filter_by(id=uid, is_active=True).first()
+        if (user and user.is_superuser) or resolve_org_role(uid) is not None:
+            return f(*args, **kwargs)
+        return jsonify({'error': 'Admin required'}), 403
     return decorated
 
 

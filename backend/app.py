@@ -83,7 +83,7 @@ def create_app():
         try:
             rating_system.load_data()
 
-            from backend.models import User, Organization, OrgMembership
+            from backend.models import User, Organization, OrgRole
             from backend.shared.org_context import DEFAULT_ORG_ID, DEFAULT_ORG_SLUG
             admin_user = os.environ.get('ADMIN_USERNAME')
             admin_pass = os.environ.get('ADMIN_PASSWORD')
@@ -92,9 +92,12 @@ def create_app():
                     success, msg = auth_manager.create_user(admin_user, admin_pass, 'admin')
                     if success:
                         print(f"Admin user '{admin_user}' created successfully")
-                        # The seeded admin needs a membership in the default org,
-                        # otherwise org-aware auth would 403 them on every route.
-                        # Ensure the default org exists, then grant admin/'*'.
+                        # The seeded admin needs governance power in the default
+                        # org, otherwise org-aware auth would 403 them on every
+                        # route. Ensure the default org exists, then grant the
+                        # org-wide 'owner' role (§13.6) — the admin's all-apps
+                        # power is derived from this governance role, so no
+                        # per-app membership rows are seeded.
                         org = db.session.get(Organization, DEFAULT_ORG_ID)
                         if org is None:
                             org = Organization(
@@ -104,12 +107,12 @@ def create_app():
                             db.session.add(org)
                             db.session.flush()
                         new_admin = User.query.filter_by(username=admin_user).first()
-                        if new_admin and OrgMembership.query.filter_by(
-                            org_id=DEFAULT_ORG_ID, user_id=new_admin.id, app='*'
+                        if new_admin and OrgRole.query.filter_by(
+                            org_id=DEFAULT_ORG_ID, user_id=new_admin.id
                         ).first() is None:
-                            db.session.add(OrgMembership(
+                            db.session.add(OrgRole(
                                 org_id=DEFAULT_ORG_ID, user_id=new_admin.id,
-                                app='*', role='admin',
+                                role='owner',
                             ))
                         db.session.commit()
         except Exception as exc:  # noqa: BLE001 — tolerate unmigrated/unavailable DB at construction

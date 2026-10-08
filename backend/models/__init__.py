@@ -8,7 +8,7 @@ Other modules should import from here:
 
 # Platform (shared)
 from .platform import (  # noqa: F401
-    db, User, UserSession, PiiAccessLog, Organization, OrgMembership, TenantMixin,
+    db, User, UserSession, PiiAccessLog, Organization, OrgMembership, OrgRole, TenantMixin,
 )
 
 # DG-Dubs

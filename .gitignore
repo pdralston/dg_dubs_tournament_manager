@@ -142,6 +142,8 @@ __pycache__/
 # Environment files with credentials
 .env
 database/.env
+# Stray dotless env file (DB credentials; not caught by the .env rule above)
+/env
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
@@ -155,3 +157,7 @@ docs/DEPLOYMENT.md
 
 # Editor config (personal)
 .vscode/
+
+# Kiro CLI tool bundle (not part of this project)
+/kirocli/
+/kirocli.zip

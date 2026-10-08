@@ -24,12 +24,56 @@ class Organization(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     memberships = db.relationship('OrgMembership', backref='organization', lazy='dynamic')
+    org_roles = db.relationship('OrgRole', backref='organization', lazy='dynamic')
+
+
+class OrgRole(db.Model):
+    """Governance-tier role: org-wide, cross-app (§13).
+
+    This is a *distinct axis* from the per-app ``OrgMembership`` ladder — not a
+    higher rung on it. Owners/managers manage other org users and derive
+    app-admin on every subscribed app (see ``resolve_membership_role``); they
+    hold no ``app`` column because their power is org-wide.
+
+      * owner   — manage owners+managers, provision app users, (future) billing.
+      * manager — manage other managers, provision app users; no billing.
+
+    At most one governance role per user per org (UNIQUE(org_id, user_id)).
+    This is a governance table: it references an org but is not org-stamped by
+    the tenant flush hook; it is written only by the seed/migration and (future)
+    governance endpoints.
+    """
+    __tablename__ = 'org_roles'
+
+    org_role_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.org_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    role = db.Column(
+        db.Enum('owner', 'manager', name='org_governance_role_enum'),
+        nullable=False,
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('org_id', 'user_id', name='uq_org_user_role'),
+    )
 
 
 class OrgMembership(db.Model):
-    """A user's role within an org, optionally scoped to a single app.
+    """A user's role within an org, scoped to a single app (§13).
 
-    app='*' grants the role across all apps in the org.
+    One row per ``(user, app)``. A multi-app user holds multiple rows — one per
+    app — each with its own role; there is no wildcard. Per-row storage is what
+    makes "no cross-app visibility" fall out for free and preserves the
+    per-app authz check and the ``(org_id, user_id, app)`` unique constraint.
+
+      * admin    — full CRUD within that one app (incl. PII/inventory) and may
+        grant/revoke admin & director memberships for that app only.
+      * director — event/data operations within one app; PII write-blind (Tags).
+
+    ``viewer`` is not a grantable role: "viewer" means *no membership* (anyone,
+    including unauthenticated users). The ``'*'`` wildcard is likewise gone —
+    its sole prior use ("org admin") is now the ``OrgRole`` governance tier.
     """
     __tablename__ = 'org_memberships'
 
@@ -37,12 +81,12 @@ class OrgMembership(db.Model):
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.org_id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     app = db.Column(
-        db.Enum('dubs', 'tags', 'putt', '*', name='org_app_enum'),
-        nullable=False, default='*',
+        db.Enum('dubs', 'tags', 'putt', name='org_app_enum'),
+        nullable=False,
     )
     role = db.Column(
-        db.Enum('admin', 'director', 'viewer', name='org_role_enum'),
-        nullable=False, default='viewer',
+        db.Enum('admin', 'director', name='org_role_enum'),
+        nullable=False,
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
