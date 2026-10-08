@@ -514,3 +514,233 @@ Re-run `scripts/prod_rehearsal.sh` locally anytime to re-validate the path
 - `production` env: SingleInstance t3.micro, `DB_NAME=dg_dubs`,
   `RESTORE_FROM_BACKUP=true`.
 - `dgputt-api` env: `DB_NAME=dgputt`.
+
+## 13. Org-Role Tier & AuthZ Refinement (design — pending implementation)
+
+**Status:** SCAFFOLDING IMPLEMENTED (local), not yet deployed to prod.
+Supersedes the role model in §6.1–6.3 and the `org_memberships` shape in §5.1.
+Drafted 2026-10-06; implemented 2026-10-07 (see §13.10 As-built). Scope of
+*this* change is **scaffolding + migrations only** — the schema, model classes,
+auth helpers, and a reversible Alembic migration. Governance *endpoints*
+(`/api/org/*`), entitlements/subscriptions, billing, and all frontend work are
+explicitly deferred.
+
+### 13.1 Motivation
+
+§6 modeled a single flat role ladder (`admin > director > viewer`) scoped per
+app, and used an `app='*'` wildcard membership to approximate "admin across the
+whole org." Requirements have since clarified an **org-governance tier that is
+a distinct axis from app operation**, not a higher rung on the same ladder:
+
+- Org-level accounts (Owner/Manager) manage *other org users*, provision app
+  users across apps, and hold billing/subscription powers (future). These are
+  **cross-app, org-wide** capabilities.
+- App-level accounts (Admin/Director) operate **within a single app** and have
+  **no cross-app visibility**.
+
+Because "create app users in any subscribed app" is a cross-app power while an
+app Admin is explicitly single-app, the two cannot be one monotonic enum. They
+are two axes. Hence a separate `org_roles` table rather than extending
+`org_role_enum` with `owner`/`manager`.
+
+### 13.2 Role model (replaces §6.1)
+
+**Governance axis — `org_roles` (NEW):** org-wide, no app column.
+
+| Role | Capabilities |
+|------|-------------|
+| **owner** | Create/edit/delete owners and managers. Provision app users (admin/director) in any subscribed app. Derives app-admin on every subscribed app. Billing + subscription-tier editing *(future, not in this change)*. |
+| **manager** | Create/edit other managers; delete own account. Provision app users in any subscribed app. Derives app-admin on every subscribed app. Cannot manage owners. No billing/subscription powers. |
+
+Owner and Manager have **identical app power** (admin on all subscribed apps);
+they differ only in governance scope (who they can manage; future billing).
+
+**App axis — `org_memberships` (MODIFIED):** one row per `(user, app)`.
+
+| Role | Capabilities |
+|------|-------------|
+| **admin** | Full account + data CRUD within that one app, incl. PII/inventory, and create/edit/revoke admin & director memberships **for that app only**. No cross-app visibility. |
+| **director** | Event/data operations within one app; PII write-blind (Tags). |
+
+- **`viewer` is removed as a grantable role.** "Viewer" = *no membership* =
+  anyone, including unauthenticated users. Public-read endpoints are
+  unauthenticated (no decorator), not `require_role(..., 'viewer')`.
+- **`app='*'` wildcard is removed.** Its sole prior use ("org admin") is now
+  the `org_roles` tier.
+- **Multi-app users** (e.g. a TD running both Tags and Dubs) are **one `User`
+  (one login) with multiple membership rows** — one per app, each with its own
+  role. The frontend presents these as a single identity with per-app role
+  chips. We deliberately do **not** fold apps into a list column: per-row
+  storage preserves independent per-app roles, the per-app authz check, and
+  the `(org_id, user_id, app)` unique constraint, and is what makes
+  "no cross-app visibility" fall out for free.
+
+### 13.3 Provisioning rules (who can grant what)
+
+| Actor | Can grant / manage |
+|-------|--------------------|
+| Owner | app memberships (admin/director) in **any subscribed app**; `org_roles` owner/manager rows. |
+| Manager | app memberships (admin/director) in **any subscribed app**; `org_roles` manager rows only. |
+| App Admin | app memberships (admin/director) **for their own app only**. Cannot touch other apps or the governance tier. |
+| App Director | none. |
+
+Consequence (confirmed): a dual-app TD's Tags row is editable by a Tags Admin
+or an Owner/Manager; the Dubs row needs a Dubs Admin or Owner/Manager. App
+admins never see or edit rows for apps they don't administer.
+
+### 13.4 Schema changes
+
+```
+org_roles                        -- NEW: governance tier, org-wide
+  org_role_id       INT PK AUTO_INCREMENT
+  org_id            INT FK -> organizations(org_id)
+  user_id           INT FK -> users(id)
+  role              ENUM('owner','manager')
+  created_at        DATETIME
+  UNIQUE(org_id, user_id)        -- at most one governance role per user per org
+
+org_memberships                  -- MODIFIED
+  app               ENUM('dubs','tags','putt')     -- '*' REMOVED
+  role              ENUM('admin','director')        -- 'viewer' REMOVED
+  (unchanged: membership_id PK, org_id FK, user_id FK, created_at,
+   UNIQUE(org_id, user_id, app))
+```
+
+Global/non-tenant: `org_roles` has no `org_id`-stamping via the tenant hook —
+it *references* an org but is a governance table, written only by governance
+endpoints (future) and the seed/migration.
+
+### 13.5 Auth-layer changes (`backend/shared/auth.py`)
+
+- `_ROLE_RANK` → `{'director': 0, 'admin': 1}` (viewer removed).
+- `resolve_membership_role(user_id, app)` new order:
+  1. superuser → `'admin'` (unchanged platform bypass).
+  2. **if the user holds any `org_roles` row (owner/manager) in the current
+     org AND `app in subscribed_apps(org)` → `'admin'`** (derived; no app row
+     needed).
+  3. else the explicit `org_memberships` row for that app (admin/director), or
+     `None`.
+- `require_role(app, role)` default changes from `'viewer'` to `'director'`
+  (there is no viewer gate anymore; public endpoints drop the decorator).
+- **NEW** `require_org_role(role='manager')` decorator — gates future
+  governance endpoints; owner outranks manager. Built now as scaffolding, not
+  yet attached to any route.
+- Back-compat `login_required` / `admin_required` currently resolve via the
+  `'*'` wildcard. Repoint them: `admin_required` → superuser or any `org_roles`
+  holder (org-admin equivalent); `login_required` → same OR any app membership.
+  This keeps the seeded operator working after the wildcard is retired.
+- **`subscribed_apps(org_id)` stub (NEW):** returns `('dubs','tags','putt')`
+  for all orgs for now. This is the *single* seam for the deferred entitlements
+  work (§ future `org_app_subscriptions`); the derived-admin rule in step (2)
+  reads it so nothing has to change there when real subscriptions land.
+
+### 13.6 `app.py` seed change
+
+Stop seeding `OrgMembership(app='*', role='admin')` for the bootstrap admin.
+Instead seed `OrgRole(org_id=1, user_id=<admin>, role='owner')`. The admin's
+all-apps power becomes derived (§13.5 step 2).
+
+### 13.7 Migration plan (Alembic)
+
+New revision `c3d4e5f6a7b8` *(id TBD at creation)*, `down_revision =
+'b2f1c3a4d5e6'` (current head). All steps reversible. **MySQL ENUM alters and a
+governance-row data migration against the prod-deployed schema — review
+required before `flask db upgrade` is run anywhere.**
+
+`upgrade()`:
+1. `create_table('org_roles', ...)` with the FK/unique above.
+2. **Data migration (before enum narrowing):** for each existing
+   `org_memberships` row with `app='*'`, insert an equivalent `org_roles` row —
+   `role='owner'` if membership role was `admin`, else `role='manager'` — then
+   delete the `'*'` row. (Today this is exactly one row: the seeded SVDGC
+   admin → owner.) Any `role='viewer'` membership rows, if present, are deleted
+   (viewer is no longer a grant; those users become implicit viewers).
+3. `ALTER` `org_app_enum` → `('dubs','tags','putt')` and `org_role_enum` →
+   `('admin','director')`, and drop the `server_default='*'` / `'viewer'`
+   defaults. (MySQL in-place `MODIFY COLUMN`; safe only *after* step 2 has
+   removed all `'*'`/`'viewer'` values, else the alter fails — ordering is
+   deliberate.)
+
+`downgrade()` (reverse order):
+1. Re-widen both enums to include `'*'` / `'viewer'`, restore defaults.
+2. For each `org_roles` row, re-insert the `org_memberships('*', ...)` row
+   (owner→admin, manager→director), then drop `org_roles` rows.
+3. `drop_table('org_roles')`.
+
+**Pre-flight check to run before upgrade (read-only):** confirm the only
+`app='*'` rows in prod are the expected seeded admin(s), and enumerate any
+`role='viewer'` rows so their deletion is intentional:
+```sql
+SELECT membership_id, org_id, user_id, app, role FROM org_memberships
+WHERE app = '*' OR role = 'viewer';
+```
+
+### 13.8 Explicitly deferred (not in this change)
+
+- `org_app_subscriptions` entitlement table + enforcement (stubbed by
+  `subscribed_apps()` returning all apps).
+- Billing / subscription-tier editing (owner power, future).
+- `/api/org/*` governance endpoints (user provisioning, org-user management).
+  `require_org_role` is built but attached to nothing yet.
+- All frontend work (org-role UI, per-app role chips, path-based routing).
+- **Superuser enablement UI.** The platform `users.is_superuser` bypass is
+  honored everywhere in the auth layer (see §13.10), but there is no code path
+  that *grants* it — no seed, no endpoint. Setting it is a manual DB flag
+  (`UPDATE users SET is_superuser=1 WHERE username=...`) until a future admin
+  portal exposes user management. Acceptable while the project has a single
+  solo site admin.
+
+### 13.9 Open items — RESOLVED
+
+- **Revision id / filename convention:** used `c3d4e5f6a7b8` (continues the
+  hand-chosen hex-slug style of the prior migrations; the id is cosmetic —
+  only `down_revision` linkage is functional).
+- **Legacy duplicate tree:** confirmed dead (not imported by the app factory;
+  cross-refs were internal to the tree) and DELETED in this change
+  (`backend/api/`, `backend/auth.py`, and the top-level `tournament_core/` +
+  `tournament_manager.py` it depended on).
+
+### 13.10 As-built (implemented 2026-10-07, local only)
+
+Implemented on `backend/venv` (py3.12); Flask-Migrate 4.0.5 + alembic 1.20.0
+were installed (declared in `backend/requirements.txt` but missing from this
+machine's venv).
+
+Code changes:
+- `backend/models/platform.py` — new `OrgRole` (`org_role_id` PK, `org_id` FK,
+  `user_id` FK, `role` Enum(`owner`,`manager`, `org_governance_role_enum`),
+  `UNIQUE(org_id,user_id)`). `OrgMembership` narrowed: `app`
+  Enum(`dubs`,`tags`,`putt`), `role` Enum(`admin`,`director`), server defaults
+  dropped. `OrgRole` exported from `backend/models/__init__.py`.
+- `backend/shared/auth.py` — `_ROLE_RANK={director:0,admin:1}`,
+  `_ORG_ROLE_RANK={manager:0,owner:1}`; `subscribed_apps()` stub (all apps);
+  `resolve_org_role()`; `resolve_membership_role()` order (superuser→admin;
+  governance holder + app∈subscribed→admin; else explicit per-app row);
+  `require_role` default `director`; new `require_org_role()`; back-compat
+  `login_required`/`admin_required` repointed off the wildcard.
+- `backend/app.py` — bootstrap admin seeded as `OrgRole(owner)` instead of
+  `OrgMembership(app='*')`.
+- `tests/conftest.py` — admin fixture → `OrgRole(owner)`; director fixture →
+  per-app `OrgMembership` rows.
+- Migration `migrations/versions/c3d4e5f6a7b8_org_role_tier.py`
+  (`down_revision='b2f1c3a4d5e6'`). Dual-dialect: MySQL `ALTER … MODIFY COLUMN`
+  for the enum narrow + default drop; SQLite `batch_alter_table`. Ordered:
+  create `org_roles` → migrate `'*'` memberships to `org_roles`
+  (admin→owner, director→manager) + delete `'*'`/`'viewer'` rows → narrow enums.
+
+**Superuser bypass is intact.** `users.is_superuser` is honored at all four
+authz entry points (`resolve_membership_role`, `require_org_role`,
+`login_required`, `admin_required`), granting admin across every org/app and
+bypassing membership/governance lookups. NOTE: the flag defaults to false
+(backfilled by `185e089a4a4b`), so the prod admin is currently an org `owner`
+of SVDGC (equivalent while single-org) but **not** a platform superuser. Set
+the flag manually (§13.8) to get the cross-org platform bypass before org #2.
+
+Verification: rehearsed the full chain (`185e089a4a4b → a1b2c3d4e5f6 →
+b2f1c3a4d5e6 → c3d4e5f6a7b8`) against a real local MySQL 8.4 dev DB reset to a
+pre-governance state. `upgrade` produced owner + N managers, narrowed enums,
+dropped defaults; `downgrade` losslessly restored the `'*'` memberships and
+widened enums; re-upgrade idempotent. Pytest 50/50 pass.
+
+**Not yet done:** prod migration (snapshot-gated deploy, separate step; run the
+§13.7 pre-flight check first), and everything in §13.8.
