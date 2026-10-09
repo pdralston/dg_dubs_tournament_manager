@@ -7,9 +7,12 @@ Create Date: 2026-10-07
 Implements the §13 Org-Role Tier scaffolding:
 
   * NEW governance table ``org_roles`` (org-wide owner/manager, no app column).
-  * Data-migrate the legacy ``app='*'`` memberships into ``org_roles``
-    (admin -> owner, director -> manager), then delete the '*' rows. Delete any
-    ``role='viewer'`` membership rows (viewer is no longer a grant).
+  * Data-migrate the legacy ``app='*'`` memberships onto the new two-axis
+    model: ``('*','admin')`` -> governance ``OrgRole(owner)``;
+    ``('*','director')`` -> an explicit per-app ``OrgMembership(director)`` row
+    for every subscribed app (directors stay app-scoped — they do NOT become
+    governance managers). Then delete the '*' rows and any ``role='viewer'``
+    rows (viewer is no longer a grant).
   * Narrow ``org_app_enum`` ('*' removed) and ``org_role_enum`` ('viewer'
     removed), and drop the ``server_default`` on both ``org_memberships``
     columns.
@@ -35,10 +38,20 @@ depends_on = None
 
 
 # ── Enum value sets ──────────────────────────────────────────────────────────
+# APP_NARROW is the *enum value set* for org_memberships.app. 'putt' is included
+# deliberately so the enum needs no further ALTER when DG-Putt is folded in
+# (design doc Phase 2) — even though no Putt app/tables exist in this backend
+# yet.
 APP_NARROW = ('dubs', 'tags', 'putt')
 APP_WIDE = ('dubs', 'tags', 'putt', '*')
 ROLE_NARROW = ('admin', 'director')
 ROLE_WIDE = ('admin', 'director', 'viewer')
+
+# LIVE_APPS is the set of apps actually served by this backend today. A legacy
+# wildcard director expands to one membership row per LIVE app — NOT per enum
+# value — because granting a 'putt' role now would reference an app that does
+# not exist here until Phase 2. Add 'putt' here when DG-Putt is migrated in.
+LIVE_APPS = ('dubs', 'tags')
 
 
 def _enum_sql(values):
@@ -88,25 +101,43 @@ def upgrade():
     )
 
     # 2. Data migration BEFORE enum narrowing.
-    #    Legacy wildcard memberships -> governance rows (admin->owner,
-    #    director->manager).
+    #    Legacy wildcard memberships are split along the new two-axis model:
+    #      * ('*','admin')    -> governance OrgRole(owner) — derives app-admin
+    #                            on every subscribed app.
+    #      * ('*','director') -> an explicit per-app OrgMembership(director) row
+    #                            for each LIVE app (dubs, tags) — directors stay
+    #                            app-scoped and do NOT become governance
+    #                            managers. 'putt' is intentionally excluded
+    #                            until DG-Putt is folded in (Phase 2).
     now_expr = "NOW()" if not _is_sqlite() else "CURRENT_TIMESTAMP"
     wildcard_rows = conn.execute(sa.text(
         "SELECT org_id, user_id, role FROM org_memberships WHERE app = '*'"
     )).fetchall()
     for org_id, user_id, role in wildcard_rows:
-        gov_role = 'owner' if role == 'admin' else 'manager'
-        # Guard against a pre-existing governance row for this (org, user).
-        exists = conn.execute(sa.text(
-            "SELECT COUNT(*) FROM org_roles WHERE org_id = :o AND user_id = :u"
-        ), {"o": org_id, "u": user_id}).scalar()
-        if not exists:
-            conn.execute(sa.text(
-                "INSERT INTO org_roles (org_id, user_id, role, created_at) "
-                f"VALUES (:o, :u, :r, {now_expr})"
-            ), {"o": org_id, "u": user_id, "r": gov_role})
+        if role == 'admin':
+            exists = conn.execute(sa.text(
+                "SELECT COUNT(*) FROM org_roles WHERE org_id = :o AND user_id = :u"
+            ), {"o": org_id, "u": user_id}).scalar()
+            if not exists:
+                conn.execute(sa.text(
+                    "INSERT INTO org_roles (org_id, user_id, role, created_at) "
+                    f"VALUES (:o, :u, 'owner', {now_expr})"
+                ), {"o": org_id, "u": user_id})
+        else:  # director (and any other non-admin, non-viewer value)
+            for app in LIVE_APPS:
+                exists = conn.execute(sa.text(
+                    "SELECT COUNT(*) FROM org_memberships "
+                    "WHERE org_id = :o AND user_id = :u AND app = :a"
+                ), {"o": org_id, "u": user_id, "a": app}).scalar()
+                if not exists:
+                    conn.execute(sa.text(
+                        "INSERT INTO org_memberships "
+                        "(org_id, user_id, app, role, created_at) "
+                        f"VALUES (:o, :u, :a, 'director', {now_expr})"
+                    ), {"o": org_id, "u": user_id, "a": app})
 
-    # Delete the migrated wildcard rows and any viewer rows (no longer grantable).
+    # Delete the now-migrated wildcard rows and any viewer rows (viewer is no
+    # longer a grant; those users become implicit viewers).
     conn.execute(sa.text("DELETE FROM org_memberships WHERE app = '*'"))
     conn.execute(sa.text("DELETE FROM org_memberships WHERE role = 'viewer'"))
 
@@ -154,9 +185,12 @@ def downgrade():
     else:
         _mysql_modify(APP_WIDE, ROLE_WIDE, app_default='*', role_default='viewer')
 
-    # 2. Re-materialize wildcard memberships from governance rows, then drop
-    #    the governance rows. owner -> admin, manager -> director.
+    # 2. Reverse the data split (mirror of upgrade step 2).
+    #    owner -> ('*','admin'); a user holding director on EVERY subscribed app
+    #    and no governance role -> collapse to a single ('*','director').
     now_expr = "NOW()" if not _is_sqlite() else "CURRENT_TIMESTAMP"
+
+    # 2a. Governance owners -> wildcard admin (manager -> wildcard director).
     gov_rows = conn.execute(sa.text(
         "SELECT org_id, user_id, role FROM org_roles"
     )).fetchall()
@@ -171,6 +205,36 @@ def downgrade():
                 "INSERT INTO org_memberships (org_id, user_id, app, role, created_at) "
                 f"VALUES (:o, :u, '*', :r, {now_expr})"
             ), {"o": org_id, "u": user_id, "r": app_role})
+
+    # 2b. Collapse per-app directors back to wildcard. A (org,user) holding a
+    #     'director' row on every LIVE app (dubs, tags) and no governance row is
+    #     treated as a former wildcard director: delete those per-app rows,
+    #     insert one ('*','director'). A partial set is left as explicit per-app
+    #     rows. (Mirrors the upgrade expansion over LIVE_APPS.)
+    n_apps = len(LIVE_APPS)
+    candidates = conn.execute(sa.text(
+        "SELECT org_id, user_id, COUNT(*) AS c FROM org_memberships "
+        "WHERE role = 'director' AND app IN :apps "
+        "GROUP BY org_id, user_id"
+    ).bindparams(sa.bindparam('apps', expanding=True)),
+        {"apps": list(LIVE_APPS)}).fetchall()
+    for org_id, user_id, c in candidates:
+        if c != n_apps:
+            continue
+        has_gov = conn.execute(sa.text(
+            "SELECT COUNT(*) FROM org_roles WHERE org_id = :o AND user_id = :u"
+        ), {"o": org_id, "u": user_id}).scalar()
+        if has_gov:
+            continue
+        conn.execute(sa.text(
+            "DELETE FROM org_memberships "
+            "WHERE org_id = :o AND user_id = :u AND role = 'director' AND app IN :apps"
+        ).bindparams(sa.bindparam('apps', expanding=True)),
+            {"o": org_id, "u": user_id, "apps": list(LIVE_APPS)})
+        conn.execute(sa.text(
+            "INSERT INTO org_memberships (org_id, user_id, app, role, created_at) "
+            f"VALUES (:o, :u, '*', 'director', {now_expr})"
+        ), {"o": org_id, "u": user_id})
 
     # 3. Drop the governance table.
     op.drop_table('org_roles')
