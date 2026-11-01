@@ -1,5 +1,7 @@
 venv/
 .venv/
+backend/venv/
+backend/.venv/
 __pycache__/
 *.pyc
 .git/
@@ -9,5 +11,22 @@ tournament_data.db
 tournament_data.json
 example_*.sh
 frontend/
+tags-frontend/
 scripts/
 docs/
+
+# Large non-project artifacts (NOT part of the app bundle)
+kirocli/
+kirocli.zip
+awscliv2.zip
+*.zip
+node_modules/
+
+# Local/editor/credentials
+.vscode/
+.env
+/env
+database/prod_backups/
+*:Zone.Identifier
+*.pem
+*.key

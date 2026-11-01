@@ -517,13 +517,14 @@ Re-run `scripts/prod_rehearsal.sh` locally anytime to re-validate the path
 
 ## 13. Org-Role Tier & AuthZ Refinement (design — pending implementation)
 
-**Status:** SCAFFOLDING IMPLEMENTED (local), not yet deployed to prod.
+**Status:** PROD DB MIGRATED (2026-10-09), CODE DEPLOY PENDING (from desktop).
 Supersedes the role model in §6.1–6.3 and the `org_memberships` shape in §5.1.
-Drafted 2026-10-06; implemented 2026-10-07 (see §13.10 As-built). Scope of
-*this* change is **scaffolding + migrations only** — the schema, model classes,
-auth helpers, and a reversible Alembic migration. Governance *endpoints*
-(`/api/org/*`), entitlements/subscriptions, billing, and all frontend work are
-explicitly deferred.
+Drafted 2026-10-06; implemented 2026-10-07; prod DB migrated 2026-10-09 (see
+§13.10 As-built and §13.11 As-executed). Scope of *this* change is
+**scaffolding + migrations only** — the schema, model classes, auth helpers,
+and a reversible Alembic migration. Governance *endpoints* (`/api/org/*`),
+entitlements/subscriptions, billing, and all frontend work are explicitly
+deferred.
 
 ### 13.1 Motivation
 
@@ -649,12 +650,17 @@ required before `flask db upgrade` is run anywhere.**
 
 `upgrade()`:
 1. `create_table('org_roles', ...)` with the FK/unique above.
-2. **Data migration (before enum narrowing):** for each existing
-   `org_memberships` row with `app='*'`, insert an equivalent `org_roles` row —
-   `role='owner'` if membership role was `admin`, else `role='manager'` — then
-   delete the `'*'` row. (Today this is exactly one row: the seeded SVDGC
-   admin → owner.) Any `role='viewer'` membership rows, if present, are deleted
-   (viewer is no longer a grant; those users become implicit viewers).
+2. **Data migration (before enum narrowing):** split each existing
+   `org_memberships` row with `app='*'` onto the two-axis model:
+   `('*','admin')` → an `org_roles` `role='owner'` row; `('*','director')` →
+   an explicit per-app `OrgMembership(director)` row for each **live** app
+   (`dubs`, `tags`) — directors stay app-scoped and do **not** become
+   governance managers. ('putt' is excluded until DG-Putt is folded in
+   (Phase 2); the `LIVE_APPS` constant in the migration is the one place to add
+   it then.) Then delete the `'*'` rows and any `role='viewer'` rows (viewer is
+   no longer a grant). **As executed on prod (2026-10-09):** admin → owner;
+   three directors (`DRoc101`,`kelly`,`lechuga`) → `dubs`+`tags` director rows
+   each (6 rows); no viewer rows existed.
 3. `ALTER` `org_app_enum` → `('dubs','tags','putt')` and `org_role_enum` →
    `('admin','director')`, and drop the `server_default='*'` / `'viewer'`
    defaults. (MySQL in-place `MODIFY COLUMN`; safe only *after* step 2 has
@@ -738,9 +744,25 @@ the flag manually (§13.8) to get the cross-org platform bypass before org #2.
 
 Verification: rehearsed the full chain (`185e089a4a4b → a1b2c3d4e5f6 →
 b2f1c3a4d5e6 → c3d4e5f6a7b8`) against a real local MySQL 8.4 dev DB reset to a
-pre-governance state. `upgrade` produced owner + N managers, narrowed enums,
-dropped defaults; `downgrade` losslessly restored the `'*'` memberships and
-widened enums; re-upgrade idempotent. Pytest 50/50 pass.
+pre-governance state. `upgrade` produced owner + per-app director rows,
+narrowed enums, dropped defaults; `downgrade` losslessly restored the `'*'`
+memberships and widened enums; re-upgrade idempotent. Pytest 50/50 pass.
 
-**Not yet done:** prod migration (snapshot-gated deploy, separate step; run the
-§13.7 pre-flight check first), and everything in §13.8.
+### 13.11 As-executed prod record (2026-10-09) — DB MIGRATED, CODE DEPLOY PENDING
+
+- Pre-flight (read-only) confirmed prod at `b2f1c3a4d5e6`, no `org_roles`, wide
+  enums, and exactly four `'*'` rows (admin + `DRoc101`/`lechuga`/`kelly`
+  directors), zero viewer rows — matching the migration's assumptions.
+- RDS snapshot `dgputt-db-pre-s13-20260109` taken (available) as rollback
+  anchor. (Shared instance — also captures the DG-Putt `dgputt` schema.)
+- Temporary SG ingress added for the laptop IP (`50.223.35.196/32:3306`) on
+  `sg-01334581d27b12812` so `flask db` could reach prod RDS from this machine.
+- `flask db upgrade` run from the laptop against prod → head `c3d4e5f6a7b8`.
+  Verified: `org_roles` = admin→owner; `org_memberships` = the three directors
+  × (`dubs`,`tags`) = 6 rows; no `'*'`/viewer rows; enums narrowed, defaults
+  dropped.
+- **CODE NOT YET DEPLOYED.** This laptop has no `.elasticbeanstalk/` config, so
+  `eb deploy` must run from the desktop. Until then the old code runs against
+  the new schema → admin/director authenticated actions 403 (public reads OK).
+  See `PROJECT_CONTEXT.md` → "NEXT SESSION" for the finish steps (deploy from
+  desktop, verify, revoke SG rule, delete snapshot, rotate DB password).
