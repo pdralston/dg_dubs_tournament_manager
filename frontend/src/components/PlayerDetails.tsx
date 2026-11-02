@@ -114,6 +114,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ playerName, onBack }) => 
       {historyLoading ? (
         <div className="loading">Loading history...</div>
       ) : currentHistory.length > 0 ? (
+        <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
@@ -138,6 +139,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ playerName, onBack }) => 
             ))}
           </tbody>
         </table>
+        </div>
       ) : (
         <p>No tournament history for this season.</p>
       )}

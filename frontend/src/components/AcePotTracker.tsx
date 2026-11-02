@@ -116,6 +116,7 @@ const AcePotTracker: React.FC<AcePotTrackerProps> = ({ userRole }) => {
       {ledger.length > 0 && (
         <>
           <h3>Ledger</h3>
+          <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
@@ -138,6 +139,7 @@ const AcePotTracker: React.FC<AcePotTrackerProps> = ({ userRole }) => {
               ))}
             </tbody>
           </table>
+          </div>
         </>
       )}
     </div>

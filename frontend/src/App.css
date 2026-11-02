@@ -1,39 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
-/* ── CSS Variables ────────────────────────────────── */
-:root {
-  --color-primary: #e94560;
-  --color-primary-hover: #c73652;
-  --color-bg-body: #1a1a2e;
-  --color-bg-dark: #0f0f1a;
-  --color-bg-card: #16213e;
-  --color-text: #e0e0e0;
-  --color-text-muted: #aaa;
-  --color-border: #333;
-  --color-border-subtle: #2a2a3e;
-  --color-success: #4caf50;
-  --color-danger: #ff4444;
-  --color-danger-text: #ff6b6b;
-  --color-gold: #ffd700;
-  --font-heading: 'Bebas Neue', cursive;
-  --font-body: 'Roboto', sans-serif;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-}
+/* ===========================================================================
+   DG-Dubs application styles
+   ---------------------------------------------------------------------------
+   Card-style layout adopted from DG-Putt: light surface cards on a dark navy
+   page, soft shadows, 12px rounded corners, and fixed-height internally-
+   scrolling table containers with sticky headers. Colors are DG-Dubs' own
+   (dark navy page + #e94560 red accent). Design tokens live in styles/theme.css.
+   =========================================================================== */
 
 /* ── Base ─────────────────────────────────────────── */
 .App {
   text-align: center;
-  background-color: var(--color-bg-body);
+  background-color: var(--color-page-bg);
   min-height: 100vh;
   font-family: var(--font-body);
-  color: var(--color-text);
+  color: var(--color-ink);
 }
 
 main {
   margin-top: 70px;
   min-height: calc(100vh - 70px);
+  background-color: var(--color-page-bg);
 }
 
 /* ── Header / Nav ─────────────────────────────────── */
@@ -43,7 +29,7 @@ main {
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: var(--color-bg-dark);
+  background-color: var(--color-page-dark);
   padding: 15px 20px;
   display: flex;
   justify-content: space-between;
@@ -52,9 +38,10 @@ main {
 
 .App-header h1 {
   margin: 0;
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  letter-spacing: 1px;
+  color: var(--accent);
 }
 
 .App-header nav {
@@ -65,7 +52,7 @@ main {
 
 .App-header nav button {
   background: transparent;
-  color: var(--color-text);
+  color: #e6e7ef;
   border: none;
   padding: 10px 0;
   cursor: pointer;
@@ -74,12 +61,12 @@ main {
 }
 
 .App-header nav button.active {
-  color: var(--color-primary);
+  color: var(--accent);
   font-weight: 700;
 }
 
 .App-header nav button:hover {
-  color: var(--color-primary);
+  color: var(--accent);
 }
 
 /* ── Auth ─────────────────────────────────────────── */
@@ -104,7 +91,7 @@ main {
 
 .App-header .auth-section .login-button:hover,
 .App-header .auth-section .logout-button:hover {
-  color: var(--color-primary);
+  color: var(--accent);
 }
 
 .login-overlay {
@@ -118,26 +105,27 @@ main {
 }
 
 .login-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card-lg);
   padding: 30px;
   width: 400px;
   max-width: 90vw;
 }
 
 .login-modal h2 {
-  color: var(--color-primary);
+  color: var(--accent);
   text-align: center;
   margin-bottom: 25px;
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
   font-size: 2rem;
 }
 
 /* ── Page Layout ──────────────────────────────────── */
 .page-content {
   padding: 30px;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
   text-align: left;
 }
@@ -146,32 +134,226 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
 }
 
+/* Large display headings use the condensed face in the red accent. On the dark
+   page (section titles outside cards) the accent reads well directly. */
 .page-content h2 {
-  color: var(--color-primary);
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  margin: 0 0 20px 0;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .page-content h3 {
-  color: var(--color-primary);
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
-  margin: 20px 0 10px 0;
+  color: var(--accent);
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 1.3rem;
+  margin: 24px 0 10px 0;
 }
 
 .loading {
   text-align: center;
-  color: var(--color-primary);
+  color: #e6e7ef;
   padding: 40px;
   font-size: 1.2rem;
 }
 
 .hint {
-  color: var(--color-text-muted);
+  color: var(--color-ink-muted);
+}
+
+/* ── Table card container (fixed height, internal scroll) ──────────────── */
+.table-container {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  max-height: 70vh;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+/* Custom scrollbar styling for the scrolling card containers. */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: rgba(20, 23, 44, 0.08);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--accent-soft);
+  background: rgba(233, 69, 96, 0.5);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(233, 69, 96, 0.7);
+}
+
+/* ── Tables ───────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table th {
+  background: var(--accent-strong);
+  color: #fff;
+  padding: 14px 16px;
+  text-align: left;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Round the header's top-left corner to match the card. */
+.data-table th:first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--color-ink);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover td {
+  background: var(--surface-alt);
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.positive { color: var(--success); }
+.negative { color: var(--danger); }
+
+.tournament-winner { font-weight: 600; }
+.muted { color: var(--color-ink-muted); font-weight: 400; }
+
+/* A table rendered outside a .table-container (e.g. small preview tables) still
+   needs its own card so the sticky header and radius have a backdrop. */
+.data-table.archive-preview-table,
+.data-table.payout-preview-table {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.data-table.archive-preview-table {
+  margin-bottom: 15px;
+}
+
+.data-table.payout-preview-table {
+  max-width: 300px;
+}
+
+/* ── Buttons ──────────────────────────────────────── */
+.action-button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.action-button:hover {
+  background: var(--accent-strong);
+}
+
+.action-button:disabled {
+  background: #B9BCCB;
+  color: #5B5F7A;
+  cursor: not-allowed;
+}
+
+.action-button.secondary {
+  background: #e4e5ee;
+  color: var(--color-ink);
+}
+
+.back-button {
+  background: transparent;
+  color: #cfd0dc;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  margin-bottom: 15px;
+}
+
+.back-button:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.delete-button {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.delete-button:hover {
+  background: var(--danger-strong);
+}
+
+.reset-button {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  padding: 8px 14px;
+  margin-left: 5px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.edit-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 /* ── Forms ────────────────────────────────────────── */
@@ -182,24 +364,26 @@ main {
 .form-group label {
   display: block;
   margin-bottom: 5px;
-  color: var(--color-text);
+  color: var(--color-ink);
   font-weight: 700;
 }
 
 .form-group input, .form-group select {
   width: 100%;
-  padding: 10px;
-  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-dark);
-  color: var(--color-text);
+  background: var(--surface);
+  color: var(--color-ink);
   box-sizing: border-box;
   font-size: 14px;
 }
 
-.form-group input:focus {
-  border-color: var(--color-primary);
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--accent);
   outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .modal-buttons {
@@ -218,17 +402,17 @@ main {
 }
 
 .modal-buttons button:first-child {
-  background: var(--color-border);
-  color: var(--color-text);
+  background: #e4e5ee;
+  color: var(--color-ink);
 }
 
 .modal-buttons button:last-child {
-  background: var(--color-primary);
+  background: var(--accent);
   color: #fff;
 }
 
 .modal-buttons button:last-child:disabled {
-  background: #666;
+  background: #B9BCCB;
   cursor: not-allowed;
 }
 
@@ -237,153 +421,32 @@ main {
   gap: 15px;
   align-items: flex-end;
   margin-bottom: 20px;
-  padding: 15px;
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
+  padding: 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
 }
 
 .inline-form .form-group {
   margin-bottom: 0;
 }
 
-/* ── Tables ───────────────────────────────────────── */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.data-table th {
-  background: var(--color-bg-dark);
-  color: var(--color-primary);
-  padding: 12px;
-  text-align: left;
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.data-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.data-table tbody tr:hover {
-  background: rgba(233, 69, 96, 0.1);
-}
-
-.clickable-row {
-  cursor: pointer;
-}
-
-.positive { color: var(--color-success); }
-.negative { color: var(--color-danger-text); }
-
-.tournament-winner { font-weight: 600; }
-.muted { color: var(--color-text-muted, #999); font-weight: 400; }
-
-/* ── Buttons ──────────────────────────────────────── */
-.action-button {
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.action-button:hover {
-  background: var(--color-primary-hover);
-}
-
-.action-button:disabled {
-  background: #666;
-  cursor: not-allowed;
-}
-
-.action-button.secondary {
-  background: var(--color-border);
-  color: var(--color-text);
-}
-
-.back-button {
-  background: transparent;
-  color: var(--color-primary);
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  margin-bottom: 15px;
-}
-
-.back-button:hover {
-  text-decoration: underline;
-}
-
-.delete-button {
-  background: var(--color-danger);
-  color: white;
-  border: none;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.delete-button:hover {
-  background: #cc0000;
-}
-
-.reset-button {
-  background: #e3f307;
-  color: rgb(0, 0, 0);
-  border: none;
-  padding: 5px 12px;
-  margin-left: 5px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.edit-button {
-  background-color: transparent;
-  border: none;
-}
-
-.edit-button:hover { 
-  background-color: buttonface;
-}
-
-.btn-sm {
-  padding: 5px 12px;
-  font-size: 12px;
-}
-
-.button-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
 /* ── Utility ──────────────────────────────────────── */
 .error-message {
-  color: var(--color-danger-text);
+  color: #ff6b6b;
   text-align: center;
   margin: 10px 0;
 }
 
 .success-message {
-  color: var(--color-success);
+  color: #7CE38B;
   text-align: center;
   margin: 10px 0;
 }
 
 .empty-state {
   text-align: center;
-  color: #888;
+  color: var(--color-ink-muted);
   padding: 40px;
 }
 
@@ -397,18 +460,18 @@ main {
 }
 
 .status-pending {
-  background: var(--color-border);
-  color: var(--color-text-muted);
+  background: #e4e5ee;
+  color: var(--color-ink-muted);
 }
 
 .status-in-progress {
-  background: rgba(233, 69, 96, 0.2);
-  color: var(--color-primary);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .status-completed {
-  background: rgba(76, 175, 80, 0.2);
-  color: var(--color-success);
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 /* ── Player List / Details ────────────────────────── */
@@ -418,53 +481,76 @@ main {
 
 .player-stats {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
+/* Each stat becomes a compact light card. */
 .stat {
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  padding: 10px 16px;
+  color: var(--color-ink-muted);
+  font-size: 1rem;
 }
 
 .stat strong {
-  color: var(--color-text);
+  color: var(--color-ink);
 }
 
 .season-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 15px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #e6e7ef;
 }
 
 .season-selector select {
-  padding: 8px;
-  background: var(--color-bg-dark);
-  color: var(--color-text);
-  border: 1px solid var(--color-primary);
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--color-ink);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  margin-left: 8px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .search-input {
   width: 100%;
-  padding: 8px;
+  padding: 10px 12px;
   margin-bottom: 15px;
-  border: 1px solid var(--color-primary);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  background-color: var(--color-bg-dark);
-  color: var(--color-text);
+  background-color: var(--surface);
+  color: var(--color-ink);
   box-sizing: border-box;
+}
+
+.search-input::placeholder {
+  color: var(--color-ink-muted);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 /* ── Tournament List ──────────────────────────────── */
 .tournament-date {
-  color: var(--color-primary);
+  color: var(--accent);
   font-weight: 700;
 }
 
 /* ── Tournament Creation ──────────────────────────── */
 .tournament-creation {
-  padding: 20px;
-  color: var(--color-text);
+  padding: 30px;
   min-height: 100vh;
 }
 
@@ -483,21 +569,26 @@ main {
   justify-content: space-evenly;
   gap: 10px;
   align-items: flex-end;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
 }
 
 .form-section label {
   display: block;
   margin-bottom: 5px;
-  font-weight: normal;
+  font-weight: 600;
+  color: var(--color-ink);
 }
 
 .form-section input[type="text"],
 .form-section input[type="date"] {
-  padding: 8px;
-  border: 1px solid var(--color-primary);
+  padding: 10px 12px;
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  background-color: var(--color-bg-dark);
-  color: var(--color-text);
+  background-color: var(--surface);
+  color: var(--color-ink);
 }
 
 .players-section {
@@ -508,25 +599,29 @@ main {
 }
 
 .available-players, .selected-players {
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  padding: 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
 }
 
 .available-players h3, .selected-players h3 {
   margin-top: 0;
-  color: var(--color-primary);
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
+  color: var(--accent);
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 1.3rem;
 }
 
 .ace-pot-buy-in-summary {
   margin-bottom: 10px;
-  padding: 8px;
-  background-color: var(--color-bg-card);
+  padding: 10px 12px;
+  background-color: var(--accent-soft);
   border-radius: var(--radius-sm);
-  color: var(--color-primary);
-  font-weight: bold;
+  color: var(--accent-strong);
+  font-weight: 700;
 }
 
 .player-list {
@@ -539,16 +634,17 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  margin-bottom: 5px;
-  border: 1px solid var(--color-border-subtle);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  background-color: var(--color-bg-dark);
+  background-color: var(--surface);
+  color: var(--color-ink);
 }
 
 .player-item.selected {
-  border-color: var(--color-primary);
-  background-color: var(--color-bg-card);
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
@@ -565,53 +661,57 @@ main {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: var(--color-primary);
+  color: var(--accent-strong);
   font-size: 12px;
   cursor: pointer;
 }
 
 .player-item button {
-  padding: 5px 10px;
+  padding: 6px 12px;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
+  font-weight: 700;
 }
 
 .available-players .player-item button {
-  background-color: var(--color-primary);
+  background-color: var(--accent);
   color: #fff;
 }
 
 .selected-players .player-item button {
-  background-color: var(--color-danger);
+  background-color: var(--danger);
   color: white;
 }
 
 .new-player-button {
   width: 100%;
   padding: 10px;
-  background-color: var(--color-primary);
+  background-color: var(--accent);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .new-player-form {
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  padding: 20px;
+  background-color: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
   margin-bottom: 30px;
   margin-top: 15px;
-  background-color: var(--color-bg-dark);
 }
 
 .new-player-form h3 {
   margin-top: 0;
-  color: var(--color-primary);
-  font-family: var(--font-heading);
+  color: var(--accent);
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .new-player-form form {
@@ -622,11 +722,11 @@ main {
 }
 
 .new-player-form input, .new-player-form select {
-  padding: 8px;
-  border: 1px solid var(--color-primary);
+  padding: 10px 12px;
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  background-color: var(--color-bg-card);
-  color: var(--color-text);
+  background-color: var(--surface);
+  color: var(--color-ink);
 }
 
 .form-buttons {
@@ -639,38 +739,37 @@ main {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  font-weight: 700;
 }
 
 .form-buttons button[type="submit"] {
-  background-color: var(--color-primary);
+  background-color: var(--accent);
   color: #fff;
 }
 
 .form-buttons button[type="button"] {
-  background-color: var(--color-border);
-  color: var(--color-text);
+  background-color: #e4e5ee;
+  color: var(--color-ink);
 }
 
 .create-tournament-button {
-  padding: 15px 30px;
-  background-color: var(--color-primary);
+  padding: 12px 24px;
+  background-color: var(--accent);
   color: #fff;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 18px;
-  font-weight: bold;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  font-family: var(--font-heading);
-  letter-spacing: 1px;
 }
 
 .create-tournament-button:disabled {
-  background-color: var(--color-border);
+  background-color: #B9BCCB;
   cursor: not-allowed;
 }
 
 .create-tournament-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background-color: var(--accent-strong);
 }
 
 /* ── Tournament Detail ────────────────────────────── */
@@ -679,28 +778,40 @@ main {
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.tournament-detail-header h2 {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .score-input {
   width: 80px;
   padding: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-dark);
-  color: var(--color-text);
+  background: var(--surface);
+  color: var(--color-ink);
   font-size: 14px;
   text-align: center;
 }
 
 .score-input:focus {
-  border-color: var(--color-primary);
+  border-color: var(--accent);
   outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .tournament-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card-lg);
   padding: 30px;
   width: 600px;
   max-width: 90vw;
@@ -708,20 +819,17 @@ main {
   overflow-y: auto;
 }
 
+.tournament-modal h2 {
+  color: var(--accent);
+  font-family: var(--font-display);
+}
+
 .tournament-modal .modal-close-button {
   margin-top: 15px;
 }
 
-.data-table.archive-preview-table {
-  margin-bottom: 15px;
-}
-
-.data-table.payout-preview-table {
-  max-width: 300px;
-}
-
 .highlight-row td {
-  background: rgba(233, 69, 96, 0.15);
+  background: var(--accent-soft) !important;
 }
 
 /* ── Ace Pot ──────────────────────────────────────── */
@@ -732,31 +840,42 @@ main {
 }
 
 .stat-card {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
   padding: 20px;
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 160px;
 }
 
 .stat-label {
-  color: var(--color-text-muted);
+  color: var(--color-ink-muted);
   font-size: 0.9rem;
   margin-bottom: 5px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
-  color: var(--color-primary);
-  font-family: var(--font-heading);
-  font-size: 2rem;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 2.2rem;
 }
 
 .ace-pot-section {
   margin-top: 25px;
-  padding: 20px;
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
+  padding: 24px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.ace-pot-section h3,
+.ace-pot-section h4 {
+  color: var(--accent);
 }
 
 .ace-subsection {
@@ -764,7 +883,7 @@ main {
 }
 
 .ace-subsection h4 {
-  color: var(--color-text-muted);
+  color: var(--color-ink-muted);
   font-size: 0.95rem;
   margin: 0 0 8px 0;
 }
@@ -772,15 +891,16 @@ main {
 .ace-paid-toggle {
   margin: 15px 0;
   font-weight: 700;
+  color: var(--color-ink);
 }
 
 .ace-pot-callout {
   margin-top: 12px;
-  padding: 10px 15px;
-  background: rgba(255, 215, 0, 0.1);
-  border-left: 3px solid var(--color-gold);
+  padding: 12px 16px;
+  background: rgba(255, 215, 0, 0.14);
+  border-left: 3px solid var(--gold);
   border-radius: var(--radius-sm);
-  color: var(--color-gold);
+  color: #8a6d00;
 }
 
 .record-button {
@@ -803,10 +923,11 @@ main {
   cursor: pointer;
   padding: 6px;
   border-radius: var(--radius-sm);
+  color: var(--color-ink);
 }
 
 .checkbox-label:hover {
-  background: rgba(233, 69, 96, 0.1);
+  background: var(--accent-soft);
 }
 
 /* ── Admin ────────────────────────────────────────── */
@@ -820,13 +941,13 @@ main {
 .admin-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 2px solid var(--color-primary);
+  border-bottom: 2px solid var(--accent);
   margin-bottom: 20px;
 }
 
 .admin-tabs button {
   background: transparent;
-  color: var(--color-text-muted);
+  color: #cfd0dc;
   border: none;
   padding: 12px 20px;
   cursor: pointer;
@@ -837,24 +958,26 @@ main {
 }
 
 .admin-tabs button.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .admin-tabs button:hover {
-  color: var(--color-text);
+  color: #fff;
 }
 
 .season-section {
   margin-top: 20px;
-  padding: 20px;
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
+  padding: 24px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
   margin-bottom: 20px;
 }
 
 .season-section h3 {
   margin-top: 0;
+  color: var(--accent);
 }
 
 .payout-form {
@@ -869,7 +992,7 @@ main {
 }
 
 .payout-preview h4 {
-  color: var(--color-text-muted);
+  color: var(--color-ink-muted);
   margin: 0 0 8px 0;
   font-size: 0.95rem;
 }
@@ -891,9 +1014,9 @@ main {
 
 .user-role-select {
   padding: 8px;
-  background: var(--color-bg-dark);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+  background: var(--surface);
+  color: var(--color-ink);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
 }
 
@@ -959,5 +1082,9 @@ main {
 
   .tournament-detail-header {
     flex-direction: column;
+  }
+
+  .create-user-grid {
+    grid-template-columns: 1fr;
   }
 }

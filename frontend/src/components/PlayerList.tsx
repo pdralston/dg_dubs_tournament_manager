@@ -130,6 +130,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ userRole, onPlayerSelect }) => 
 
       <input type="text" placeholder="Search players..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="search-input" aria-label="Search players" />
 
+      <div className="table-container">
       <table className="data-table">
         <thead>
           <tr>
@@ -183,6 +184,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ userRole, onPlayerSelect }) => 
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };
