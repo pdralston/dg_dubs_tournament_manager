@@ -279,6 +279,9 @@ main {
 .positive { color: var(--color-success); }
 .negative { color: var(--color-danger-text); }
 
+.tournament-winner { font-weight: 600; }
+.muted { color: var(--color-text-muted, #999); font-weight: 400; }
+
 /* ── Buttons ──────────────────────────────────────── */
 .action-button {
   background: var(--color-primary);
