@@ -2,17 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config/api';
 import { Player } from '../types';
 
+interface TournamentResult {
+  team: string[];
+  position: number;
+  expected_position: number;
+  score: number;
+  team_rating: number;
+  payout: number;
+}
+
 interface TournamentSummary {
   tournament_id: number;
   date: string;
   course: string;
   teams: number;
   status: string;
+  results?: TournamentResult[];
 }
 
 interface TournamentDetail extends TournamentSummary {
   participants: { name: string; rating: number; ace_pot_buy_in: boolean }[];
-  results: { team: string[]; position: number; expected_position: number; score: number; team_rating: number; payout: number }[];
+  results: TournamentResult[];
   ace_pot_paid?: boolean;
   ace_pot_recipient?: string | null;
 }
@@ -34,6 +44,10 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
   const [view, setView] = useState<View>('list');
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Season selection (list view). 'null' => current season.
+  const [seasons, setSeasons] = useState<{ id: number | null; name: string }[]>([]);
+  const [selectedSeason, setSelectedSeason] = useState<string>('null');
 
   // Create state
   const [pendingId, setPendingId] = useState<number | null>(null);
@@ -67,14 +81,33 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
 
   const canEdit = userRole === 'admin' || userRole === 'director';
 
-  const fetchTournaments = async () => {
+  const fetchTournaments = async (seasonId?: string) => {
+    const sid = seasonId ?? selectedSeason;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/tournaments`, { credentials: 'include' });
+      const url = sid && sid !== 'null'
+        ? `${API_BASE_URL}/api/tournaments?season_id=${sid}`
+        : `${API_BASE_URL}/api/tournaments`;
+      const res = await fetch(url, { credentials: 'include' });
       if (res.ok) setTournaments(await res.json());
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchTournaments(); }, []);
+  const fetchSeasons = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/tournaments/seasons`, { credentials: 'include' });
+      if (res.ok) setSeasons(await res.json());
+    } catch {}
+  };
+
+  useEffect(() => { fetchSeasons(); fetchTournaments(); }, []);
+
+  const handleSeasonChange = (seasonId: string) => {
+    setSelectedSeason(seasonId);
+    setLoading(true);
+    fetchTournaments(seasonId);
+  };
+
+  const isCurrentSeason = selectedSeason === 'null';
 
   const visibleTournaments = canEdit
     ? tournaments
@@ -417,16 +450,37 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
 
   // ── List view ────────────────────────────────────
 
+  const winnerFor = (t: TournamentSummary): string => {
+    if (t.status !== 'Completed' || !t.results || t.results.length === 0) return '';
+    const winning = t.results.find(r => r.position === 1);
+    if (!winning) return '';
+    return winning.team.filter(p => p && p !== 'Ghost Player').join(' & ');
+  };
+
   if (view === 'list') {
     if (loading) return <div className="loading">Loading tournaments...</div>;
     return (
       <div className="page-content tournament-directory">
         <div className="page-header">
           <h2>Tournaments</h2>
-          {canEdit && (
+          {canEdit && isCurrentSeason && (
             <button className="create-tournament-button" onClick={startCreate}>Create Tournament</button>
           )}
         </div>
+        {seasons.length > 1 && (
+          <div className="season-selector">
+            <label htmlFor="tournament-season-select">Season: </label>
+            <select
+              id="tournament-season-select"
+              value={selectedSeason}
+              onChange={e => handleSeasonChange(e.target.value)}
+            >
+              {seasons.map(s => (
+                <option key={s.id ?? 'current'} value={s.id === null ? 'null' : s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <table className="data-table">
           <thead>
             <tr>
@@ -434,6 +488,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
               <th>Course</th>
               <th>Status</th>
               <th>Teams</th>
+              <th>Winner</th>
               {canEdit && <th></th>}
             </tr>
           </thead>
@@ -451,6 +506,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                 <td>{t.course}</td>
                 <td><span className={`status-badge status-${t.status.toLowerCase().replace(' ', '-')}`}>{t.status}</span></td>
                 <td>{t.teams}</td>
+                <td className="tournament-winner">{winnerFor(t) || <span className="muted">—</span>}</td>
                 {canEdit && (
                   <td>
                     {(t.status === 'Pending' || t.status === 'In Progress') && (
@@ -465,7 +521,13 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
             ))}
           </tbody>
         </table>
-        {visibleTournaments.length === 0 && <p className="empty-state">The season hasn't started yet, but when it does check back here to see all of the completed tournaments!</p>}
+        {visibleTournaments.length === 0 && (
+          <p className="empty-state">
+            {isCurrentSeason
+              ? "The season hasn't started yet, but when it does check back here to see all of the completed tournaments!"
+              : 'No tournaments found for this season.'}
+          </p>
+        )}
       </div>
     );
   }

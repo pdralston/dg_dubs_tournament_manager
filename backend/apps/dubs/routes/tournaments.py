@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request, current_app
 import datetime
-from backend.models import db, Tournament, TournamentParticipant, Player, Team
+from backend.models import db, Tournament, TournamentParticipant, Player, Team, Season
 from backend.shared.auth import login_required
 
 tournaments_bp = Blueprint('tournaments_api', __name__)
@@ -12,23 +12,79 @@ def _rs():
     return current_app.rating_system
 
 
+def _results_from_teams(tid):
+    """Build a results list from persisted Team rows.
+
+    Used for archived-season tournaments whose results are not held in the
+    in-memory rating system (which only tracks the current season). Completed
+    Team rows carry position, score, team_rating and payout.
+    """
+    db_teams = Team.query.filter_by(tournament_id=tid).order_by(Team.position).all()
+    results = []
+    for team in db_teams:
+        p1 = Player.query.get(team.player1_id)
+        p2 = Player.query.get(team.player2_id) if team.player2_id else None
+        results.append({
+            'team': [p1.name if p1 else 'Unknown', p2.name if p2 else 'Ghost Player'],
+            'position': team.position,
+            'expected_position': float(team.expected_position),
+            'score': team.score,
+            'team_rating': float(team.team_rating),
+            'payout': float(team.payout),
+        })
+    return results
+
+
+@tournaments_bp.route('/api/tournaments/seasons', methods=['GET'])
+def get_tournament_seasons():
+    """List seasons available in the tournament directory dropdown.
+
+    'Current Season' (id null) plus each archived season, newest first.
+    Mirrors the seasons list exposed by the player detail endpoint.
+    """
+    seasons = [{'id': None, 'name': 'Current Season'}]
+    for s in Season.query.order_by(Season.end_date.desc()).all():
+        seasons.append({'id': s.season_id, 'name': s.season_name})
+    return jsonify(seasons)
+
+
 @tournaments_bp.route('/api/tournaments', methods=['GET'])
 def get_tournaments():
     rs = _rs()
-    db_tournaments = Tournament.query.filter_by(season_id=None).order_by(Tournament.date.desc()).all()
+
+    # Optional season filter: absent/'null' => current season (season_id NULL);
+    # otherwise an archived season's tournaments.
+    season_filter = request.args.get('season_id')
+    if season_filter and season_filter != 'null':
+        try:
+            sid = int(season_filter)
+        except ValueError:
+            return jsonify({'error': 'Invalid season_id'}), 400
+        db_tournaments = Tournament.query.filter_by(season_id=sid).order_by(Tournament.date.desc()).all()
+    else:
+        sid = None
+        db_tournaments = Tournament.query.filter_by(season_id=None).order_by(Tournament.date.desc()).all()
+
     in_memory = {t['id']: t for t in rs.tournaments if 'id' in t}
 
     result = []
     for t in db_tournaments:
         tid = t.tournament_id
         mem = in_memory.get(tid)
+        if mem:
+            results = mem['results']
+        elif sid is not None:
+            # Archived tournaments are not in memory; build from Team rows.
+            results = _results_from_teams(tid)
+        else:
+            results = []
         result.append({
             'tournament_id': tid,
             'date': t.date.isoformat() if hasattr(t.date, 'isoformat') else str(t.date),
             'course': t.course,
             'teams': t.team_count,
             'status': t.status or 'Completed',
-            'results': mem['results'] if mem else [],
+            'results': results,
         })
     return jsonify(result)
 
@@ -52,6 +108,13 @@ def get_tournament(tid):
 
     rs = _rs()
     mem = next((x for x in rs.tournaments if x.get('id') == tid), None)
+    if mem:
+        results = mem['results']
+    elif t.season_id is not None and (t.status or 'Completed') == 'Completed':
+        # Archived tournament: results live in persisted Team rows, not memory.
+        results = _results_from_teams(tid)
+    else:
+        results = []
 
     ace_pot_recipient = t.ace_pot_paid_to if t.ace_pot_paid else None
 
@@ -75,7 +138,7 @@ def get_tournament(tid):
         'teams': t.team_count,
         'status': t.status or 'Completed',
         'participants': players,
-        'results': mem['results'] if mem else [],
+        'results': results,
         'generated_teams': generated_teams,
         'ace_pot_paid': t.ace_pot_paid,
         'ace_pot_recipient': ace_pot_recipient,
