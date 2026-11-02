@@ -161,3 +161,19 @@ docs/DEPLOYMENT.md
 # Kiro CLI tool bundle (not part of this project)
 /kirocli/
 /kirocli.zip
+
+# ── Public-repo safety: keep infra details & installer artifacts out ──────────
+# DEPLOYMENT.md holds the real prod RDS hostname, DB user, bucket/CloudFront/
+# Route53/ACM identifiers — fine locally, do NOT publish on a public repo.
+# (The pre-existing docs/DEPLOYMENT.md rule did not match the repo-root file.)
+/DEPLOYMENT.md
+# Unpacked AWS CLI bundle — installer artifact, not project code.
+/aws/
+# Any zip (installer downloads etc.) — awscliv2.zip was not caught before.
+*.zip
+# Installer package artifacts (e.g. session-manager-plugin.deb) — not project code.
+*.deb
+# Local SSO/credential caches, just in case.
+.aws/
+# Local scratch dir (DB dumps may contain PII/password hashes) — never commit.
+tmp/

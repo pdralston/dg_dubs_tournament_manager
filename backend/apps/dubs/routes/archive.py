@@ -6,6 +6,7 @@ from backend.models import (
     TournamentParticipant, AcePotTracker,
 )
 from backend.shared.auth import admin_required
+from backend.shared.org_context import current_org_id
 from sqlalchemy import func
 from datetime import datetime
 
@@ -101,16 +102,20 @@ def perform_archive():
                     p.rating = 1150.00
 
         balance_row = db.session.execute(
-            db.text("SELECT COALESCE(SUM(amount), 0) as total FROM ace_pot_tracker")
+            db.text("SELECT COALESCE(SUM(amount), 0) as total FROM ace_pot_tracker WHERE org_id = :oid"),
+            {'oid': current_org_id()}
         ).fetchone()
         carry_over = float(balance_row[0]) if balance_row else 0.0
 
-        db.session.execute(db.text("DELETE FROM ace_pot_tracker"))
+        db.session.execute(
+            db.text("DELETE FROM ace_pot_tracker WHERE org_id = :oid"),
+            {'oid': current_org_id()}
+        )
         if carry_over != 0:
             db.session.execute(
-                db.text("INSERT INTO ace_pot_tracker (date, description, amount, balance) VALUES (:d, :desc, :amt, :bal)"),
+                db.text("INSERT INTO ace_pot_tracker (date, description, amount, balance, org_id) VALUES (:d, :desc, :amt, :bal, :oid)"),
                 {'d': datetime.now().strftime('%Y-%m-%d'), 'desc': f'Carry-over from {season_name}',
-                 'amt': carry_over, 'bal': carry_over}
+                 'amt': carry_over, 'bal': carry_over, 'oid': current_org_id()}
             )
 
         db.session.commit()

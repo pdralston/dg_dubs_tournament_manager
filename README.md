@@ -286,10 +286,10 @@ cd tags-frontend && npm run build && aws s3 sync build/ s3://<tags-bucket> --del
 
 ## Testing
 
-50 tests covering the DG-Tags API lifecycle:
+65 tests covering the DG-Tags API lifecycle and DG-Dubs season archiving:
 
 ```
-tests/test_tags_lifecycle.py
+tests/test_tags_lifecycle.py           (50)
 ├── TestTagMemberManagement (14)     # CRUD, PII, search, duplicates
 ├── TestEventCreation (7)            # Types, visibility, validation
 ├── TestMonthlyEventLifecycle (4)    # Full workflow, tiebreaker, DNF, same-day
@@ -299,6 +299,13 @@ tests/test_tags_lifecycle.py
 ├── TestScoreImport (2)              # CSV matching, unmatched
 ├── TestRegistrationImport (2)       # DGScene CSV, state validation
 └── TestStandingsAndHistory (4)      # Public access, sorting, history
+
+tests/test_archive.py                  (15)
+├── TestArchiveAcePotCarryover (3)   # org_id carry-over FK regression, zero balance
+├── TestArchiveSeasonAndTournaments (3) # Season creation, tournament assignment, validation
+├── TestArchivePlayerEffects (4)     # Orphan purge, cash rollover, reset, rating normalization
+├── TestArchiveAuthorization (3)     # Admin-only, auth gating
+└── TestArchivePreview (2)           # Preview counts, empty state
 ```
 
 ## License
