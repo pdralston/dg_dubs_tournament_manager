@@ -481,6 +481,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
             </select>
           </div>
         )}
+        <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
@@ -521,6 +522,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
             ))}
           </tbody>
         </table>
+        </div>
         {visibleTournaments.length === 0 && (
           <p className="empty-state">
             {isCurrentSeason
@@ -635,6 +637,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
         {detail.status === 'In Progress' && generatedTeams && (
           <>
             <h3>Teams</h3>
+            <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
@@ -663,6 +666,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {canEdit && (
               <>
@@ -741,6 +745,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
         {detail.status === 'Completed' && detail.results.length > 0 && (
           <>
             <h3>Results</h3>
+            <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr><th>Pos</th><th>Team</th><th>Score</th><th>Team Rating</th><th>Payout</th></tr>
@@ -757,6 +762,7 @@ const Tournaments: React.FC<TournamentsProps> = ({ userRole }) => {
                 ))}
               </tbody>
             </table>
+            </div>
             {detail.ace_pot_recipient && (
               <div className="ace-pot-callout">
                 🎯 Ace Pot awarded to <strong>{detail.ace_pot_recipient}</strong>

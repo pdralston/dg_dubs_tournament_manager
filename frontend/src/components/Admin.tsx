@@ -216,6 +216,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
           )}
 
           {usersLoading ? <div className="loading">Loading...</div> : (
+            <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
@@ -269,6 +270,7 @@ const Admin: React.FC<AdminProps> = ({ currentUser, onUserUpdated }) => {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </>
       )}
