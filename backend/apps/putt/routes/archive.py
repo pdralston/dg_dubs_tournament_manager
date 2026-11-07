@@ -11,7 +11,7 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 
 from backend.models import (
     db,
@@ -305,6 +305,7 @@ def perform_archive():
             'promoted_player_ids': sorted(promote_ids),
         })
 
-    except Exception as e:
+    except Exception:
+        current_app.logger.exception("perform_archive failed")
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Failed to archive season'}), 500
