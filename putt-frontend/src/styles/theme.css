@@ -1,0 +1,100 @@
+/* ===========================================================================
+   DG-Putt design tokens
+   ---------------------------------------------------------------------------
+   These tokens are extracted from the tournament-bracket view, which was
+   designed by a UI/UX designer and is the visual reference for the whole app.
+
+   Design language summary:
+   - Surfaces are light: white cards on a dark-green page, with soft shadows
+     and 12px rounded corners.
+   - Content text is dark navy (#14172C / #242B5C) on those light surfaces,
+     set in Roboto (body) and Roboto Condensed (labels / emphasis).
+   - Green (#1AFF95 / #038549) is an ACCENT only: buttons, borders, status
+     bubbles, dividers. It is never used for large bodies of text.
+   - The condensed display face (Bebas Neue) is reserved for large display
+     headings; it must never be used for body copy (it squishes into an
+     unreadable blob at small sizes).
+   =========================================================================== */
+
+:root {
+  /* --- Brand / page --- */
+  --color-page-bg: #003A1F;        /* dark green app background */
+  --color-page-bg-2: #004A2F;      /* slightly lighter green panel */
+  --color-ink: #14172C;            /* primary navy text on light surfaces */
+  --color-ink-2: #242B5C;          /* secondary navy text */
+  --color-ink-muted: #5B5F7A;      /* muted navy for secondary info */
+
+  /* --- Surfaces (the white/light cards from the bracket) --- */
+  --surface: #FFFFFF;              /* primary card */
+  --surface-alt: #F1F6F4;          /* subtle off-white band */
+  --surface-completed: #C6CAFF;    /* lavender (completed match card) */
+  --surface-pending: #BAFFDF;      /* mint (pending match card) */
+  --surface-border: #C6C7D3;       /* hairline divider on light cards */
+
+  /* --- Accent (green) --- */
+  --accent: #1AFF95;               /* bright putting-green accent */
+  --accent-strong: #038549;        /* deep green for solid buttons/text */
+  --accent-ink: #073C24;           /* text on bright-green fills */
+  --accent-soft: rgba(26, 255, 149, 0.12);
+
+  /* --- Status / semantic --- */
+  --gold: #FFD700;
+  --danger: #B00020;
+  --danger-strong: #8b0000;
+  --on-accent: #003A1F;
+
+  /* --- Typography --- */
+  --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-condensed: 'Roboto Condensed', 'Roboto', sans-serif;
+  --font-display: 'Bebas Neue', sans-serif;  /* large headings ONLY */
+
+  /* --- Shape / depth --- */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-card-lg: 0 4px 26px rgba(0, 0, 0, 0.14);
+}
+
+/* ---------------------------------------------------------------------------
+   Reusable surface primitives matching the bracket match cards.
+   --------------------------------------------------------------------------- */
+
+.surface-card {
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  text-align: left;
+}
+
+/* A section title in the condensed display face, sized large so it is legible
+   (Bebas Neue only reads well large). Green accent, left aligned like the
+   bracket column titles (.bracket h1). */
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--accent);
+  font-size: 2.2rem;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px;
+  text-align: left;
+}
+
+/* Primary accent button (bright green) — mirrors the bracket score-button. */
+.btn-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-accent:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}

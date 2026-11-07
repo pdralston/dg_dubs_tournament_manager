@@ -1,0 +1,77 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* ---------------------------------------------------------------------------
+   Accessibility primitives (shared across all components)
+   --------------------------------------------------------------------------- */
+
+/*
+ * Visible focus indicator for keyboard users. Uses :focus-visible so the ring
+ * only appears for keyboard/AT navigation, not mouse clicks. The gold ring
+ * contrasts against both the dark-green app background and the light cards.
+ */
+:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Older engines without :focus-visible fall back to a plain focus ring. */
+*:focus {
+  outline-color: #FFD700;
+}
+
+/*
+ * Screen-reader-only text. Visually hidden but available to assistive tech.
+ * `.sr-only` and `.visually-hidden` are aliases so either name works.
+ */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * When a visually-hidden element receives focus (e.g. a skip link), reveal it.
+ */
+.sr-only:focus,
+.visually-hidden:focus,
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Respect users who prefer reduced motion: disable the decorative glows. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

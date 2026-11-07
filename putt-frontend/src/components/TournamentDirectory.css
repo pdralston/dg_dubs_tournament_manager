@@ -1,0 +1,155 @@
+.tournament-directory {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: left;
+}
+
+.tournament-directory .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.tournament-directory .page-header h2 {
+  color: var(--accent);
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.6rem;
+  letter-spacing: 0.5px;
+}
+
+.create-tournament-button {
+  padding: 10px 20px;
+  background-color: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.create-tournament-button:hover {
+  background-color: var(--accent-strong);
+  color: #fff;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.season-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-ink);
+}
+
+.season-selector select {
+  padding: 8px 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface, #fff);
+  color: var(--color-ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tournaments-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tournaments-table th {
+  background: var(--accent-strong);
+  color: #fff;
+  padding: 14px 16px;
+  text-align: left;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tournaments-table th:first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.tournaments-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--color-ink);
+  vertical-align: middle;
+}
+
+.tournaments-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tournaments-table tr:hover td {
+  background: var(--surface-alt);
+}
+
+.tournaments-table .action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.view-button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.view-button:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.manage-button {
+  background: #0F6FB5;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.manage-button:hover {
+  background: #0B5890;
+}
+
+.delete-button {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.delete-button:hover {
+  background: #8f0019;
+}
