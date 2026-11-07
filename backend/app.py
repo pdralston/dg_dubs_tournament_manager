@@ -9,12 +9,61 @@ import sys
 
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, join_room, leave_room
 from dotenv import load_dotenv
 
 # Ensure project root is on Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 load_dotenv()
+
+# Module-level SocketIO instance (initialized in create_app via init_app so the
+# app-factory pattern is preserved). DG-Putt's live bracket/match updates emit
+# through this; routes reach it via current_app.extensions['socketio'].
+#
+# async_mode='threading' keeps the existing synchronous WSGI stack intact (no
+# eventlet/gevent monkey-patching, which would complicate PyMySQL/SQLAlchemy).
+# For higher WebSocket concurrency in production, switch to a gevent/eventlet
+# worker and set async_mode accordingly.
+socketio = SocketIO()
+
+
+_SOCKETIO_HANDLERS_REGISTERED = False
+
+
+def _register_socketio_handlers():
+    """Register DG-Putt's live-update handlers once.
+
+    Clients join a per-tournament room; match-scoring routes emit
+    ``match_updated`` to ``tournament_<id>`` via
+    ``current_app.extensions['socketio']``. Guarded so repeated create_app()
+    calls (tests) don't double-register.
+    """
+    global _SOCKETIO_HANDLERS_REGISTERED
+    if _SOCKETIO_HANDLERS_REGISTERED:
+        return
+
+    @socketio.on('connect')
+    def handle_connect():  # noqa: ANN202
+        pass
+
+    @socketio.on('disconnect')
+    def handle_disconnect():  # noqa: ANN202
+        pass
+
+    @socketio.on('join_tournament')
+    def handle_join_tournament(data):  # noqa: ANN001, ANN202
+        tournament_id = (data or {}).get('tournament_id')
+        if tournament_id:
+            join_room(f'tournament_{tournament_id}')
+
+    @socketio.on('leave_tournament')
+    def handle_leave_tournament(data):  # noqa: ANN001, ANN202
+        tournament_id = (data or {}).get('tournament_id')
+        if tournament_id:
+            leave_room(f'tournament_{tournament_id}')
+
+    _SOCKETIO_HANDLERS_REGISTERED = True
 
 
 def create_app():
@@ -25,7 +74,23 @@ def create_app():
     CORS(app, supports_credentials=True, origins=[
         'http://localhost:3000', 'http://127.0.0.1:3000',
         'https://dg-rater.com', 'https://tags.dg-rater.com',
+        'https://putt.dg-rater.com',
     ])
+
+    # ── Real-time (SocketIO) ─────────────────────────────────────────
+    # Allowed origins mirror the CORS list. During the single-SPA transition
+    # putt.dg-rater.com is still the live Putt origin; dg-rater.com covers the
+    # future consolidated frontend.
+    socketio.init_app(
+        app,
+        cors_allowed_origins=[
+            'http://localhost:3000', 'http://127.0.0.1:3000',
+            'https://dg-rater.com', 'https://tags.dg-rater.com',
+            'https://putt.dg-rater.com',
+        ],
+        async_mode='threading',
+    )
+    _register_socketio_handlers()
 
     # ── Database configuration ───────────────────────────────────────
     DATABASE_URL = os.environ.get('DATABASE_URL') or \
@@ -132,13 +197,18 @@ def create_app():
     from backend.apps.tags.routes import tags_bp
     app.register_blueprint(tags_bp)
 
+    # DG-Putt routes
+    from backend.apps.putt.routes import putt_blueprints
+    for blueprint in putt_blueprints:
+        app.register_blueprint(blueprint)
+
     # ── Health check ─────────────────────────────────────────────────
 
     @app.route('/')
     def health_check():
         return jsonify({
             "status": "DG-Rater Platform API is running",
-            "apps": ["dubs", "tags"],
+            "apps": ["dubs", "tags", "putt"],
         })
 
     return app
@@ -147,4 +217,6 @@ def create_app():
 # Allow running directly: python backend/app.py
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    # Use socketio.run so the WebSocket transport is served (DG-Putt live
+    # updates). Falls back to standard WSGI for normal HTTP routes.
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
