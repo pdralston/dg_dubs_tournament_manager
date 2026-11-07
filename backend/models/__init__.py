@@ -22,3 +22,9 @@ from .tags import (  # noqa: F401
     TagMember, MemberContactInfo, TagEvent, TagRegistration, TagHistory,
     TagInventory, TagUnavailable,
 )
+
+# DG-Putt
+from .putt import (  # noqa: F401
+    PuttSeason, PuttPlayer, PuttTournament, PuttRegistration, PuttTeam,
+    PuttMatch, PuttTeamHistory, PuttAcePot, PuttSeasonStanding,
+)
