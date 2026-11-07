@@ -33,13 +33,20 @@ AWS RDS MySQL instance:
   stamped `org_id=1` (run between events — the season is live), then (3) deploy
   + repoint the Putt frontend + 301 `putt.dg-rater.com`. Until then the
   standalone `puttingLeague` repo keeps serving prod untouched.
-- **Frontend CRA → Vite (Phase 2.5): IN PROGRESS.** DG-Dubs (`frontend/`) and
-  DG-Tags (`tags-frontend/`) are both migrated to Vite on branch
-  `frontend-vite-migration` — pure tooling swap, `base: '/'` (no routing change
-  yet), `build/` output preserved so the existing `aws s3 sync build/` deploy is
-  unchanged. Required bumping `@types/node`→20 and `typescript`→5.x (Vite 5 /
-  bundler resolution). Remaining CRA: DG-Putt's SPA (to be copied into this repo
-  from `../puttingLeague/` and migrated).
+- **Frontend CRA → Vite (Phase 2.5): all three SPAs migrated.** DG-Dubs
+  (`frontend/`), DG-Tags (`tags-frontend/`), and DG-Putt (`putt-frontend/`,
+  copied in from `../puttingLeague/frontend/` during the monorepo
+  consolidation) are all on Vite — pure tooling swap, `base: '/'` (no routing
+  change yet), `build/` output preserved so the existing `aws s3 sync build/`
+  deploy is unchanged. Required bumping `@types/node`→20 and `typescript`→5.x
+  (Vite 5 / bundler resolution). DG-Putt keeps `socket.io-client`; its Vite dev
+  server proxies both `/api` and `/socket.io` (ws) to the backend. **DG-Putt's
+  frontend API calls were repointed to `/api/putt/*`** (shared `/api/auth/*`
+  left as-is), so the consolidated stack is testable locally — verified live
+  (players/tournaments/ace-pot/seasons + socket.io handshake). **Known gap:**
+  the DG-Putt Admin user-management tab is broken pending the §13 governance
+  migration (see follow-ups). **Still CRA: none.** Remaining Phase 2.5:
+  path-based routing + single distribution.
 - **Org-level governance (Phase 1) is DEPLOYED to prod.** All domain data is
   scoped to an organization via an `org_id` column on tenant tables, with a
   `before_flush` hook that stamps org ownership on writes.
@@ -83,9 +90,10 @@ AWS RDS MySQL instance:
   helper).
 - `backend/apps/dubs/`, `backend/apps/tags/`, `backend/apps/putt/` — per-app
   routes + services.
-- `frontend/` (DG-Dubs SPA) and `tags-frontend/` (DG-Tags SPA) — React + TS,
-  both **migrated to Vite** (branch `frontend-vite-migration`). DG-Putt's SPA
-  still lives in `../puttingLeague/` (to be copied in and migrated).
+- `frontend/` (DG-Dubs), `tags-frontend/` (DG-Tags), `putt-frontend/`
+  (DG-Putt, incl. `socket.io-client`) — React + TS SPAs, all **on Vite**.
+  DG-Putt's SPA was copied in from `../puttingLeague/frontend/`; the standalone
+  copy still serves prod until cutover.
 - `migrations/` — Alembic migration chain.
 - `tests/` — pytest suite (SQLite in-memory).
 
@@ -94,17 +102,19 @@ AWS RDS MySQL instance:
 Phase 1 + §13 + the DG-Putt **backend** fold-in are all landed. Current effort
 is **Phase 2.5 frontend consolidation** on branch `frontend-vite-migration`:
 
-1. **DONE — DG-Dubs CRA → Vite** (`frontend/`). Pure tooling swap, `base: '/'`,
-   build + live dev-server/proxy verified against the :5000 backend.
-2. **DONE — DG-Tags CRA → Vite** (`tags-frontend/`), same pattern; build
-   verified.
-3. **NEXT — copy DG-Putt's SPA into this repo** (e.g. `putt-frontend/`) and
-   migrate it to Vite. Its API calls will be repointed to `/api/putt/*` on
-   `api.dg-rater.com` as part of cutover (separate step). (This is the next
-   committed chunk after merging the Dubs+Tags Vite work.)
-4. Then (separate chunk) path-based routing: switch each app's Vite `base` to
-   `/svdgc/<app>/` + React Router `basename`, single S3/CloudFront, landing
-   page at `/`, 301 `putt.dg-rater.com` → `/svdgc/putt`.
+1. **DONE — DG-Dubs CRA → Vite** (`frontend/`). Live-verified against :5000.
+2. **DONE — DG-Tags CRA → Vite** (`tags-frontend/`). Build-verified.
+3. **DONE — DG-Putt SPA copied in** (`putt-frontend/`) + CRA → Vite.
+   Build-verified (95 modules, socket.io-client intact). API calls still target
+   the standalone `/api/tournaments` paths; `/api/putt/*` repoint is deferred to
+   cutover.
+4. **NEXT — path-based routing + single distribution** (own chunk). Decide
+   first: **separate path-prefixed builds** (each app its own Vite build at
+   `base=/svdgc/<app>/`, synced into one S3 bucket) **vs a single unified SPA**
+   (one Vite project, client-side routing over `/<org>/<app>`, one dev server).
+   Then: React Router `basename` per app, landing/directory page at `/`,
+   CloudFront SPA-routing behaviors, 301 `putt.dg-rater.com` → `/svdgc/putt`.
+   (Also fold in: give each dev server a distinct port so all can run at once.)
 
 **DG-Putt prod cutover (backend) — still pending, do NOT do piecemeal:**
 snapshot shared RDS → `flask db upgrade` (`d4e5f6a7b8c9`, additive, safe
@@ -130,8 +140,15 @@ ship from the standalone `puttingLeague` repo without interference.
 - In-memory `TournamentRatingSystem` (DG-Dubs read cache) is single-org; must
   be made per-org before onboarding a 2nd org.
 - Migrate tenant read call-sites to org-scoped queries when multi-org lands.
-- CRA → Vite: **DG-Dubs + DG-Tags done** (branch `frontend-vite-migration`);
-  DG-Putt's SPA still to be copied in and migrated, before the path-based
-  frontend deploy.
+- CRA → Vite: **all three SPAs done** (`frontend/`, `tags-frontend/`,
+  `putt-frontend/`). Remaining Phase 2.5: path-based routing + single
+  distribution; DG-Putt frontend API repoint to `/api/putt/*` **done**.
+- **DG-Putt Admin user-management tab broken, pending the §13 governance
+  migration.** `putt-frontend/src/components/Admin.tsx` still assumes DG-Putt's
+  old single-axis auth: it calls the nonexistent `/api/auth/reset-data` and
+  uses `user_id` / `Admin`/`Director` role enums instead of the shared `id` +
+  `org_roles`/`org_memberships` model. Rest of the DG-Putt SPA works against the
+  consolidated backend. Fix = rebuild the tab on the governance model (not a
+  patch). See design doc §13.8.
 - Phase 2: DG-Putt backend fold-in **done on `main`** (`putt_*` tables,
   `/api/putt/*`). Remaining: prod data cutover + frontend copy-in/repoint.

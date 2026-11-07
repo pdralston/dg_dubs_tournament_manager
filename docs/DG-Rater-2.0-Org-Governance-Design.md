@@ -332,13 +332,17 @@ RDS snapshot before any schema change.**
   `REACT_APP_*` env vars to `VITE_*`, swap `react-scripts` for `vite` +
   `@vitejs/plugin-react`, set `base` per app. This is an independent workstream
   from the governance backend and does not block Phase 1.
-  - **Status (2026-11-07):** DG-Dubs (`frontend/`) and DG-Tags
-    (`tags-frontend/`) both **migrated** on branch `frontend-vite-migration` —
-    `base: '/'` interim (no routing change yet), `build/` outDir preserved so
-    the existing `aws s3 sync build/` deploy is unchanged. The swap also
-    required bumping `@types/node`→20 and `typescript`→5.x (Vite 5 peer /
+  - **Status (2026-11-07):** **all three SPAs migrated to Vite.** DG-Dubs
+    (`frontend/`), DG-Tags (`tags-frontend/`), and DG-Putt (`putt-frontend/`,
+    copied in from the standalone `puttingLeague` repo) — `base: '/'` interim
+    (no routing change yet), `build/` outDir preserved so the existing
+    `aws s3 sync build/` deploy is unchanged. The swap required bumping
+    `@types/node`→20 and `typescript`→5.x (Vite 5 peer /
     `moduleResolution: 'bundler'`). CRA Jest scaffolding removed; Vitest
-    deferred. Remaining: copy DG-Putt's SPA into this repo and migrate it.
+    deferred. DG-Putt keeps `socket.io-client`; its dev server proxies both
+    `/api` and `/socket.io` (ws) to the backend. Its API calls still target the
+    standalone `/api/tournaments` paths — the `/api/putt/*` repoint is a
+    cutover-coupled step, not part of this tooling swap.
 - Provision (if not already) the single frontend: reuse S3 `dg-rater-com` +
   CloudFront `E1X7Y3M3J92BY0` (the existing dg-rater.com distribution).
 - Build each app with its path prefix via Vite `base`: Dubs
@@ -702,6 +706,26 @@ WHERE app = '*' OR role = 'viewer';
   (`UPDATE users SET is_superuser=1 WHERE username=...`) until a future admin
   portal exposes user management. Acceptable while the project has a single
   solo site admin.
+- **DG-Putt frontend Admin → user-management tab is broken pending this
+  migration (known gap, 2026-11-07).** When `putt-frontend/` was folded in and
+  repointed to the consolidated backend, its domain calls moved to `/api/putt/*`
+  and its shared calls (`/api/auth/login|logout|me|users`) resolve correctly —
+  **but its Admin user-management UI (`putt-frontend/src/components/Admin.tsx`)
+  still assumes DG-Putt's old single-axis auth** and does not work against the
+  shared two-axis model:
+  - It calls `POST /api/auth/reset-data`, a DG-Putt-only destructive dev utility
+    that does **not** exist on the shared `auth_api.py` (deliberately not
+    ported — a cross-app "wipe all data" is unsafe on a multi-tenant backend) →
+    404.
+  - It references `user.user_id` / sends an `Admin`/`Director` role enum, but
+    the shared `users` model keys on `id` and authorization is now
+    `org_roles` + `org_memberships`, not a flat `users.role`.
+  Everything else in the DG-Putt SPA (players, tournaments, brackets, scoring,
+  ace-pot, archive, login/logout) works against the consolidated backend. The
+  fix is **not** a frontend patch — it is to rebuild this tab on the governance
+  model (per-app role chips, org-user provisioning via the future `/api/org/*`
+  endpoints), as part of this §13 governance frontend work. Until then, treat
+  the DG-Putt Admin user-management tab as non-functional.
 
 ### 13.9 Open items — RESOLVED
 

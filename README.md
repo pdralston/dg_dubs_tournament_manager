@@ -33,6 +33,8 @@ tags.dg-rater.com                  dg-rater.com
 
 - **DG-Dubs Frontend** — React 19 + TypeScript (Vite) at `frontend/`
 - **DG-Tags Frontend** — React 19 + TypeScript (Vite) at `tags-frontend/`
+- **DG-Putt Frontend** — React 19 + TypeScript (Vite) at `putt-frontend/`
+  (Socket.IO for live bracket updates)
 - **Backend** — Flask + SQLAlchemy + PyMySQL, app factory pattern
 - **Database** — MySQL (AWS RDS), shared instance
 - **Auth** — Session-based (PBKDF2). Authorization is **two-axis**: an org-wide
@@ -190,6 +192,25 @@ npm run dev
 Available at http://localhost:3000 (run one frontend at a time, or change
 ports). The dev server proxies `/api` to the local backend. Build with
 `npm run build` (outputs to `tags-frontend/build/`).
+
+### DG-Putt Frontend
+
+```bash
+cd putt-frontend
+cp .env.example .env   # edit VITE_API_URL if needed
+npm install
+npm run dev
+```
+
+Available at http://localhost:3000 (run one frontend at a time, or change
+ports). The dev server proxies both `/api` and the Socket.IO transport
+(`/socket.io`, used for live bracket updates) to the local backend. Build with
+`npm run build` (outputs to `putt-frontend/build/`).
+
+> Note: `putt-frontend/`'s API calls still target the standalone DG-Putt paths
+> (`/api/tournaments`, …). Repointing them to the consolidated `/api/putt/*` on
+> `api.dg-rater.com` is a deliberate later step tied to the DG-Putt prod
+> cutover.
 
 ### Running Tests
 
