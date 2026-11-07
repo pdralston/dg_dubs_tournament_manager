@@ -12,12 +12,34 @@ AWS RDS MySQL instance:
 
 - **DG-Dubs** — doubles tournament rating system. Live at https://dg-rater.com.
 - **DG-Tags** — bag-tag tracking. API live; standalone frontend still in dev.
-- **DG-Putt** — putting league. Live at https://putt.dg-rater.com, currently a
-  *separate* project/repo (`../puttingLeague/`) and EB env; consolidation into
-  this backend is planned (design doc Phase 2), not yet done.
+- **DG-Putt** — putting league. Live at https://putt.dg-rater.com, served by a
+  *separate* project/repo (`../puttingLeague/`) and EB env **in prod**. Its
+  backend has now been **folded into this repo** (`backend/apps/putt/`,
+  `putt_*` tables) on `main`, but that consolidated code is **not yet deployed**
+  and prod still runs from the standalone repo until cutover (design doc
+  Phase 2).
 
-## Current state (as of 2026-10-20)
+## Current state (as of 2026-11-07)
 
+- **DG-Putt backend fold-in (Phase 2): MERGED to `main`, NOT yet deployed.**
+  DG-Putt's backend is consolidated into this app factory (PR #68): nine
+  `putt_*` tables (`backend/models/putt.py`, org-scoped via `TenantMixin`), all
+  routes under `/api/putt/*` (`backend/apps/putt/`) on the shared two-axis auth
+  (`require_role(app='putt', ...)`), SocketIO added to `create_app` for live
+  bracket updates, and Alembic migration `d4e5f6a7b8c9` (creates the `putt_*`
+  tables; rehearsed reversible on MySQL). **The prod cutover is deliberately
+  pending** — it requires, in order: (1) `flask db upgrade` on the shared RDS
+  to create the `putt_*` tables, (2) a one-off `dgputt`→`putt_*` data migration
+  stamped `org_id=1` (run between events — the season is live), then (3) deploy
+  + repoint the Putt frontend + 301 `putt.dg-rater.com`. Until then the
+  standalone `puttingLeague` repo keeps serving prod untouched.
+- **Frontend CRA → Vite (Phase 2.5): IN PROGRESS.** DG-Dubs (`frontend/`) and
+  DG-Tags (`tags-frontend/`) are both migrated to Vite on branch
+  `frontend-vite-migration` — pure tooling swap, `base: '/'` (no routing change
+  yet), `build/` output preserved so the existing `aws s3 sync build/` deploy is
+  unchanged. Required bumping `@types/node`→20 and `typescript`→5.x (Vite 5 /
+  bundler resolution). Remaining CRA: DG-Putt's SPA (to be copied into this repo
+  from `../puttingLeague/` and migrated).
 - **Org-level governance (Phase 1) is DEPLOYED to prod.** All domain data is
   scoped to an organization via an `org_id` column on tenant tables, with a
   `before_flush` hook that stamps org ownership on writes.
@@ -44,8 +66,9 @@ AWS RDS MySQL instance:
 - The single existing org is **Silicon Valley Disc Golf Club (SVDGC,
   `org_id=1`)**; all pre-existing data was backfilled to it.
 - Schema is managed by **Alembic / Flask-Migrate** (migrations under
-  `migrations/`; prod head `c3d4e5f6a7b8`). `db.create_all()` is only used for
-  the SQLite test DB.
+  `migrations/`; chain head `d4e5f6a7b8c9` = the DG-Putt `putt_*` tables; prod
+  RDS is currently at `c3d4e5f6a7b8` since the putt migration is not yet
+  applied). `db.create_all()` is only used for the SQLite test DB.
 - The **URL direction** is path-based, org-first: `dg-rater.com/<org>/<app>`
   (e.g. `/svdgc/tags`). Not all frontends serve this yet.
 
@@ -53,44 +76,42 @@ AWS RDS MySQL instance:
 
 - `backend/app.py` — Flask app factory (`create_app`).
 - `backend/models/` — SQLAlchemy models: `platform.py` (User, Org,
-  OrgMembership, OrgRole, TenantMixin, sessions, PII log), `dubs.py`, `tags.py`.
+  OrgMembership, OrgRole, TenantMixin, sessions, PII log), `dubs.py`, `tags.py`,
+  `putt.py` (nine `putt_*` tables).
 - `backend/shared/` — `auth.py` (auth + `require_role` / `require_org_role`),
   `org_context.py` (resolve current org), `scoping.py` (org stamping/query
   helper).
-- `backend/apps/dubs/`, `backend/apps/tags/` — per-app routes + services.
-- `frontend/` (DG-Dubs SPA), `tags-frontend/` (DG-Tags SPA) — React + TS (CRA;
-  migration to Vite planned).
+- `backend/apps/dubs/`, `backend/apps/tags/`, `backend/apps/putt/` — per-app
+  routes + services.
+- `frontend/` (DG-Dubs SPA) and `tags-frontend/` (DG-Tags SPA) — React + TS,
+  both **migrated to Vite** (branch `frontend-vite-migration`). DG-Putt's SPA
+  still lives in `../puttingLeague/` (to be copied in and migrated).
 - `migrations/` — Alembic migration chain.
 - `tests/` — pytest suite (SQLite in-memory).
 
-## NEXT SESSION — post-§13 cleanup (START HERE)
+## NEXT SESSION — frontend consolidation (START HERE)
 
-The §13 deploy is DONE (see Current state). Remaining follow-ups:
+Phase 1 + §13 + the DG-Putt **backend** fold-in are all landed. Current effort
+is **Phase 2.5 frontend consolidation** on branch `frontend-vite-migration`:
 
-1. ~~Set `users.is_superuser` on the site-owner account.~~ **DONE 2026-10-20.**
-   Set `admin` (user id 1) to `is_superuser=True` on prod RDS. Method: connected
-   to the EB instance (`i-0d7e6cb8dc9147dc5`) via **SSM Session Manager** (not
-   SSH), `sudo su -`, sourced the EB env (`set -a; . /opt/elasticbeanstalk/deployment/env; set +a`
-   — needed because the root shell lacks the injected `DB_*` vars, else it
-   falls back to localhost), activated `/var/app/venv/staging-LQM1lest`, and ran
-   a one-off ORM script scoped to `username='admin'`. Verified before/after.
-   Reversible: set back to `False` to undo. (Still a manual DB flag until an
-   admin portal exposes user management, §13.8.)
-2. **Delete the pre-migration snapshot** `dgputt-db-pre-s13-20260109` after a
-   few clean days.
-3. ~~Revoke temporary SG rule~~ — N/A; no SG rule was created this session
-   (deployed via EB, not a direct DB connection).
-4. ~~Rotate prod DB password~~ — deprioritized; exposure was on a personal,
-   non-shared laptop. (Original note still stands long-term: `DB_PASSWORD` and
-   `ADMIN_PASSWORD` share one value and should differ.)
-5. **Commit the `.ebignore` fix** (excludes `kirocli*`, `awscliv2.zip`,
-   `*.zip`, `backend/venv/`, `tags-frontend/`, etc.) so future deploys from any
-   machine don't hit the 512MB archive limit.
+1. **DONE — DG-Dubs CRA → Vite** (`frontend/`). Pure tooling swap, `base: '/'`,
+   build + live dev-server/proxy verified against the :5000 backend.
+2. **DONE — DG-Tags CRA → Vite** (`tags-frontend/`), same pattern; build
+   verified.
+3. **NEXT — copy DG-Putt's SPA into this repo** (e.g. `putt-frontend/`) and
+   migrate it to Vite. Its API calls will be repointed to `/api/putt/*` on
+   `api.dg-rater.com` as part of cutover (separate step). (This is the next
+   committed chunk after merging the Dubs+Tags Vite work.)
+4. Then (separate chunk) path-based routing: switch each app's Vite `base` to
+   `/svdgc/<app>/` + React Router `basename`, single S3/CloudFront, landing
+   page at `/`, 301 `putt.dg-rater.com` → `/svdgc/putt`.
 
-Rollback if the deploy misbehaves: redeploy the prior app version, or
-`flask db downgrade b2f1c3a4d5e6` (proven reversible — re-materializes the four
-`'*'` rows), or restore snapshot `dgputt-db-pre-s13-20260109` (nuclear; also
-rolls back the DG-Putt `dgputt` schema on the shared instance).
+**DG-Putt prod cutover (backend) — still pending, do NOT do piecemeal:**
+snapshot shared RDS → `flask db upgrade` (`d4e5f6a7b8c9`, additive, safe
+anytime) → one-off `dgputt`→`putt_*` data copy stamped `org_id=1` (between
+events) → deploy consolidated backend → repoint Putt frontend → retire
+standalone env. `main` is kept at deployed-prod state so a season hotfix can
+ship from the standalone `puttingLeague` repo without interference.
 
 ## Known follow-ups (see design doc §11a and §13 for the full list)
 
@@ -109,5 +130,8 @@ rolls back the DG-Putt `dgputt` schema on the shared instance).
 - In-memory `TournamentRatingSystem` (DG-Dubs read cache) is single-org; must
   be made per-org before onboarding a 2nd org.
 - Migrate tenant read call-sites to org-scoped queries when multi-org lands.
-- CRA → Vite before the path-based frontend deploy.
-- Phase 2: fold DG-Putt into this backend (rename its tables `putt_*`).
+- CRA → Vite: **DG-Dubs + DG-Tags done** (branch `frontend-vite-migration`);
+  DG-Putt's SPA still to be copied in and migrated, before the path-based
+  frontend deploy.
+- Phase 2: DG-Putt backend fold-in **done on `main`** (`putt_*` tables,
+  `/api/putt/*`). Remaining: prod data cutover + frontend copy-in/repoint.

@@ -332,6 +332,13 @@ RDS snapshot before any schema change.**
   `REACT_APP_*` env vars to `VITE_*`, swap `react-scripts` for `vite` +
   `@vitejs/plugin-react`, set `base` per app. This is an independent workstream
   from the governance backend and does not block Phase 1.
+  - **Status (2026-11-07):** DG-Dubs (`frontend/`) and DG-Tags
+    (`tags-frontend/`) both **migrated** on branch `frontend-vite-migration` —
+    `base: '/'` interim (no routing change yet), `build/` outDir preserved so
+    the existing `aws s3 sync build/` deploy is unchanged. The swap also
+    required bumping `@types/node`→20 and `typescript`→5.x (Vite 5 peer /
+    `moduleResolution: 'bundler'`). CRA Jest scaffolding removed; Vitest
+    deferred. Remaining: copy DG-Putt's SPA into this repo and migrate it.
 - Provision (if not already) the single frontend: reuse S3 `dg-rater-com` +
   CloudFront `E1X7Y3M3J92BY0` (the existing dg-rater.com distribution).
 - Build each app with its path prefix via Vite `base`: Dubs

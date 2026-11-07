@@ -31,8 +31,8 @@ tags.dg-rater.com                  dg-rater.com
 └─────────────────────────────────────────────┘
 ```
 
-- **DG-Dubs Frontend** — React 19 + TypeScript (CRA) at `frontend/`
-- **DG-Tags Frontend** — React 19 + TypeScript (CRA) at `tags-frontend/`
+- **DG-Dubs Frontend** — React 19 + TypeScript (Vite) at `frontend/`
+- **DG-Tags Frontend** — React 19 + TypeScript (Vite) at `tags-frontend/`
 - **Backend** — Flask + SQLAlchemy + PyMySQL, app factory pattern
 - **Database** — MySQL (AWS RDS), shared instance
 - **Auth** — Session-based (PBKDF2). Authorization is **two-axis**: an org-wide
@@ -171,21 +171,25 @@ API available at http://localhost:5000.
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
-Available at http://localhost:3000.
+Available at http://localhost:3000. The dev server proxies `/api` to the local
+backend; set `VITE_API_URL` (see `frontend/.env.example`) to point elsewhere.
+Build for production with `npm run build` (outputs to `frontend/build/`).
 
 ### DG-Tags Frontend
 
 ```bash
 cd tags-frontend
-cp .env.example .env   # edit REACT_APP_API_URL if needed
+cp .env.example .env   # edit VITE_API_URL if needed
 npm install
-npm start
+npm run dev
 ```
 
-Available at http://localhost:3000 (run one frontend at a time, or change ports).
+Available at http://localhost:3000 (run one frontend at a time, or change
+ports). The dev server proxies `/api` to the local backend. Build with
+`npm run build` (outputs to `tags-frontend/build/`).
 
 ### Running Tests
 
