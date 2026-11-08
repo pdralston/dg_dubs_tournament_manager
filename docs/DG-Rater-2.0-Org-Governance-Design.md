@@ -408,6 +408,23 @@ onboarded — the root is the platform/org entry point, so `/` renders the
 platform landing and apps live under `/:org/:app/*`. (Confirmed with operator;
 applies at the part-(b) deploy.)
 
+**Part-(b) deploy-time auth smoke check (session cookie).** After the `web/`
+SPA is live on `dg-rater.com` (calling `api.dg-rater.com`), log in and confirm
+the session *sticks* (a follow-up `GET /api/auth/me` returns the authenticated
+identity, not Viewer). This is expected to work with **no backend cookie
+change**: `dg-rater.com` and `api.dg-rater.com` share the same registrable
+domain, so SPA→API requests are *same-site* (cross-origin but same-site), and
+Flask's default `SameSite=Lax` session cookie is sent on same-site requests —
+the same relationship DG-Dubs already uses in prod today. Only if the SPA and
+API were ever served from *different registrable domains* would cross-site auth
+require `SESSION_COOKIE_SAMESITE='None'` + `SESSION_COOKIE_SECURE=True`
+(+ likely `SESSION_COOKIE_DOMAIN='.dg-rater.com'`); do **not** set these
+pre-emptively, as `SameSite=None` loosens the cookie for no benefit here. (Note:
+in local dev, loading the SPA via `127.0.0.1:3000` while the API base points at
+`localhost:5000` *is* genuinely cross-site — different hosts — and drops the
+`Lax` cookie; the dev API base is therefore left empty so calls go same-origin
+through the Vite proxy. That dev-only mismatch does not exist in prod.)
+
 ### Phase 3 — Cost cleanup
 - Confirm one EB env (`production`) serves all traffic; terminate the second
   env. Verify billing drop.
