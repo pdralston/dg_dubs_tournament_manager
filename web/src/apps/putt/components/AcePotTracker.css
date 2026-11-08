@@ -1,0 +1,99 @@
+.ace-pot-tracker {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: left;
+}
+
+.ace-pot-tracker .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.ace-pot-tracker .page-header h2 {
+  color: var(--accent);
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.6rem;
+  letter-spacing: 0.5px;
+}
+
+/* "Current Total" sits on the dark page, so use light text + accent amount. */
+.current-total {
+  color: #EFF9F4;
+  font-size: 1.2rem;
+}
+
+.current-total .amount {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.ace-pot-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ace-pot-table th {
+  background: var(--accent-strong);
+  color: #fff;
+  padding: 14px 16px;
+  text-align: left;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.ace-pot-table th:first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.ace-pot-table th:nth-child(3),
+.ace-pot-table th:nth-child(4) {
+  text-align: right;
+  width: 140px;
+}
+
+.ace-pot-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--color-ink);
+}
+
+.ace-pot-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ace-pot-table td:nth-child(3),
+.ace-pot-table td:nth-child(4) {
+  text-align: right;
+  font-weight: 700;
+}
+
+.ace-pot-table tr:hover td {
+  background: var(--surface-alt);
+}
+
+/* Positive = accent green, negative = danger red, both readable on white. */
+.positive {
+  color: var(--accent-strong);
+}
+
+.negative {
+  color: var(--danger);
+}
+
+.running-total {
+  color: var(--color-ink) !important;
+}

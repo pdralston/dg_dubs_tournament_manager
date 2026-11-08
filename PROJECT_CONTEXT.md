@@ -21,7 +21,7 @@ AWS RDS MySQL instance:
 
 ## Current state (as of 2026-11-07)
 
-- **Unified single-SPA frontend (`web/`): IN PROGRESS (shell + Dubs + Tags done).**
+- **Unified single-SPA frontend (`web/`): IN PROGRESS (all 3 apps ported; wiring/cleanup next).**
   Decision taken to go straight to the **single unified SPA** (design doc §4
   north star) instead of the interim path-prefixed separate builds — one Vite
   app, one build, one bucket/CloudFront, client-side routing over
@@ -31,9 +31,12 @@ AWS RDS MySQL instance:
   landing, `/:org/:app/*` app host), app shell (brand + org/app switcher + auth
   slot + shared login modal), and a shared three-tier `AuthContext` (Site
   `isSuperuser` → Org `orgRole` owner/manager → App `appRole` admin/director,
-  mirroring the backend) wired to the enriched `/api/auth/me`. **DG-Dubs
-  (`spa/03`) and DG-Tags (`spa/04`) are ported** and live-verified into
-  `web/src/apps/{dubs,tags}/`; DG-Putt remains a placeholder mount (`spa/05`).
+  mirroring the backend) wired to the enriched `/api/auth/me`. **All three apps
+  are ported and live-verified** into `web/src/apps/{dubs,tags,putt}/` (`spa/03`
+  Dubs, `spa/04` Tags, `spa/05` Putt incl. Socket.IO live bracket updates).
+  A build-time PostCSS plugin (`web/postcss-scope-app.mjs`) scopes each app's
+  CSS under its `[data-app]` host so the three apps' reused class names + `:root`
+  vars don't collide in the one DOM.
   The standalone `frontend/`, `tags-frontend/`, `putt-frontend/` are superseded
   and get removed once all apps are ported into `web/src/apps/` (`spa/06`).
 - **`/api/auth/me` enriched (on `main`, PR #71).** Returns the three-tier
@@ -142,13 +145,14 @@ path-prefixed separate builds).
    don't touch auth (gating was only in the old App.tsx) → no adapter context
    needed; `TagsApp` uses shared `useAuth()` (`hasAppRole('tags',…)`). Tags API
    = `/api/tags/*` + shared `/api/auth/*` (unchanged). Live-verified.
-5. **NEXT — `spa/05` port DG-Putt** into `web/src/apps/putt/` (Socket.IO; its
-   API calls already target `/api/putt/*`; Admin user-mgmt tab still the §13.8
-   gap). Local test data: `DRoc101` granted `(putt,director)` so director-level
-   putt is verifiable; `admin` already has putt via superuser.
-6. **`spa/06`** — build/deploy wiring (single bucket/CloudFront, SPA fallback,
-   301 `putt.dg-rater.com` → `/svdgc/putt`), and **remove** `frontend/`,
-   `tags-frontend/`, `putt-frontend/`. Then final CR
+5. **DONE — `spa/05` port DG-Putt** into `web/src/apps/putt/` (Socket.IO live
+   bracket updates working; API already `/api/putt/*`; role-casing bridge
+   lowercase→`Admin`/`Director`; Admin user-mgmt tab still the §13.8 gap).
+   Live-verified against prod (styling/fonts match). Local test data: `DRoc101`
+   granted `(putt,director)`; `admin` has putt via superuser.
+6. **NEXT — `spa/06`** — build/deploy wiring (single bucket/CloudFront, SPA
+   fallback, 301 `putt.dg-rater.com` → `/svdgc/putt`), and **remove**
+   `frontend/`, `tags-frontend/`, `putt-frontend/`. Then final CR
    `single-spa-implementation` → `main`.
 
 **Port-pattern lessons (apply to Putt):**
@@ -162,12 +166,22 @@ path-prefixed separate builds).
   in Dubs).
 - Feed `appRole(app) ?? 'Viewer'` as the legacy `userRole` string prop; shape
   `identity` into the app's `User`/`currentUser` for admin components.
-- **Per-app CSS scoping differs by app.** Dubs CSS was all `.App*`/component
-  classes (no scoping needed). **Tags CSS HAD bare element selectors** (`body`,
-  `h1-h6`, `a`, `table`, `th`, `td`, `tbody tr:hover`, `select.form-control`,
-  `main`) — all were scoped under `[data-app="tags"]` and the global `body` rule
-  neutralized (shell owns the page). Putt likely has similar globals — audit and
-  scope. (esbuild minifies `[data-app="tags"]`→`[data-app=tags]` in the bundle.)
+- **Per-app CSS isolation is handled by a build-time PostCSS plugin**
+  (`web/postcss-scope-app.mjs`, wired in `web/vite.config.ts`): it auto-scopes
+  every rule in `src/apps/<app>/*.css` under `[data-app="<app>"]`
+  (`:root`/`html`/`body` → the host; `@media` children scoped; `@import`/
+  `@keyframes`/`@font-face` left global; idempotent vs already-scoped
+  selectors). This is required because the three apps reuse class names (`.App`,
+  `.App-header`, `.table-container`, …) and `:root` var names (`--accent`,
+  `--color-page-bg`, …) with different values. Three latent couplings it
+  surfaced (all fixed): (a) apps' palettes collided via global `:root` — the
+  plugin scopes them; (b) Putt never imported its own `styles/theme.css` (it had
+  been borrowing Dubs' leaked global vars) — add the theme import per app;
+  (c) each app must **anchor its base typography on its host** (a `body { font-
+  family: var(--font-*) }` rule, which the plugin rewrites to the host), not
+  rely on a global `body` font — the standalone apps' `index.css` body fonts are
+  NOT ported (the shell owns `body`). (esbuild minifies `[data-app="x"]`→
+  `[data-app=x]` in the bundle.)
 
 **Seed-data / auth note (address before prod cutover):** the §13 migration made
 every director a director of BOTH `dubs` and `tags` (directors-of-everything).

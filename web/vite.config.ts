@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import scopeAppCss from './postcss-scope-app.mjs';
 
 // Unified DG-Rater SPA (single-SPA end state). One build, one bucket, one
 // CloudFront distribution. Client-side routing over /:org/:app/*.
@@ -14,6 +15,14 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   base: '/',
+  css: {
+    // Scope each app's CSS under its [data-app="<app>"] host so the three
+    // ported apps (which reuse class names + :root var names) don't collide in
+    // the single DOM. See postcss-scope-app.mjs.
+    postcss: {
+      plugins: [scopeAppCss()],
+    },
+  },
   build: {
     outDir: 'build',
   },
