@@ -1,0 +1,207 @@
+.landing-page {
+  min-height: 100vh;
+  background-color: var(--color-page-bg);
+  color: #EFF9F4;
+}
+
+/* ---- Hero ---- */
+.landing-hero {
+  padding: 5rem 1rem 1.5rem;
+  text-align: center;
+  border-bottom: 2px solid var(--accent);
+}
+
+.landing-hero h1 {
+  margin: 0 0 2rem 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 5rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow: 2px 2px 4px #00381F;
+}
+
+.landing-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.landing-nav button {
+  background-color: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.landing-nav button:hover {
+  background-color: var(--accent-strong);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ---- Content card ---- */
+.landing-content {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.landing-page .tab-container {
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-card-lg);
+}
+
+/* Tab bar reads like the table header: deep green active, neutral inactive. */
+.landing-page .tab-buttons {
+  display: flex;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.landing-page .tab-buttons button {
+  flex: 1;
+  background: transparent;
+  color: var(--color-ink-2);
+  border: none;
+  padding: 1rem;
+  font-family: var(--font-condensed);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-right: 1px solid var(--surface-border);
+}
+
+.landing-page .tab-buttons button:last-child {
+  border-right: none;
+}
+
+.landing-page .tab-buttons button:hover {
+  background: #E7EEEA;
+  color: var(--color-ink);
+}
+
+.landing-page .tab-buttons button.active {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.landing-page .tab-content {
+  padding: 2rem;
+}
+
+.landing-page .tab-panel h2 {
+  color: var(--color-ink);
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.4rem;
+  letter-spacing: 0.5px;
+}
+
+.landing-page .tab-panel h3 {
+  color: var(--accent-strong);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 1.3rem;
+}
+
+.landing-page .tab-panel p {
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+  font-size: 1.05rem;
+  white-space: pre-line;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--color-ink);
+  text-align: left;
+}
+
+.landing-page .tab-panel section {
+  margin-bottom: 2rem;
+}
+
+/* ---- About tab action links (scoped to avoid global .action-buttons) ---- */
+.landing-page .action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.landing-page .contact-button,
+.landing-page .support-button {
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: 700;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.landing-page .contact-button:hover,
+.landing-page .support-button:hover {
+  background: var(--accent-strong);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .landing-hero {
+    padding: 1.5rem 1rem;
+  }
+
+  .landing-hero h1 {
+    font-size: 3rem;
+  }
+
+  .landing-nav {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .landing-nav button {
+    width: 220px;
+  }
+
+  .landing-content {
+    padding: 1rem;
+  }
+
+  .landing-page .tab-buttons {
+    flex-direction: column;
+  }
+
+  .landing-page .tab-buttons button {
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  .landing-page .tab-buttons button:last-child {
+    border-bottom: none;
+  }
+
+  .landing-page .tab-content {
+    padding: 1.25rem;
+  }
+}
