@@ -21,7 +21,7 @@ AWS RDS MySQL instance:
 
 ## Current state (as of 2026-11-07)
 
-- **Unified single-SPA frontend (`web/`): IN PROGRESS (shell + DG-Dubs done).**
+- **Unified single-SPA frontend (`web/`): IN PROGRESS (shell + Dubs + Tags done).**
   Decision taken to go straight to the **single unified SPA** (design doc §4
   north star) instead of the interim path-prefixed separate builds — one Vite
   app, one build, one bucket/CloudFront, client-side routing over
@@ -31,11 +31,11 @@ AWS RDS MySQL instance:
   landing, `/:org/:app/*` app host), app shell (brand + org/app switcher + auth
   slot + shared login modal), and a shared three-tier `AuthContext` (Site
   `isSuperuser` → Org `orgRole` owner/manager → App `appRole` admin/director,
-  mirroring the backend) wired to the enriched `/api/auth/me`. **DG-Dubs is
-  ported** (`spa/03`, live-verified) into `web/src/apps/dubs/`; Tags + Putt
-  remain placeholder mounts (`spa/04`, `spa/05`). The standalone `frontend/`,
-  `tags-frontend/`, `putt-frontend/` are superseded and get removed once all
-  apps are ported into `web/src/apps/` (`spa/06`).
+  mirroring the backend) wired to the enriched `/api/auth/me`. **DG-Dubs
+  (`spa/03`) and DG-Tags (`spa/04`) are ported** and live-verified into
+  `web/src/apps/{dubs,tags}/`; DG-Putt remains a placeholder mount (`spa/05`).
+  The standalone `frontend/`, `tags-frontend/`, `putt-frontend/` are superseded
+  and get removed once all apps are ported into `web/src/apps/` (`spa/06`).
 - **`/api/auth/me` enriched (on `main`, PR #71).** Returns the three-tier
   identity (`is_superuser`, `org_role`, `app_roles`) alongside the legacy flat
   fields, so the SPA auth context can gate UI the same way the backend gates the
@@ -138,28 +138,49 @@ path-prefixed separate builds).
 3. **DONE — `spa/03` port DG-Dubs** into `web/src/apps/dubs/`. Components copied
    verbatim (take a `userRole` string → fed `appRole('dubs')`); `DubsApp`
    consumes `useAuth()`; shared `LoginModal` added to the shell. Live-verified.
-4. **NEXT — `spa/04` port DG-Tags** into `web/src/apps/tags/`.
-5. **`spa/05` — port DG-Putt** into `web/src/apps/putt/` (Socket.IO; its API
-   calls already target `/api/putt/*`; Admin user-mgmt tab still the §13.8 gap).
+4. **DONE — `spa/04` port DG-Tags** into `web/src/apps/tags/`. Data components
+   don't touch auth (gating was only in the old App.tsx) → no adapter context
+   needed; `TagsApp` uses shared `useAuth()` (`hasAppRole('tags',…)`). Tags API
+   = `/api/tags/*` + shared `/api/auth/*` (unchanged). Live-verified.
+5. **NEXT — `spa/05` port DG-Putt** into `web/src/apps/putt/` (Socket.IO; its
+   API calls already target `/api/putt/*`; Admin user-mgmt tab still the §13.8
+   gap). Local test data: `DRoc101` granted `(putt,director)` so director-level
+   putt is verifiable; `admin` already has putt via superuser.
 6. **`spa/06`** — build/deploy wiring (single bucket/CloudFront, SPA fallback,
    301 `putt.dg-rater.com` → `/svdgc/putt`), and **remove** `frontend/`,
    `tags-frontend/`, `putt-frontend/`. Then final CR
    `single-spa-implementation` → `main`.
 
-**Port-pattern lessons from `spa/03` (apply to Tags + Putt):**
+**Port-pattern lessons (apply to Putt):**
 - **Keep each app's own header/banner; strip ONLY its auth controls** (login/
-  logout/user) — the shell owns those. (First Dubs attempt wrongly dropped the
-  whole banner.) If the app header was `position: fixed`, override to `static`
-  so it flows under the shell's org bar, and drop any `main` top-offset that
-  compensated for the fixed header.
+  logout/user) — the shell owns those. If the app header was `position: fixed`,
+  override to `static` so it flows under the shell's org bar, and drop any
+  `main` top-offset that compensated for the fixed header.
 - **Add an appRole-loss reset guard:** when `appRole(app)` drops (e.g. logout),
-  reset any admin/privileged view to a public one AND hard-guard the privileged
-  render — otherwise admin content lingers after logout (a real leak found in
-  Dubs). 
+  reset any privileged view to a public one AND hard-guard the privileged
+  render — otherwise privileged content lingers after logout (a real leak found
+  in Dubs).
 - Feed `appRole(app) ?? 'Viewer'` as the legacy `userRole` string prop; shape
   `identity` into the app's `User`/`currentUser` for admin components.
-- Per-app CSS: scope under the `[data-app="..."]` host; verify no bare element
-  selectors leak (Dubs had none; its classes were all `.App*`/component-scoped).
+- **Per-app CSS scoping differs by app.** Dubs CSS was all `.App*`/component
+  classes (no scoping needed). **Tags CSS HAD bare element selectors** (`body`,
+  `h1-h6`, `a`, `table`, `th`, `td`, `tbody tr:hover`, `select.form-control`,
+  `main`) — all were scoped under `[data-app="tags"]` and the global `body` rule
+  neutralized (shell owns the page). Putt likely has similar globals — audit and
+  scope. (esbuild minifies `[data-app="tags"]`→`[data-app=tags]` in the bundle.)
+
+**Seed-data / auth note (address before prod cutover):** the §13 migration made
+every director a director of BOTH `dubs` and `tags` (directors-of-everything).
+Per-app scoping works correctly (verified: a dubs-only director gets
+`tags: null`); the memberships just need curating to intended real-world scope
+before go-live. Separately, **DG-Putt user reconciliation** at cutover: DG-Putt's
+`users` table (`admin`, `DRoc101`, `Mr. Hilbert`, `Hal Kurz`; scrypt hashes) is
+NOT folded in as a table — unify on shared `users` + memberships. `admin` and
+`DRoc101` are the operator's existing shared accounts (dedupe by username: admin
+already has putt via superuser; grant `DRoc101` `(putt,director)`). `Mr. Hilbert`
+/`Hal Kurz` need shared accounts created with FRESH passwords (scrypt≠shared
+PBKDF2, can't port) + `(putt,director)` — or dropped if stale. DG-Putt `users`
+rows discarded. (See design doc §7/§8.)
 
 **DG-Putt prod cutover (backend) — still pending, do NOT do piecemeal:**
 snapshot shared RDS → `flask db upgrade` (`d4e5f6a7b8c9`, additive, safe
