@@ -1,0 +1,16 @@
+# dependencies
+/node_modules
+
+# production build
+/build
+
+# vite cache
+/.vite
+
+# local env
+.env.local
+.env.*.local
+
+# misc
+.DS_Store
+npm-debug.log*

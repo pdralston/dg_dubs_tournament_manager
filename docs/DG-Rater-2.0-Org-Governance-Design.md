@@ -355,6 +355,40 @@ RDS snapshot before any schema change.**
   function or S3 redirect), then retire the `putt.dg-rater.com` and
   `api.putt.dg-rater.com` distributions after a retention window.
 
+#### Decision (2026-11-07): go straight to the single unified SPA
+
+Rather than ship the interim **path-prefixed separate builds** and migrate to a
+single SPA later, we build the **single unified SPA** directly (the §4 north
+star). Rationale: the "don't destabilize the live DG-Putt season" caution does
+**not** apply to this repo — DG-Putt prod is served from the separate
+`puttingLeague` repo, so nothing here reaches Putt's users until cutover. With
+season-risk off the table, paying the single-SPA cost once (vs A now + an A→B
+migration later) is the better trade. The separate-builds step is skipped.
+
+New app lives in **`web/`** (one Vite project, one build, one bucket/CloudFront):
+
+```
+web/
+  index.html                 single HTML entry
+  vite.config.ts             base '/', /api + /socket.io (ws) dev proxy
+  src/
+    main.tsx                 boots <AuthProvider> + <RouterProvider>
+    router.tsx               /  ·  /:org  ·  /:org/:app/*
+    auth/AuthContext.tsx     Site(isSuperuser) → Org(orgRole) → App(appRole),
+                             wired to the enriched /api/auth/me
+    shell/Shell.tsx          header + org/app switcher + auth slot + <Outlet/>
+    host/AppHost.tsx         mounts the app for :app under [data-app=...]
+    landing/                 platform (/) + org (/:org) placeholders
+    apps/{dubs,tags,putt}/   app modules (ported in spa/03–05)
+```
+
+Built on a long-lived `single-spa-implementation` integration branch via small
+interim CRs (`spa/01` shell scaffold, `spa/02` auth, `spa/03–05` app ports,
+`spa/06` build/deploy wiring + delete the old `*-frontend/` dirs), then one
+final CR to `main`. CloudFront SPA-fallback serves `web/`'s `index.html` for
+every non-`/api`, non-`/socket.io` path; the client router renders the right
+org/app. `base`/`basename` stay `'/'` (the app owns the origin).
+
 ### Phase 3 — Cost cleanup
 - Confirm one EB env (`production`) serves all traffic; terminate the second
   env. Verify billing drop.

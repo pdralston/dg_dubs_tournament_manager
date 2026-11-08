@@ -21,6 +21,24 @@ AWS RDS MySQL instance:
 
 ## Current state (as of 2026-11-07)
 
+- **Unified single-SPA frontend (`web/`): SCAFFOLDED (in progress).** Decision
+  taken to go straight to the **single unified SPA** (design doc §4 north star)
+  instead of the interim path-prefixed separate builds — one Vite app, one
+  build, one bucket/CloudFront, client-side routing over `/:org/:app/*`. Built
+  on a long-lived `single-spa-implementation` integration branch (interim CRs
+  merge into it; one final CR to `main` when whole). The `spa/01` scaffold adds
+  `web/`: router (`/` platform landing, `/:org` org landing, `/:org/:app/*` app
+  host), app shell (brand + org/app switcher + auth slot), and a shared
+  three-tier `AuthContext` (Site `isSuperuser` → Org `orgRole` owner/manager →
+  App `appRole` admin/director, mirroring the backend) wired to the enriched
+  `/api/auth/me`. Apps are placeholder mounts; real ports follow (`spa/03`
+  Dubs, `spa/04` Tags, `spa/05` Putt). The standalone `frontend/`,
+  `tags-frontend/`, `putt-frontend/` are superseded and get removed once their
+  apps are ported into `web/src/apps/`.
+- **`/api/auth/me` enriched (on `main`, PR #71).** Returns the three-tier
+  identity (`is_superuser`, `org_role`, `app_roles`) alongside the legacy flat
+  fields, so the SPA auth context can gate UI the same way the backend gates the
+  API (same resolvers).
 - **DG-Putt backend fold-in (Phase 2): MERGED to `main`, NOT yet deployed.**
   DG-Putt's backend is consolidated into this app factory (PR #68): nine
   `putt_*` tables (`backend/models/putt.py`, org-scoped via `TenantMixin`), all
@@ -93,28 +111,40 @@ AWS RDS MySQL instance:
 - `frontend/` (DG-Dubs), `tags-frontend/` (DG-Tags), `putt-frontend/`
   (DG-Putt, incl. `socket.io-client`) — React + TS SPAs, all **on Vite**.
   DG-Putt's SPA was copied in from `../puttingLeague/frontend/`; the standalone
-  copy still serves prod until cutover.
+  copy still serves prod until cutover. **Being superseded by `web/`** — the
+  unified single SPA (shell + router + shared AuthContext; apps port into
+  `web/src/apps/{dubs,tags,putt}/`). The three `*-frontend/` dirs get removed
+  once their ports land.
+- `web/` — unified single-SPA (Vite): `src/{auth,shell,host,router,landing,apps}`.
 - `migrations/` — Alembic migration chain.
 - `tests/` — pytest suite (SQLite in-memory).
 
 ## NEXT SESSION — frontend consolidation (START HERE)
 
-Phase 1 + §13 + the DG-Putt **backend** fold-in are all landed. Current effort
-is **Phase 2.5 frontend consolidation** on branch `frontend-vite-migration`:
+Phase 1 + §13 + the DG-Putt **backend** fold-in are all landed, and all three
+SPAs are on Vite. Current effort is the **unified single SPA** (`web/`) on the
+long-lived `single-spa-implementation` integration branch (interim CRs merge
+into it; one final CR to `main`). Decision: single unified SPA (not interim
+path-prefixed separate builds).
 
-1. **DONE — DG-Dubs CRA → Vite** (`frontend/`). Live-verified against :5000.
-2. **DONE — DG-Tags CRA → Vite** (`tags-frontend/`). Build-verified.
-3. **DONE — DG-Putt SPA copied in** (`putt-frontend/`) + CRA → Vite.
-   Build-verified (95 modules, socket.io-client intact). API calls still target
-   the standalone `/api/tournaments` paths; `/api/putt/*` repoint is deferred to
-   cutover.
-4. **NEXT — path-based routing + single distribution** (own chunk). Decide
-   first: **separate path-prefixed builds** (each app its own Vite build at
-   `base=/svdgc/<app>/`, synced into one S3 bucket) **vs a single unified SPA**
-   (one Vite project, client-side routing over `/<org>/<app>`, one dev server).
-   Then: React Router `basename` per app, landing/directory page at `/`,
-   CloudFront SPA-routing behaviors, 301 `putt.dg-rater.com` → `/svdgc/putt`.
-   (Also fold in: give each dev server a distinct port so all can run at once.)
+1. **DONE — `spa/01` shell scaffold.** `web/` Vite app: router (`/`, `/:org`,
+   `/:org/:app/*`), app shell (org/app switcher + auth slot), shared three-tier
+   `AuthContext` wired to enriched `/api/auth/me`, placeholder landings + app
+   mounts. Build-verified (46 modules). (Live nav check needs a dev server +
+   a backend restart to serve the enriched `/me`.)
+2. **NEXT — `spa/02`** (optional): refine/validate the AuthContext live
+   (login → tiers → gating) now that `/me` is enriched. Much of it is built.
+3. **`spa/03` — port DG-Dubs** into `web/src/apps/dubs/` (best test surface).
+4. **`spa/04` — port DG-Tags** into `web/src/apps/tags/`.
+5. **`spa/05` — port DG-Putt** into `web/src/apps/putt/` (Socket.IO; its API
+   calls already target `/api/putt/*`; Admin user-mgmt tab still the §13.8 gap).
+6. **`spa/06`** — build/deploy wiring (single bucket/CloudFront, SPA fallback,
+   301 `putt.dg-rater.com` → `/svdgc/putt`), scope each app's CSS under
+   `[data-app]`, and **remove** `frontend/`, `tags-frontend/`, `putt-frontend/`.
+   Then final CR `single-spa-implementation` → `main`.
+
+Per-app CSS collision risk: three apps now share one DOM; scope each app's
+global styles under its `[data-app="..."]` host container during its port.
 
 **DG-Putt prod cutover (backend) — still pending, do NOT do piecemeal:**
 snapshot shared RDS → `flask db upgrade` (`d4e5f6a7b8c9`, additive, safe
