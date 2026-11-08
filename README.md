@@ -31,15 +31,14 @@ tags.dg-rater.com                  dg-rater.com
 └─────────────────────────────────────────────┘
 ```
 
-- **DG-Dubs Frontend** — React 19 + TypeScript (Vite) at `frontend/`
-- **DG-Tags Frontend** — React 19 + TypeScript (Vite) at `tags-frontend/`
-- **DG-Putt Frontend** — React 19 + TypeScript (Vite) at `putt-frontend/`
-  (Socket.IO for live bracket updates)
-- **Unified SPA (`web/`, in progress)** — the three apps above are being merged
-  into one Vite single-page app with client-side routing over `/:org/:app/*`
-  (shared app shell + three-tier auth context). On the
-  `single-spa-implementation` branch; it supersedes the three `*-frontend/`
-  dirs, which are removed once each app is ported into `web/src/apps/`.
+- **Unified Frontend (`web/`)** — a single React 19 + TypeScript (Vite) SPA
+  serving all three apps with client-side routing over `/:org/:app/*` (shared
+  app shell + three-tier auth context). DG-Dubs, DG-Tags, and DG-Putt (the last
+  with Socket.IO for live bracket updates) are ported into
+  `web/src/apps/{dubs,tags,putt}/`. One build, one bucket/CloudFront
+  distribution. A build-time PostCSS plugin (`web/postcss-scope-app.mjs`) scopes
+  each app's CSS under its `[data-app]` host so the three apps' reused class
+  names and `:root` vars don't collide in the one DOM.
 - **Backend** — Flask + SQLAlchemy + PyMySQL, app factory pattern
 - **Database** — MySQL (AWS RDS), shared instance
 - **Auth** — Session-based (PBKDF2). Authorization is **two-axis**: an org-wide
@@ -107,25 +106,26 @@ dg_dubs_tournament_manager/
 │   │   ├── dubs/
 │   │   │   ├── routes/            # 6 route files
 │   │   │   └── services/          # ratings, db_manager, ace_pot_manager
-│   │   └── tags/
-│   │       ├── routes.py          # 20 endpoints under /api/tags/
-│   │       └── services.py        # Distribution algorithm, inventory,
-│   │                              #   transitions, imports, matching
+│   │   ├── tags/
+│   │   │   ├── routes.py          # 20 endpoints under /api/tags/
+│   │   │   └── services.py        # Distribution algorithm, inventory,
+│   │   │                          #   transitions, imports, matching
+│   │   └── putt/                  # 20 endpoints under /api/putt/ + Socket.IO
 │   ├── requirements.txt
 │   └── venv/
-├── frontend/                       # DG-Dubs React app
-│   ├── src/
-│   │   ├── App.tsx
-│   │   └── components/
-│   └── package.json
-├── tags-frontend/                  # DG-Tags React app (standalone)
-│   ├── src/
-│   │   ├── App.tsx                # App shell with tab navigation
-│   │   ├── components/            # Standings, Events, Members, Inventory, Login
-│   │   ├── context/AuthContext.tsx # Session auth provider
-│   │   ├── services/api.ts       # Typed API client
-│   │   └── types/index.ts        # TypeScript interfaces
-│   └── package.json
+├── web/                            # Unified single-SPA (React 19 + TS, Vite)
+│   ├── index.html                  # single HTML entry
+│   ├── vite.config.ts              # base '/', /api + /socket.io (ws) dev proxy
+│   ├── postcss-scope-app.mjs       # per-app CSS scoping ([data-app="<app>"])
+│   ├── public/                     # shared static assets
+│   └── src/
+│       ├── main.tsx                # boots <AuthProvider> + <RouterProvider>
+│       ├── router.tsx              # /  ·  /:org  ·  /:org/:app/*
+│       ├── auth/AuthContext.tsx    # three-tier identity (site/org/app)
+│       ├── shell/                  # app shell: brand + org/app switcher + login
+│       ├── host/AppHost.tsx        # mounts the app for :app under [data-app]
+│       ├── landing/                # platform (/) + org (/:org) landings
+│       └── apps/{dubs,tags,putt}/  # the three ported apps
 ├── tests/
 │   ├── conftest.py                # Shared fixtures (SQLite in-memory, auth clients)
 │   └── test_tags_lifecycle.py     # 50 tests across 8 classes
@@ -173,49 +173,29 @@ python application.py
 
 API available at http://localhost:5000.
 
-### DG-Dubs Frontend
+### Frontend (`web/`)
+
+The unified single-page app serving all three apps. One Vite project, one build.
 
 ```bash
-cd frontend
+cd web
+cp .env.example .env   # optional: edit VITE_API_URL (defaults to localhost:5000 in dev)
 npm install
 npm run dev
 ```
 
-Available at http://localhost:3000. The dev server proxies `/api` to the local
-backend; set `VITE_API_URL` (see `frontend/.env.example`) to point elsewhere.
-Build for production with `npm run build` (outputs to `frontend/build/`).
+Available at http://localhost:3000. The dev server proxies both `/api` and the
+Socket.IO transport (`/socket.io`, used by DG-Putt's live bracket updates) to
+the local backend on :5000. Client-side routing serves the platform landing at
+`/`, an org landing at `/:org`, and each app under `/:org/:app/*` (e.g.
+`/svdgc/dubs`, `/svdgc/tags`, `/svdgc/putt`).
 
-### DG-Tags Frontend
-
-```bash
-cd tags-frontend
-cp .env.example .env   # edit VITE_API_URL if needed
-npm install
-npm run dev
-```
-
-Available at http://localhost:3000 (run one frontend at a time, or change
-ports). The dev server proxies `/api` to the local backend. Build with
-`npm run build` (outputs to `tags-frontend/build/`).
-
-### DG-Putt Frontend
+Build for production with `npm run build` (outputs to `web/build/`). Set
+`VITE_API_URL` to the backend origin — Vite inlines it at build time:
 
 ```bash
-cd putt-frontend
-cp .env.example .env   # edit VITE_API_URL if needed
-npm install
-npm run dev
+VITE_API_URL=https://api.dg-rater.com npm run build
 ```
-
-Available at http://localhost:3000 (run one frontend at a time, or change
-ports). The dev server proxies both `/api` and the Socket.IO transport
-(`/socket.io`, used for live bracket updates) to the local backend. Build with
-`npm run build` (outputs to `putt-frontend/build/`).
-
-> Note: `putt-frontend/`'s API calls still target the standalone DG-Putt paths
-> (`/api/tournaments`, …). Repointing them to the consolidated `/api/putt/*` on
-> `api.dg-rater.com` is a deliberate later step tied to the DG-Putt prod
-> cutover.
 
 ### Running Tests
 
@@ -303,16 +283,22 @@ Pending → Scheduled → In Progress → Complete
 
 ## Deployment
 
-**Backend:** AWS Elastic Beanstalk (single instance serves both apps)  
-**DG-Dubs Frontend:** S3 + CloudFront → `dg-rater.com`  
-**DG-Tags Frontend:** S3 + CloudFront → `tags.dg-rater.com`  
+**Backend:** AWS Elastic Beanstalk (single instance serves all apps)  
+**Frontend:** the unified `web/` SPA → one S3 bucket + CloudFront
+(`dg-rater.com`), with SPA fallback (403/404 → `/index.html`) so client-side
+routes under `/:org/:app/*` resolve.  
 **Database:** AWS RDS MySQL (shared)
 
-Deploy frontend:
+Deploy frontend (one build, one bucket):
 ```bash
-cd frontend && npm run build && aws s3 sync build/ s3://<dubs-bucket> --delete
-cd tags-frontend && npm run build && aws s3 sync build/ s3://<tags-bucket> --delete
+cd web && VITE_API_URL=https://api.dg-rater.com npm run build
+aws s3 sync build/ s3://<frontend-bucket> --delete
+# then invalidate the CloudFront distribution
 ```
+
+> `putt.dg-rater.com` is 301-redirected to `dg-rater.com/svdgc/putt` at cutover;
+> navigating to the site root (`/`) shows the platform landing. See
+> `DEPLOYMENT.md` for the concrete bucket/CloudFront IDs and commands.
 
 ## Testing
 

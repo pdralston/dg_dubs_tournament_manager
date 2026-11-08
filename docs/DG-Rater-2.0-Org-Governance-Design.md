@@ -282,6 +282,10 @@ DG-Putt is the largest lift because it is a separate stack.
 4. **Register blueprint** with `url_prefix='/api/putt'` in `create_app()`.
 5. **Frontend**: point `../puttingLeague/frontend` `REACT_APP_API_URL` at
    `https://api.dg-rater.com` and its calls at `/api/putt/*`.
+   *(Superseded 2026-11-08: DG-Putt is now ported into the unified `web/` SPA
+   (`web/src/apps/putt/`) with calls already on `/api/putt/*`; the standalone
+   `putt-frontend/` has been deleted. The remaining repoint is the prod
+   cutover, served by `web/`.)*
 6. **CORS**: add putt.dg-rater.com origin to the CORS allow-list in
    `create_app()` (already lists dg-rater.com, tags.dg-rater.com).
 
@@ -389,6 +393,38 @@ final CR to `main`. CloudFront SPA-fallback serves `web/`'s `index.html` for
 every non-`/api`, non-`/socket.io` path; the client router renders the right
 org/app. `base`/`basename` stay `'/'` (the app owns the origin).
 
+**Progress (2026-11-08):** `spa/06` **part (a) — in-repo finalize** landed on
+`single-spa-implementation`: the three superseded standalone SPAs (`frontend/`,
+`tags-frontend/`, `putt-frontend/`) are deleted (fully replaced by
+`web/src/apps/{dubs,tags,putt}/`), and all references in the README, this doc,
+`.ebignore` (now excludes `web/` from the backend EB bundle), `.gitignore`, and
+`DEPLOYMENT.md` are updated to the unified `web/` Vite build. Part (b) — the AWS
+deploy wiring — is deferred behind the DG-Putt backend prod cutover.
+
+**Decision (2026-11-08): the site root `/` shows the platform landing** (not a
+redirect to `/svdgc/dubs`). Existing dg-rater.com users land on DG-Dubs at root
+today, but an app-at-root default stops making sense once a second org is
+onboarded — the root is the platform/org entry point, so `/` renders the
+platform landing and apps live under `/:org/:app/*`. (Confirmed with operator;
+applies at the part-(b) deploy.)
+
+**Part-(b) deploy-time auth smoke check (session cookie).** After the `web/`
+SPA is live on `dg-rater.com` (calling `api.dg-rater.com`), log in and confirm
+the session *sticks* (a follow-up `GET /api/auth/me` returns the authenticated
+identity, not Viewer). This is expected to work with **no backend cookie
+change**: `dg-rater.com` and `api.dg-rater.com` share the same registrable
+domain, so SPA→API requests are *same-site* (cross-origin but same-site), and
+Flask's default `SameSite=Lax` session cookie is sent on same-site requests —
+the same relationship DG-Dubs already uses in prod today. Only if the SPA and
+API were ever served from *different registrable domains* would cross-site auth
+require `SESSION_COOKIE_SAMESITE='None'` + `SESSION_COOKIE_SECURE=True`
+(+ likely `SESSION_COOKIE_DOMAIN='.dg-rater.com'`); do **not** set these
+pre-emptively, as `SameSite=None` loosens the cookie for no benefit here. (Note:
+in local dev, loading the SPA via `127.0.0.1:3000` while the API base points at
+`localhost:5000` *is* genuinely cross-site — different hosts — and drops the
+`Lax` cookie; the dev API base is therefore left empty so calls go same-origin
+through the Vite proxy. That dev-only mismatch does not exist in prod.)
+
 ### Phase 3 — Cost cleanup
 - Confirm one EB env (`production`) serves all traffic; terminate the second
   env. Verify billing drop.
@@ -463,10 +499,33 @@ Resolved:
   hook (correct ownership from day one); read call sites keep plain `.query`
   for Phase 1 (correct because single-org) and migrate to `tenant_query` /
   a global filter when org #2 arrives. See Follow-ups.
+- **Schema & table naming — REJECTED a rename (2026-11-08).** Considered: rename
+  the `dg_dubs` schema → `dg_rater`, and re-prefix the DG-Dubs/DG-Tags tables to
+  a uniform `dubs_*`/`tags_*`/`putt_*` pattern (matching `putt_*`). **Not
+  doing it.** Rationale: (a) the schema name is invisible to users and purely a
+  connection-string label — renaming it means a `RENAME TABLE` cutover of ~30
+  tables + an `DB_NAME` flip with a downtime window, on the shared instance that
+  also backs live Putt, for zero functional gain; (b) the `putt_*` prefix is not
+  a cosmetic convention but a collision fix — DG-Putt clashed with DG-Dubs on
+  `tournaments`/`teams`/`seasons`, so only Putt needed prefixing; Dubs and Tags
+  never collided, so re-prefixing them is churn with no benefit; (c) tenancy
+  keys on the `org_id` column, not table names, so naming has no bearing on
+  multi-org. The one *real* residue is conceptual: the `dg_dubs` schema is in
+  fact the platform-wide DG-Rater schema; its name predates the DG-Rater
+  umbrella. That is a documentation smell, not a code problem — noted here
+  rather than fixed. If uniform naming is ever wanted, fold it into a future
+  schema revision that is *already* taking a downtime window (e.g. first real
+  multi-org onboarding), so the cutover cost is paid once.
 
 Open:
-1. Confirm the behavior of `RESTORE_FROM_BACKUP=true` on `production` before
-   any redeploy.
+1. ~~Confirm the behavior of `RESTORE_FROM_BACKUP=true` on `production`.~~
+   **RESOLVED 2026-11-08 (live-verified):** `RESTORE_FROM_BACKUP` is set as an
+   EB env var but is **not read by any code in this repo** (zero references in
+   `backend/`, `application.py`, `.ebextensions/`, `migrations/` — it appears
+   only in this doc). It is an inert leftover; a redeploy does not trigger any
+   restore. Safe to leave; optionally delete the var as cleanup. (Caveat: the
+   standalone `puttingLeague` repo is out of scope here, but `production` runs
+   *this* repo's code, so it is inert for the consolidation cutover.)
 2. Timing/window for DB password + SECRET_KEY rotation (forces re-login).
 3. Production migration must also `DROP COLUMN phone` on `member_contact_info`
    (leftover from before the phone-field removal) — include in the prod cutover.
