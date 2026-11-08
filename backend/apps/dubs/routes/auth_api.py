@@ -2,9 +2,44 @@
 
 from flask import Blueprint, jsonify, request, session, current_app
 from backend.models import db, User, UserSession
-from backend.shared.auth import login_required, admin_required
+from backend.shared.auth import (
+    login_required, admin_required,
+    resolve_org_role, resolve_membership_role, subscribed_apps,
+)
+from backend.shared.org_context import current_org_id
 
 auth_api_bp = Blueprint('auth_api', __name__)
+
+
+def _viewer_identity():
+    """Anonymous/unauthenticated identity — consistent three-tier shape with
+    everything empty so the client always receives the same keys."""
+    return {
+        'user_id': 0,
+        'username': 'Viewer',
+        'role': 'Viewer',          # legacy flat field (back-compat)
+        'is_superuser': False,     # Site tier
+        'org_role': None,          # Org tier: 'owner' | 'manager' | None
+        'app_roles': {},           # App tier: {app: 'admin'|'director'|None}
+    }
+
+
+def _identity_payload(user):
+    """Build the Site -> Org -> App identity for an authenticated user in the
+    current org, using the same resolvers the backend uses to *enforce* access
+    (so UI gating matches API behavior by construction)."""
+    oid = current_org_id()
+    return {
+        'user_id': user.id,
+        'username': user.username,
+        'role': user.role,                         # legacy flat field (back-compat)
+        'is_superuser': bool(user.is_superuser),   # Site tier
+        'org_role': resolve_org_role(user.id),     # Org tier
+        'app_roles': {                             # App tier (per subscribed app)
+            app: resolve_membership_role(user.id, app)
+            for app in subscribed_apps(oid)
+        },
+    }
 
 
 @auth_api_bp.route('/api/auth/login', methods=['POST'])
@@ -41,14 +76,26 @@ def logout():
 
 @auth_api_bp.route('/api/auth/me', methods=['GET'])
 def me():
+    """Return the current user's identity across the three authZ tiers
+    (Site superuser -> Org governance role -> per-app role) for the current org.
+
+    Response shape (always these keys, viewer = everything empty):
+      user_id, username, role (legacy flat, back-compat),
+      is_superuser (bool), org_role ('owner'|'manager'|None),
+      app_roles ({app: 'admin'|'director'|None}).
+    """
     if 'session_token' not in session:
-        return jsonify({'user_id': 0, 'username': 'Viewer', 'role': 'Viewer'})
+        return jsonify(_viewer_identity())
     auth = current_app.auth_manager
     valid, info = auth.validate_session(session['session_token'])
-    if valid:
-        return jsonify(info)
-    session.clear()
-    return jsonify({'user_id': 0, 'username': 'Viewer', 'role': 'Viewer'})
+    if not valid:
+        session.clear()
+        return jsonify(_viewer_identity())
+    user = User.query.filter_by(id=info['user_id'], is_active=True).first()
+    if not user:
+        session.clear()
+        return jsonify(_viewer_identity())
+    return jsonify(_identity_payload(user))
 
 
 @auth_api_bp.route('/api/auth/users', methods=['GET'])
