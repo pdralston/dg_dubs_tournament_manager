@@ -1134,3 +1134,46 @@
   margin-top: 0;
   min-height: 0;
 }
+
+/* ── Unified shell integration: tournament detail back button ──────
+   The standalone app fixed `.back-button-container` to the viewport, offset by
+   its old fixed header height. In the unified SPA the app banner is static and
+   sits below the shell's org bar, so a viewport-fixed button overlaps both
+   bars. Let it flow in-document at the top of the tournament view instead. */
+.back-button-container {
+  position: static;
+  top: auto;
+  left: auto;
+  margin: 0 0 12px;
+}
+
+/* ── Unified shell integration: matches-in-progress bar ───────────
+   Standalone pinned this bar to the viewport (fixed, offset by the old fixed
+   header). In the unified SPA that overlaps the shell org bar + static app
+   banner. Make it flow in-document instead; the compensating top-margin on the
+   content (which cleared the fixed bar) is then unnecessary. */
+.matches-in-progress {
+  position: static;
+  top: auto;
+}
+.tournament-content.with-matches-in-progress {
+  margin-top: 0;
+}
+
+/* ── Unified shell integration: back button legibility ────────────
+   The standalone used `color:#585858` + `filter:invert(1)` (toggled off when
+   the light matches-bar was a sibling) to auto-contrast. That invert yields a
+   dim gray on the dark-green tournament view — low contrast. The back button
+   now always sits on the dark-green view, so use an explicit light color and
+   drop the fragile invert/sibling toggle. */
+.back-button {
+  color: #EFF9F4;
+  filter: none;
+}
+.back-button img {
+  /* icon is dark; keep it visible on dark green */
+  filter: invert(1);
+}
+.matches-in-progress ~ .back-button-container .back-button {
+  filter: none !important;
+}

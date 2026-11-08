@@ -150,10 +150,28 @@ path-prefixed separate builds).
    lowercase→`Admin`/`Director`; Admin user-mgmt tab still the §13.8 gap).
    Live-verified against prod (styling/fonts match). Local test data: `DRoc101`
    granted `(putt,director)`; `admin` has putt via superuser.
-6. **NEXT — `spa/06`** — build/deploy wiring (single bucket/CloudFront, SPA
-   fallback, 301 `putt.dg-rater.com` → `/svdgc/putt`), and **remove**
-   `frontend/`, `tags-frontend/`, `putt-frontend/`. Then final CR
-   `single-spa-implementation` → `main`.
+   **spa/05 also carries the per-app CSS-scoping plugin + the post-merge layout
+   fixes** (see the CSS-isolation bullet below): full-width shell
+   (`.dgr-content` padding→0), Putt back-button (static position + copied
+   `back-arrow-circle.png`/`dg-basket-grn.svg` into `web/public/` + light text
+   on green), matches-in-progress bar made static, `.sr-only` utility added to
+   shell `index.css`, players table `table-layout: auto` fit. All build- +
+   live-verified. Known deferred visual passes (NOT yet exercised live): Putt
+   tournament create/manage, bracket view mid-tournament, Admin tab; and a
+   Dubs/Tags full-width re-check — handle as follow-ups, not blockers.
+
+6. **START HERE NEXT SESSION — `spa/06`** (after `spa/05` merges). Two parts:
+   (a) **Code/cleanup in-repo:** delete the superseded `frontend/`,
+   `tags-frontend/`, `putt-frontend/` dirs; update README/docs to point at
+   `web/` as the sole frontend; decide dev-server ports (each app no longer has
+   its own server — `web/` is one dev server, so this is moot now). Commit as an
+   `spa/06` CR into `single-spa-implementation`.
+   (b) **AWS deploy wiring (needs operator + live-resource confirmation; do NOT
+   execute blind):** build `web/` → one S3 bucket (reuse `dg-rater-com`) behind
+   one CloudFront distro; add SPA-fallback (serve `web/`'s `index.html` for any
+   non-`/api`, non-`/socket.io` path); 301 `putt.dg-rater.com` →
+   `dg-rater.com/svdgc/putt`; retire the old per-app distributions after soak.
+   Then the **final CR `single-spa-implementation` → `main`**.
 
 **Port-pattern lessons (apply to Putt):**
 - **Keep each app's own header/banner; strip ONLY its auth controls** (login/
@@ -202,6 +220,30 @@ anytime) → one-off `dgputt`→`putt_*` data copy stamped `org_id=1` (between
 events) → deploy consolidated backend → repoint Putt frontend → retire
 standalone env. `main` is kept at deployed-prod state so a season hotfix can
 ship from the standalone `puttingLeague` repo without interference.
+
+## Remaining big-picture workplan (ordered)
+
+1. **`spa/06`** — frontend finalize: delete old `*-frontend/` dirs + AWS deploy
+   wiring (single bucket/CloudFront + SPA fallback + 301), then CR
+   `single-spa-implementation` → `main`. (See step 6 above.)
+2. **DG-Putt backend prod cutover** — the RDS `flask db upgrade` + `dgputt`→
+   `putt_*` data migration + consolidated-backend deploy (see cutover block
+   above). Gate behind an RDS snapshot; run the data copy between putt events.
+3. **Pre-go-live data curation (decide with operator):**
+   - Curate `org_memberships` to intended per-app scope (the §13 migration made
+     every director a director of both dubs+tags — "directors of everything").
+   - **DG-Putt user reconciliation:** `admin`/`DRoc101` dedupe to existing
+     shared accounts (admin has putt via superuser; grant `DRoc101` putt); decide
+     migrate-or-drop for `Mr. Hilbert` / `Hal Kurz` (fresh passwords — scrypt
+     can't port). **OPEN QUESTION pending operator.**
+   - Optionally set `users.is_superuser` properly (currently owner-equiv only).
+4. **Deferred governance-frontend work (§13.8):** rebuild the DG-Putt (and the
+   DG-Dubs) Admin user-management tabs on the two-axis model; `/api/org/*`
+   endpoints; `org_app_subscriptions` entitlements. Putt Admin tab is currently
+   non-functional against the shared auth (documented in Admin.tsx banner).
+5. **Deferred visual QA passes** (non-blocking): Putt tournament create/manage,
+   bracket mid-tournament + live Socket.IO update, Admin tab; Dubs/Tags
+   full-width re-check.
 
 ## Known follow-ups (see design doc §11a and §13 for the full list)
 

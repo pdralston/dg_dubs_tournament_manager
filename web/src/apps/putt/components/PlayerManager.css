@@ -619,3 +619,31 @@
   box-shadow: 0 0 16px rgba(205, 127, 50, 0.3);
 }
 
+
+/* ── Unified shell: prevent the players table from being clipped ───
+   `.table-container` used `overflow: hidden` on x, so with `table-layout:
+   fixed` any width mismatch clipped the right-most (Actions) column. Allow
+   horizontal scroll instead so the full table is always reachable. The
+   player-manager already self-constrains to max-width:1200px. */
+.table-container {
+  overflow-x: auto;
+}
+
+/* ── Unified shell: players table column fit ──────────────────────
+   `table-layout: fixed` + the fixed per-column widths (auto / 200px / 50px)
+   mis-distributed width and clipped the Actions column. Use auto layout so the
+   table sizes to its content within the (max-width:1200px) container, and give
+   the columns sensible proportions. */
+.players-table {
+  table-layout: auto;
+}
+.players-table th:nth-child(2) {
+  width: 160px;
+}
+.players-table th:nth-child(3) {
+  width: 90px;
+  text-align: center;
+}
+.players-table td.actions-cell {
+  text-align: center;
+}

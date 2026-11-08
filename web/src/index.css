@@ -52,7 +52,10 @@ a:hover { text-decoration: underline; }
   border-radius: 6px;
   cursor: pointer;
 }
-.dgr-content { padding: 1.5rem; }
+/* Full-bleed: mounted apps own their full canvas (own backgrounds/padding) and
+   sit flush under the org bar. The placeholder landing pages (.dgr-page) supply
+   their own margins, so they still breathe. */
+.dgr-content { padding: 0; }
 
 /* Pages */
 .dgr-page { max-width: 880px; margin: 2rem auto; padding: 0 1.25rem; }
@@ -114,3 +117,31 @@ a:hover { text-decoration: underline; }
 }
 .dgr-modal-buttons button[type="submit"] { background: var(--dgr-accent); border-color: var(--dgr-accent); color: #fff; }
 .dgr-modal-buttons button:disabled { opacity: 0.6; cursor: default; }
+
+/* Screen-reader-only utility (global; ported from the standalone apps'
+   index.css which the shell replaces). Visually hides an element while keeping
+   it available to assistive tech — used for accessible input labels whose
+   visual affordance is the placeholder. `.visually-hidden` is an alias. */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only:focus,
+.visually-hidden:focus,
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
