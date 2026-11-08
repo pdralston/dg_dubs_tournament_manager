@@ -499,10 +499,33 @@ Resolved:
   hook (correct ownership from day one); read call sites keep plain `.query`
   for Phase 1 (correct because single-org) and migrate to `tenant_query` /
   a global filter when org #2 arrives. See Follow-ups.
+- **Schema & table naming — REJECTED a rename (2026-11-08).** Considered: rename
+  the `dg_dubs` schema → `dg_rater`, and re-prefix the DG-Dubs/DG-Tags tables to
+  a uniform `dubs_*`/`tags_*`/`putt_*` pattern (matching `putt_*`). **Not
+  doing it.** Rationale: (a) the schema name is invisible to users and purely a
+  connection-string label — renaming it means a `RENAME TABLE` cutover of ~30
+  tables + an `DB_NAME` flip with a downtime window, on the shared instance that
+  also backs live Putt, for zero functional gain; (b) the `putt_*` prefix is not
+  a cosmetic convention but a collision fix — DG-Putt clashed with DG-Dubs on
+  `tournaments`/`teams`/`seasons`, so only Putt needed prefixing; Dubs and Tags
+  never collided, so re-prefixing them is churn with no benefit; (c) tenancy
+  keys on the `org_id` column, not table names, so naming has no bearing on
+  multi-org. The one *real* residue is conceptual: the `dg_dubs` schema is in
+  fact the platform-wide DG-Rater schema; its name predates the DG-Rater
+  umbrella. That is a documentation smell, not a code problem — noted here
+  rather than fixed. If uniform naming is ever wanted, fold it into a future
+  schema revision that is *already* taking a downtime window (e.g. first real
+  multi-org onboarding), so the cutover cost is paid once.
 
 Open:
-1. Confirm the behavior of `RESTORE_FROM_BACKUP=true` on `production` before
-   any redeploy.
+1. ~~Confirm the behavior of `RESTORE_FROM_BACKUP=true` on `production`.~~
+   **RESOLVED 2026-11-08 (live-verified):** `RESTORE_FROM_BACKUP` is set as an
+   EB env var but is **not read by any code in this repo** (zero references in
+   `backend/`, `application.py`, `.ebextensions/`, `migrations/` — it appears
+   only in this doc). It is an inert leftover; a redeploy does not trigger any
+   restore. Safe to leave; optionally delete the var as cleanup. (Caveat: the
+   standalone `puttingLeague` repo is out of scope here, but `production` runs
+   *this* repo's code, so it is inert for the consolidation cutover.)
 2. Timing/window for DB password + SECRET_KEY rotation (forces re-login).
 3. Production migration must also `DROP COLUMN phone` on `member_contact_info`
    (leftover from before the phone-field removal) — include in the prod cutover.
