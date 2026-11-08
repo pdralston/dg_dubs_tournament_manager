@@ -179,3 +179,9 @@ docs/DEPLOYMENT.md
 .aws/
 # Local scratch dir (DB dumps may contain PII/password hashes) — never commit.
 tmp/
+# Local operational runbooks/notes — these hold prod infra details (RDS
+# hostnames, SG IDs, allowlisted IP paths, bucket/CloudFront/EB identifiers).
+# Keep them local, same rationale as /DEPLOYMENT.md above. Never commit.
+*.local.md
+*-runbook.md
+docs/*-runbook.md
