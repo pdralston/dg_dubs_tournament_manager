@@ -35,6 +35,11 @@ tags.dg-rater.com                  dg-rater.com
 - **DG-Tags Frontend** — React 19 + TypeScript (Vite) at `tags-frontend/`
 - **DG-Putt Frontend** — React 19 + TypeScript (Vite) at `putt-frontend/`
   (Socket.IO for live bracket updates)
+- **Unified SPA (`web/`, in progress)** — the three apps above are being merged
+  into one Vite single-page app with client-side routing over `/:org/:app/*`
+  (shared app shell + three-tier auth context). On the
+  `single-spa-implementation` branch; it supersedes the three `*-frontend/`
+  dirs, which are removed once each app is ported into `web/src/apps/`.
 - **Backend** — Flask + SQLAlchemy + PyMySQL, app factory pattern
 - **Database** — MySQL (AWS RDS), shared instance
 - **Auth** — Session-based (PBKDF2). Authorization is **two-axis**: an org-wide
