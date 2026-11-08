@@ -282,6 +282,10 @@ DG-Putt is the largest lift because it is a separate stack.
 4. **Register blueprint** with `url_prefix='/api/putt'` in `create_app()`.
 5. **Frontend**: point `../puttingLeague/frontend` `REACT_APP_API_URL` at
    `https://api.dg-rater.com` and its calls at `/api/putt/*`.
+   *(Superseded 2026-11-08: DG-Putt is now ported into the unified `web/` SPA
+   (`web/src/apps/putt/`) with calls already on `/api/putt/*`; the standalone
+   `putt-frontend/` has been deleted. The remaining repoint is the prod
+   cutover, served by `web/`.)*
 6. **CORS**: add putt.dg-rater.com origin to the CORS allow-list in
    `create_app()` (already lists dg-rater.com, tags.dg-rater.com).
 
@@ -388,6 +392,21 @@ interim CRs (`spa/01` shell scaffold, `spa/02` auth, `spa/03–05` app ports,
 final CR to `main`. CloudFront SPA-fallback serves `web/`'s `index.html` for
 every non-`/api`, non-`/socket.io` path; the client router renders the right
 org/app. `base`/`basename` stay `'/'` (the app owns the origin).
+
+**Progress (2026-11-08):** `spa/06` **part (a) — in-repo finalize** landed on
+`single-spa-implementation`: the three superseded standalone SPAs (`frontend/`,
+`tags-frontend/`, `putt-frontend/`) are deleted (fully replaced by
+`web/src/apps/{dubs,tags,putt}/`), and all references in the README, this doc,
+`.ebignore` (now excludes `web/` from the backend EB bundle), `.gitignore`, and
+`DEPLOYMENT.md` are updated to the unified `web/` Vite build. Part (b) — the AWS
+deploy wiring — is deferred behind the DG-Putt backend prod cutover.
+
+**Decision (2026-11-08): the site root `/` shows the platform landing** (not a
+redirect to `/svdgc/dubs`). Existing dg-rater.com users land on DG-Dubs at root
+today, but an app-at-root default stops making sense once a second org is
+onboarded — the root is the platform/org entry point, so `/` renders the
+platform landing and apps live under `/:org/:app/*`. (Confirmed with operator;
+applies at the part-(b) deploy.)
 
 ### Phase 3 — Cost cleanup
 - Confirm one EB env (`production`) serves all traffic; terminate the second

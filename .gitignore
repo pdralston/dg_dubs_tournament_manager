@@ -145,8 +145,7 @@ database/.env
 # Stray dotless env file (DB credentials; not caught by the .env rule above)
 /env
 # Prod build-time env (bakes prod API URL into the bundle) — no prod info in public repo
-frontend/.env.production
-tags-frontend/.env.production
+web/.env.production
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
