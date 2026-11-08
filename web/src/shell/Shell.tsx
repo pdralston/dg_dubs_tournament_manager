@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link, Outlet, useParams } from 'react-router-dom';
 import { useAuth, type AppName } from '../auth/AuthContext';
+import LoginModal from './LoginModal';
 
 const APPS: AppName[] = ['dubs', 'tags', 'putt'];
 const APP_LABEL: Record<AppName, string> = {
@@ -14,6 +16,7 @@ const APP_LABEL: Record<AppName, string> = {
 export default function Shell() {
   const { org, app } = useParams();
   const { isAuthenticated, identity, orgRole, isSuperuser, logout } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
 
   return (
     <div className="dgr-shell">
@@ -52,7 +55,7 @@ export default function Shell() {
               <button className="dgr-btn" onClick={() => logout()}>Log out</button>
             </>
           ) : (
-            <span className="dgr-user dgr-viewer">Viewer</span>
+            <button className="dgr-btn" onClick={() => setShowLogin(true)}>Log in</button>
           )}
         </div>
       </header>
@@ -60,6 +63,8 @@ export default function Shell() {
       <div className="dgr-content">
         <Outlet />
       </div>
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 }

@@ -21,20 +21,21 @@ AWS RDS MySQL instance:
 
 ## Current state (as of 2026-11-07)
 
-- **Unified single-SPA frontend (`web/`): SCAFFOLDED (in progress).** Decision
-  taken to go straight to the **single unified SPA** (design doc §4 north star)
-  instead of the interim path-prefixed separate builds — one Vite app, one
-  build, one bucket/CloudFront, client-side routing over `/:org/:app/*`. Built
-  on a long-lived `single-spa-implementation` integration branch (interim CRs
-  merge into it; one final CR to `main` when whole). The `spa/01` scaffold adds
-  `web/`: router (`/` platform landing, `/:org` org landing, `/:org/:app/*` app
-  host), app shell (brand + org/app switcher + auth slot), and a shared
-  three-tier `AuthContext` (Site `isSuperuser` → Org `orgRole` owner/manager →
-  App `appRole` admin/director, mirroring the backend) wired to the enriched
-  `/api/auth/me`. Apps are placeholder mounts; real ports follow (`spa/03`
-  Dubs, `spa/04` Tags, `spa/05` Putt). The standalone `frontend/`,
-  `tags-frontend/`, `putt-frontend/` are superseded and get removed once their
-  apps are ported into `web/src/apps/`.
+- **Unified single-SPA frontend (`web/`): IN PROGRESS (shell + DG-Dubs done).**
+  Decision taken to go straight to the **single unified SPA** (design doc §4
+  north star) instead of the interim path-prefixed separate builds — one Vite
+  app, one build, one bucket/CloudFront, client-side routing over
+  `/:org/:app/*`. Built on a long-lived `single-spa-implementation` integration
+  branch (interim CRs merge into it; one final CR to `main` when whole). The
+  `spa/01` scaffold added `web/`: router (`/` platform landing, `/:org` org
+  landing, `/:org/:app/*` app host), app shell (brand + org/app switcher + auth
+  slot + shared login modal), and a shared three-tier `AuthContext` (Site
+  `isSuperuser` → Org `orgRole` owner/manager → App `appRole` admin/director,
+  mirroring the backend) wired to the enriched `/api/auth/me`. **DG-Dubs is
+  ported** (`spa/03`, live-verified) into `web/src/apps/dubs/`; Tags + Putt
+  remain placeholder mounts (`spa/04`, `spa/05`). The standalone `frontend/`,
+  `tags-frontend/`, `putt-frontend/` are superseded and get removed once all
+  apps are ported into `web/src/apps/` (`spa/06`).
 - **`/api/auth/me` enriched (on `main`, PR #71).** Returns the three-tier
   identity (`is_superuser`, `org_role`, `app_roles`) alongside the legacy flat
   fields, so the SPA auth context can gate UI the same way the backend gates the
@@ -130,21 +131,35 @@ path-prefixed separate builds).
 1. **DONE — `spa/01` shell scaffold.** `web/` Vite app: router (`/`, `/:org`,
    `/:org/:app/*`), app shell (org/app switcher + auth slot), shared three-tier
    `AuthContext` wired to enriched `/api/auth/me`, placeholder landings + app
-   mounts. Build-verified (46 modules). (Live nav check needs a dev server +
-   a backend restart to serve the enriched `/me`.)
-2. **NEXT — `spa/02`** (optional): refine/validate the AuthContext live
-   (login → tiers → gating) now that `/me` is enriched. Much of it is built.
-3. **`spa/03` — port DG-Dubs** into `web/src/apps/dubs/` (best test surface).
-4. **`spa/04` — port DG-Tags** into `web/src/apps/tags/`.
+   mounts. Build-verified; live nav verified.
+2. **DONE — shared `AuthContext` validated live** (folded into `spa/03`): login
+   via the shell's `LoginModal` → `/api/auth/me` tiers → per-app gating, all
+   confirmed working. (No separate `spa/02` branch was needed.)
+3. **DONE — `spa/03` port DG-Dubs** into `web/src/apps/dubs/`. Components copied
+   verbatim (take a `userRole` string → fed `appRole('dubs')`); `DubsApp`
+   consumes `useAuth()`; shared `LoginModal` added to the shell. Live-verified.
+4. **NEXT — `spa/04` port DG-Tags** into `web/src/apps/tags/`.
 5. **`spa/05` — port DG-Putt** into `web/src/apps/putt/` (Socket.IO; its API
    calls already target `/api/putt/*`; Admin user-mgmt tab still the §13.8 gap).
 6. **`spa/06`** — build/deploy wiring (single bucket/CloudFront, SPA fallback,
-   301 `putt.dg-rater.com` → `/svdgc/putt`), scope each app's CSS under
-   `[data-app]`, and **remove** `frontend/`, `tags-frontend/`, `putt-frontend/`.
-   Then final CR `single-spa-implementation` → `main`.
+   301 `putt.dg-rater.com` → `/svdgc/putt`), and **remove** `frontend/`,
+   `tags-frontend/`, `putt-frontend/`. Then final CR
+   `single-spa-implementation` → `main`.
 
-Per-app CSS collision risk: three apps now share one DOM; scope each app's
-global styles under its `[data-app="..."]` host container during its port.
+**Port-pattern lessons from `spa/03` (apply to Tags + Putt):**
+- **Keep each app's own header/banner; strip ONLY its auth controls** (login/
+  logout/user) — the shell owns those. (First Dubs attempt wrongly dropped the
+  whole banner.) If the app header was `position: fixed`, override to `static`
+  so it flows under the shell's org bar, and drop any `main` top-offset that
+  compensated for the fixed header.
+- **Add an appRole-loss reset guard:** when `appRole(app)` drops (e.g. logout),
+  reset any admin/privileged view to a public one AND hard-guard the privileged
+  render — otherwise admin content lingers after logout (a real leak found in
+  Dubs). 
+- Feed `appRole(app) ?? 'Viewer'` as the legacy `userRole` string prop; shape
+  `identity` into the app's `User`/`currentUser` for admin components.
+- Per-app CSS: scope under the `[data-app="..."]` host; verify no bare element
+  selectors leak (Dubs had none; its classes were all `.App*`/component-scoped).
 
 **DG-Putt prod cutover (backend) — still pending, do NOT do piecemeal:**
 snapshot shared RDS → `flask db upgrade` (`d4e5f6a7b8c9`, additive, safe

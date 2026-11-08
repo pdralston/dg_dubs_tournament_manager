@@ -77,3 +77,40 @@ a:hover { text-decoration: underline; }
 
 /* App host placeholder */
 .dgr-app-placeholder { padding: 1rem; }
+
+/* Shared login modal */
+.dgr-login-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.dgr-login-modal {
+  background: var(--dgr-panel);
+  border: 1px solid var(--dgr-border);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  width: min(92vw, 360px);
+}
+.dgr-login-modal h2 { margin-top: 0; }
+.dgr-form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
+.dgr-form-group label { color: var(--dgr-muted); font-size: 0.85rem; }
+.dgr-form-group input {
+  background: var(--dgr-bg);
+  border: 1px solid var(--dgr-border);
+  border-radius: 6px;
+  color: var(--dgr-fg);
+  padding: 0.5rem 0.6rem;
+}
+.dgr-error { color: #ff6b81; font-size: 0.85rem; margin-bottom: 0.75rem; }
+.dgr-modal-buttons { display: flex; justify-content: flex-end; gap: 0.5rem; }
+.dgr-modal-buttons button {
+  background: transparent;
+  border: 1px solid var(--dgr-border);
+  color: var(--dgr-fg);
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dgr-modal-buttons button[type="submit"] { background: var(--dgr-accent); border-color: var(--dgr-accent); color: #fff; }
+.dgr-modal-buttons button:disabled { opacity: 0.6; cursor: default; }

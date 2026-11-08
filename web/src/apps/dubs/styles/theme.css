@@ -1,0 +1,125 @@
+/* ===========================================================================
+   DG-Dubs design tokens
+   ---------------------------------------------------------------------------
+   Adopts the card-style structure from DG-Putt (light surface cards on a dark
+   page, soft shadows, 12px rounded corners, fixed-height internally-scrolling
+   table containers with sticky headers) while keeping DG-Dubs' own color
+   identity: a dark navy page and the signature #e94560 red accent (NOT the
+   DG-Putt green).
+
+   Design language summary:
+   - Surfaces are light: white cards on a dark navy page, with soft shadows and
+     12px rounded corners.
+   - Content text is dark navy ink (#14172C / #242B5C) on those light surfaces,
+     set in Roboto (body) and Roboto Condensed (labels / emphasis).
+   - Red (#e94560) is an ACCENT only: buttons, borders, status bubbles, table
+     headers, dividers, section titles. It is never used for large bodies of
+     text.
+   - The condensed display face (Bebas Neue) is reserved for large display
+     headings; never for body copy.
+   =========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&display=swap');
+
+:root {
+  /* --- Brand / page (dark navy, unchanged from DG-Dubs) --- */
+  --color-page-bg: #1a1a2e;        /* dark navy app background */
+  --color-page-bg-2: #16213e;      /* slightly lighter navy panel */
+  --color-page-dark: #0f0f1a;      /* darkest navy (header) */
+
+  /* --- Ink (dark text on the light surface cards) --- */
+  --color-ink: #14172C;            /* primary navy text on light surfaces */
+  --color-ink-2: #242B5C;          /* secondary navy text */
+  --color-ink-muted: #5B5F7A;      /* muted navy for secondary info */
+
+  /* --- Surfaces (the white/light cards) --- */
+  --surface: #FFFFFF;              /* primary card */
+  --surface-alt: #F3F4F9;          /* subtle off-white band (row hover) */
+  --surface-border: #D8D9E3;       /* hairline divider on light cards */
+
+  /* --- Accent (DG-Dubs red) --- */
+  --accent: #e94560;               /* signature DG-Dubs red accent */
+  --accent-strong: #c73652;        /* deeper red for solid fills / headers */
+  --accent-ink: #ffffff;           /* text on red fills */
+  --accent-soft: rgba(233, 69, 96, 0.12);
+
+  /* --- Status / semantic --- */
+  --gold: #ffd700;
+  --success: #2e7d32;
+  --success-soft: rgba(46, 125, 50, 0.14);
+  --danger: #c62828;
+  --danger-strong: #8b0000;
+
+  /* --- Typography --- */
+  --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-condensed: 'Roboto Condensed', 'Roboto', sans-serif;
+  --font-display: 'Bebas Neue', cursive;  /* large headings ONLY */
+
+  /* --- Shape / depth --- */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.28);
+  --shadow-card-lg: 0 4px 26px rgba(0, 0, 0, 0.35);
+
+  /* --- Back-compat aliases (older rules in App.css still reference these) --- */
+  --color-primary: var(--accent);
+  --color-primary-hover: var(--accent-strong);
+  --color-bg-body: var(--color-page-bg);
+  --color-bg-dark: var(--color-page-dark);
+  --color-bg-card: var(--surface);
+  --color-text: var(--color-ink);
+  --color-text-muted: var(--color-ink-muted);
+  --color-border: var(--surface-border);
+  --color-border-subtle: var(--surface-border);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-danger-text: #ff6b6b;
+  --color-gold: var(--gold);
+  --font-heading: var(--font-display);
+  --radius-md: var(--radius);
+}
+
+/* ---------------------------------------------------------------------------
+   Reusable surface primitives (the light cards).
+   --------------------------------------------------------------------------- */
+
+.surface-card {
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  text-align: left;
+}
+
+/* A section title in the condensed display face, sized large so it is legible
+   (Bebas Neue only reads well large). Red accent, left aligned. */
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--accent);
+  font-size: 2.2rem;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px;
+  text-align: left;
+}
+
+/* Primary accent button (red). */
+.btn-accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-accent:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}
