@@ -1,0 +1,649 @@
+.player-manager {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: left;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.page-header h2 {
+  color: var(--accent);
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.6rem;
+  letter-spacing: 0.5px;
+}
+
+.add-button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.add-button:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.player-registration {
+  background: var(--surface);
+  color: var(--color-ink);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.player-registration h3 {
+  color: var(--color-ink);
+  margin-top: 0;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.player-registration input,
+.player-registration select {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+
+.player-registration input:focus,
+.player-registration select:focus {
+  outline: none;
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.player-registration button {
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.player-registration button:hover:not(:disabled) {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.player-registration button:disabled {
+  background: #B9C2BD;
+  color: #5B5F7A;
+  cursor: not-allowed;
+}
+
+.table-container {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.players-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.players-table th:nth-child(1) {
+  width: auto;
+}
+
+.players-table th:nth-child(2) {
+  width: 200px;
+}
+
+.players-table th:nth-child(3) {
+  width: 50px;
+}
+
+.players-table thead th {
+  background: var(--accent-strong);
+  color: #fff;
+  padding: 14px 16px;
+  text-align: left;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Round only the header's top-LEFT corner to match the card. The top-right is
+   left square so the vertical scrollbar gutter forms a clean straight edge
+   instead of a rounded corner pulling away from the scrollbar. Cell
+   border-radius renders because the table uses border-collapse: separate. */
+.players-table thead th:first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.players-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--color-ink);
+}
+
+.players-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.players-table tr:hover {
+  background: var(--surface-alt);
+}
+
+.player-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-condensed);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.player-name-text {
+  color: var(--color-ink);
+}
+
+.nickname {
+  color: var(--accent-strong);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.95em;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-ink-muted);
+  font-style: italic;
+  background: var(--surface);
+}
+
+.loading {
+  text-align: center;
+  color: var(--accent);
+  padding: 40px;
+}
+.players-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.players-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+/*
+ * Each player row exposes its clickable area as a real <button> so it is
+ * keyboard-focusable and announced as a control. The buttons are styled to
+ * fill the table cell and inherit the cell's typography, preserving the
+ * original "clickable row" look while being fully accessible.
+ */
+.player-row-button,
+.player-division-button {
+  display: block;
+  width: 100%;
+  margin: -14px -16px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.player-division-button {
+  cursor: pointer;
+}
+
+/* Hover/focus feedback on the whole row via its buttons. */
+.players-table tr:hover .player-row-button,
+.players-table tr:hover .player-division-button {
+  background-color: var(--surface-alt);
+}
+
+.player-row-button:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: -3px;
+}
+.tournament-entry {
+  display: grid;
+  grid-template-columns: auto 100px 1fr auto;
+  gap: 15px;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #666;
+}
+
+.ace-winner {
+  color: var(--accent-ink) !important;
+  font-weight: 700;
+  background-color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-strong);
+  white-space: nowrap;
+}
+
+/* On the player-detail page the back button flows in normal document order
+   above the card, rather than floating fixed over it (the fixed variant is
+   used on the full-screen bracket view). */
+.back-button-container--inline {
+  position: static;
+  margin-bottom: 12px;
+}
+
+.player-detail {
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+  margin-top: 20px;
+}
+
+.player-detail h2 {
+  color: var(--color-ink);
+  margin-bottom: 6px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.player-detail .nickname {
+  color: var(--accent-strong);
+  font-style: italic;
+  font-weight: 400;
+  margin-bottom: 24px;
+}
+
+.season-select {
+  background: #FFFFFF;
+  color: var(--color-ink);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 15px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface-alt);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+}
+
+.stat label {
+  font-weight: 700;
+  font-family: var(--font-condensed);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-ink-muted);
+}
+
+.stat span {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.player-detail h3 {
+  color: var(--accent-strong);
+  margin-top: 32px;
+  margin-bottom: 14px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tournament-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Tournament standings modal (opened from the tournament-history table).
+   Uses the shared .edit-modal-overlay dim backdrop; this is the light card. */
+.standings-modal {
+  background: var(--surface);
+  color: var(--color-ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card-lg);
+  padding: 24px 28px;
+  width: 440px;
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.standings-modal h3 {
+  margin-top: 0;
+  color: var(--color-ink);
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.standings-modal .modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.standings-modal .modal-buttons button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.standings-modal .modal-buttons button:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+
+/* History sections now sit on the dark page as their own cards, matching the
+   player-list / leaderboard look. */
+.detail-section {
+  margin-top: 28px;
+}
+
+.detail-section-title {
+  color: var(--accent);
+  margin: 0 0 12px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 1.4rem;
+}
+
+/* Standalone white table card on the dark page — identical treatment to the
+   player list's .table-container. position: relative contains the sticky
+   header / absolutely-positioned descendants so they don't inflate the page. */
+.detail-table-card {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.detail-table th {
+  background: var(--accent-strong);
+  color: #fff;
+  text-align: left;
+  padding: 14px 16px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Round only the top-left; the top-right stays square so the scrollbar forms
+   a clean straight gutter (matches the player list). */
+.detail-table th:first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.detail-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--color-ink);
+}
+
+.detail-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.detail-table tbody tr:hover td {
+  background: var(--surface-alt);
+}
+
+.detail-table tbody tr.clickable-row {
+  cursor: pointer;
+}
+
+.detail-table tbody tr.clickable-row:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: -3px;
+}
+
+/* Center the Ace Pot column (last column) in the tournament-history table. */
+.tournament-history .detail-table th:last-child,
+.tournament-history .detail-table td:last-child {
+  text-align: center;
+}
+
+.detail-empty {
+  color: var(--color-ink-muted);
+  font-style: italic;
+  margin: 0 0 8px;
+}
+.player-detail h4 {
+  color: var(--accent-strong);
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 1.1em;
+}
+
+.team-info {
+  margin-top: 15px;
+}
+
+.teammate-name {
+  font-weight: 700;
+  font-family: var(--font-condensed);
+  color: var(--color-ink);
+}
+.search-section {
+  margin: 20px 0;
+}
+
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--color-ink);
+  font-size: 16px;
+}
+
+.search-input::placeholder {
+  color: var(--color-ink-muted);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* Divisional Leader Styles */
+.rank-cell {
+  text-align: center;
+  font-size: 1.2em;
+  width: 60px;
+}
+
+.division-leader-1st {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05)) !important;
+  border-left: 4px solid #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.division-leader-2nd {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(192, 192, 192, 0.05)) !important;
+  border-left: 4px solid #C0C0C0;
+  box-shadow: 0 0 10px rgba(192, 192, 192, 0.3);
+}
+
+.division-leader-3rd {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(205, 127, 50, 0.05)) !important;
+  border-left: 4px solid #CD7F32;
+  box-shadow: 0 0 8px rgba(205, 127, 50, 0.3);
+}
+
+/* Enhanced animations for leaders */
+.division-leader-1st {
+  animation: gold-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes gold-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+}
+
+.division-leader-2nd {
+  animation: silver-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes silver-glow {
+  0% {
+    box-shadow: 0 0 8px rgba(192, 192, 192, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 16px rgba(192, 192, 192, 0.5);
+  }
+}
+
+.division-leader-3rd {
+  animation: bronze-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes bronze-glow {
+  0% {
+    box-shadow: 0 0 6px rgba(205, 127, 50, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 14px rgba(205, 127, 50, 0.5);
+  }
+}
+
+/* Player Detail Flair for Leaders */
+.player-detail.division-leader-1st {
+  border: 3px solid #FFD700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), #FFFFFF 55%);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+}
+
+.player-detail.division-leader-2nd {
+  border: 3px solid #B8B8B8;
+  background: linear-gradient(135deg, rgba(168, 168, 168, 0.22), #FFFFFF 55%);
+  box-shadow: 0 0 16px rgba(160, 160, 160, 0.3);
+}
+
+.player-detail.division-leader-3rd {
+  border: 3px solid #CD7F32;
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), #FFFFFF 55%);
+  box-shadow: 0 0 16px rgba(205, 127, 50, 0.3);
+}
+
+
+/* ── Unified shell: prevent the players table from being clipped ───
+   `.table-container` used `overflow: hidden` on x, so with `table-layout:
+   fixed` any width mismatch clipped the right-most (Actions) column. Allow
+   horizontal scroll instead so the full table is always reachable. The
+   player-manager already self-constrains to max-width:1200px. */
+.table-container {
+  overflow-x: auto;
+}
+
+/* ── Unified shell: players table column fit ──────────────────────
+   `table-layout: fixed` + the fixed per-column widths (auto / 200px / 50px)
+   mis-distributed width and clipped the Actions column. Use auto layout so the
+   table sizes to its content within the (max-width:1200px) container, and give
+   the columns sensible proportions. */
+.players-table {
+  table-layout: auto;
+}
+.players-table th:nth-child(2) {
+  width: 160px;
+}
+.players-table th:nth-child(3) {
+  width: 90px;
+  text-align: center;
+}
+.players-table td.actions-cell {
+  text-align: center;
+}

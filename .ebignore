@@ -10,8 +10,7 @@ __pycache__/
 tournament_data.db
 tournament_data.json
 example_*.sh
-frontend/
-tags-frontend/
+web/
 scripts/
 docs/
 

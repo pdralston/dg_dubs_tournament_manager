@@ -21,6 +21,28 @@ AWS RDS MySQL instance:
 
 ## Current state (as of 2026-11-07)
 
+- **Unified single-SPA frontend (`web/`): IN PROGRESS (all 3 apps ported; wiring/cleanup next).**
+  Decision taken to go straight to the **single unified SPA** (design doc §4
+  north star) instead of the interim path-prefixed separate builds — one Vite
+  app, one build, one bucket/CloudFront, client-side routing over
+  `/:org/:app/*`. Built on a long-lived `single-spa-implementation` integration
+  branch (interim CRs merge into it; one final CR to `main` when whole). The
+  `spa/01` scaffold added `web/`: router (`/` platform landing, `/:org` org
+  landing, `/:org/:app/*` app host), app shell (brand + org/app switcher + auth
+  slot + shared login modal), and a shared three-tier `AuthContext` (Site
+  `isSuperuser` → Org `orgRole` owner/manager → App `appRole` admin/director,
+  mirroring the backend) wired to the enriched `/api/auth/me`. **All three apps
+  are ported and live-verified** into `web/src/apps/{dubs,tags,putt}/` (`spa/03`
+  Dubs, `spa/04` Tags, `spa/05` Putt incl. Socket.IO live bracket updates).
+  A build-time PostCSS plugin (`web/postcss-scope-app.mjs`) scopes each app's
+  CSS under its `[data-app]` host so the three apps' reused class names + `:root`
+  vars don't collide in the one DOM.
+  The standalone `frontend/`, `tags-frontend/`, `putt-frontend/` are superseded
+  and get removed once all apps are ported into `web/src/apps/` (`spa/06`).
+- **`/api/auth/me` enriched (on `main`, PR #71).** Returns the three-tier
+  identity (`is_superuser`, `org_role`, `app_roles`) alongside the legacy flat
+  fields, so the SPA auth context can gate UI the same way the backend gates the
+  API (same resolvers).
 - **DG-Putt backend fold-in (Phase 2): MERGED to `main`, NOT yet deployed.**
   DG-Putt's backend is consolidated into this app factory (PR #68): nine
   `putt_*` tables (`backend/models/putt.py`, org-scoped via `TenantMixin`), all
@@ -93,28 +115,126 @@ AWS RDS MySQL instance:
 - `frontend/` (DG-Dubs), `tags-frontend/` (DG-Tags), `putt-frontend/`
   (DG-Putt, incl. `socket.io-client`) — React + TS SPAs, all **on Vite**.
   DG-Putt's SPA was copied in from `../puttingLeague/frontend/`; the standalone
-  copy still serves prod until cutover.
+  copy still serves prod until cutover. **Being superseded by `web/`** — the
+  unified single SPA (shell + router + shared AuthContext; apps port into
+  `web/src/apps/{dubs,tags,putt}/`). The three `*-frontend/` dirs get removed
+  once their ports land.
+- `web/` — unified single-SPA (Vite): `src/{auth,shell,host,router,landing,apps}`.
 - `migrations/` — Alembic migration chain.
 - `tests/` — pytest suite (SQLite in-memory).
 
 ## NEXT SESSION — frontend consolidation (START HERE)
 
-Phase 1 + §13 + the DG-Putt **backend** fold-in are all landed. Current effort
-is **Phase 2.5 frontend consolidation** on branch `frontend-vite-migration`:
+Phase 1 + §13 + the DG-Putt **backend** fold-in are all landed, and all three
+SPAs are on Vite. Current effort is the **unified single SPA** (`web/`) on the
+long-lived `single-spa-implementation` integration branch (interim CRs merge
+into it; one final CR to `main`). Decision: single unified SPA (not interim
+path-prefixed separate builds).
 
-1. **DONE — DG-Dubs CRA → Vite** (`frontend/`). Live-verified against :5000.
-2. **DONE — DG-Tags CRA → Vite** (`tags-frontend/`). Build-verified.
-3. **DONE — DG-Putt SPA copied in** (`putt-frontend/`) + CRA → Vite.
-   Build-verified (95 modules, socket.io-client intact). API calls still target
-   the standalone `/api/tournaments` paths; `/api/putt/*` repoint is deferred to
-   cutover.
-4. **NEXT — path-based routing + single distribution** (own chunk). Decide
-   first: **separate path-prefixed builds** (each app its own Vite build at
-   `base=/svdgc/<app>/`, synced into one S3 bucket) **vs a single unified SPA**
-   (one Vite project, client-side routing over `/<org>/<app>`, one dev server).
-   Then: React Router `basename` per app, landing/directory page at `/`,
-   CloudFront SPA-routing behaviors, 301 `putt.dg-rater.com` → `/svdgc/putt`.
-   (Also fold in: give each dev server a distinct port so all can run at once.)
+1. **DONE — `spa/01` shell scaffold.** `web/` Vite app: router (`/`, `/:org`,
+   `/:org/:app/*`), app shell (org/app switcher + auth slot), shared three-tier
+   `AuthContext` wired to enriched `/api/auth/me`, placeholder landings + app
+   mounts. Build-verified; live nav verified.
+2. **DONE — shared `AuthContext` validated live** (folded into `spa/03`): login
+   via the shell's `LoginModal` → `/api/auth/me` tiers → per-app gating, all
+   confirmed working. (No separate `spa/02` branch was needed.)
+3. **DONE — `spa/03` port DG-Dubs** into `web/src/apps/dubs/`. Components copied
+   verbatim (take a `userRole` string → fed `appRole('dubs')`); `DubsApp`
+   consumes `useAuth()`; shared `LoginModal` added to the shell. Live-verified.
+4. **DONE — `spa/04` port DG-Tags** into `web/src/apps/tags/`. Data components
+   don't touch auth (gating was only in the old App.tsx) → no adapter context
+   needed; `TagsApp` uses shared `useAuth()` (`hasAppRole('tags',…)`). Tags API
+   = `/api/tags/*` + shared `/api/auth/*` (unchanged). Live-verified.
+5. **DONE — `spa/05` port DG-Putt** into `web/src/apps/putt/` (Socket.IO live
+   bracket updates working; API already `/api/putt/*`; role-casing bridge
+   lowercase→`Admin`/`Director`; Admin user-mgmt tab still the §13.8 gap).
+   Live-verified against prod (styling/fonts match). Local test data: `DRoc101`
+   granted `(putt,director)`; `admin` has putt via superuser.
+   **spa/05 also carries the per-app CSS-scoping plugin + the post-merge layout
+   fixes** (see the CSS-isolation bullet below): full-width shell
+   (`.dgr-content` padding→0), Putt back-button (static position + copied
+   `back-arrow-circle.png`/`dg-basket-grn.svg` into `web/public/` + light text
+   on green), matches-in-progress bar made static, `.sr-only` utility added to
+   shell `index.css`, players table `table-layout: auto` fit. All build- +
+   live-verified. Known deferred visual passes (NOT yet exercised live): Putt
+   tournament create/manage, bracket view mid-tournament, Admin tab; and a
+   Dubs/Tags full-width re-check — handle as follow-ups, not blockers.
+
+6. **START HERE NEXT SESSION — `spa/06`** (on `single-spa-implementation`,
+   which now has all 3 apps merged — PR #76). Prep/recon done; nothing
+   implemented yet. Two parts:
+
+   **(a) In-repo finalize (safe, do first) — `spa/06` CR into the branch:**
+   - Delete the superseded dirs: `frontend/` (31 tracked files), `tags-frontend/`
+     (20), `putt-frontend/` (54). They're fully replaced by `web/src/apps/*`.
+   - Update refs to them: `README.md`, `docs/DG-Rater-2.0-Org-Governance-Design.md`,
+     `.ebignore`, `.gitignore`, and rewrite `DEPLOYMENT.md`'s "Frontend Changes"
+     section (currently `cd frontend` + CRA `REACT_APP_API_URL` build) to the
+     `web/` Vite build.
+   - Verify `web/` still builds after removals; verify backend EB bundle isn't
+     affected (`.ebignore` should still exclude all frontend dirs incl `web/`).
+
+   **(b) AWS deploy wiring — NEEDS OPERATOR (live resources, do NOT run blind).**
+   Good news from DEPLOYMENT.md: the pieces largely exist already —
+   - Frontend bucket `dg-rater-com` + CloudFront `E1X7Y3M3J92BY0` (alias
+     dg-rater.com) **already has SPA routing 403/404→/index.html**. So the
+     unified `web/` SPA can deploy straight onto it:
+     `cd web && VITE_API_URL=https://api.dg-rater.com npm run build &&
+      AWS_PROFILE=eb-deployer aws s3 sync build/ s3://dg-rater-com --delete`
+     then CloudFront invalidate `E1X7Y3M3J92BY0 /*`.
+   - Backend already serves `/api/{dubs,tags,putt}/*` + `/api/auth/*` + socket.io
+     at api.dg-rater.com — BUT the **DG-Putt backend cutover (step 2 below) must
+     land first**, else `/api/putt/*` 500s in prod (putt_* tables not yet on
+     prod RDS). So: backend cutover → deploy web/ → then Putt works end-to-end.
+   - 301 `putt.dg-rater.com` → `dg-rater.com/svdgc/putt` (CloudFront function or
+     S3 redirect); retire old putt distributions after soak.
+   - NOTE the URL scheme: the app currently defaults the landing to `/` and apps
+     to `/svdgc/<app>`. Existing prod dg-rater.com users land on DG-Dubs at root
+     today; confirm whether `/` should redirect to `/svdgc/dubs` or show the new
+     platform landing — **operator UX decision.**
+   Then the **final CR `single-spa-implementation` → `main`** (coordinate with
+   the backend cutover so main reflects deployed state).
+
+**Port-pattern lessons (apply to Putt):**
+- **Keep each app's own header/banner; strip ONLY its auth controls** (login/
+  logout/user) — the shell owns those. If the app header was `position: fixed`,
+  override to `static` so it flows under the shell's org bar, and drop any
+  `main` top-offset that compensated for the fixed header.
+- **Add an appRole-loss reset guard:** when `appRole(app)` drops (e.g. logout),
+  reset any privileged view to a public one AND hard-guard the privileged
+  render — otherwise privileged content lingers after logout (a real leak found
+  in Dubs).
+- Feed `appRole(app) ?? 'Viewer'` as the legacy `userRole` string prop; shape
+  `identity` into the app's `User`/`currentUser` for admin components.
+- **Per-app CSS isolation is handled by a build-time PostCSS plugin**
+  (`web/postcss-scope-app.mjs`, wired in `web/vite.config.ts`): it auto-scopes
+  every rule in `src/apps/<app>/*.css` under `[data-app="<app>"]`
+  (`:root`/`html`/`body` → the host; `@media` children scoped; `@import`/
+  `@keyframes`/`@font-face` left global; idempotent vs already-scoped
+  selectors). This is required because the three apps reuse class names (`.App`,
+  `.App-header`, `.table-container`, …) and `:root` var names (`--accent`,
+  `--color-page-bg`, …) with different values. Three latent couplings it
+  surfaced (all fixed): (a) apps' palettes collided via global `:root` — the
+  plugin scopes them; (b) Putt never imported its own `styles/theme.css` (it had
+  been borrowing Dubs' leaked global vars) — add the theme import per app;
+  (c) each app must **anchor its base typography on its host** (a `body { font-
+  family: var(--font-*) }` rule, which the plugin rewrites to the host), not
+  rely on a global `body` font — the standalone apps' `index.css` body fonts are
+  NOT ported (the shell owns `body`). (esbuild minifies `[data-app="x"]`→
+  `[data-app=x]` in the bundle.)
+
+**Seed-data / auth note (address before prod cutover):** the §13 migration made
+every director a director of BOTH `dubs` and `tags` (directors-of-everything).
+Per-app scoping works correctly (verified: a dubs-only director gets
+`tags: null`); the memberships just need curating to intended real-world scope
+before go-live. Separately, **DG-Putt user reconciliation** at cutover: DG-Putt's
+`users` table (`admin`, `DRoc101`, `Mr. Hilbert`, `Hal Kurz`; scrypt hashes) is
+NOT folded in as a table — unify on shared `users` + memberships. `admin` and
+`DRoc101` are the operator's existing shared accounts (dedupe by username: admin
+already has putt via superuser; grant `DRoc101` `(putt,director)`). `Mr. Hilbert`
+/`Hal Kurz` need shared accounts created with FRESH passwords (scrypt≠shared
+PBKDF2, can't port) + `(putt,director)` — or dropped if stale. DG-Putt `users`
+rows discarded. (See design doc §7/§8.)
 
 **DG-Putt prod cutover (backend) — still pending, do NOT do piecemeal:**
 snapshot shared RDS → `flask db upgrade` (`d4e5f6a7b8c9`, additive, safe
@@ -122,6 +242,30 @@ anytime) → one-off `dgputt`→`putt_*` data copy stamped `org_id=1` (between
 events) → deploy consolidated backend → repoint Putt frontend → retire
 standalone env. `main` is kept at deployed-prod state so a season hotfix can
 ship from the standalone `puttingLeague` repo without interference.
+
+## Remaining big-picture workplan (ordered)
+
+1. **`spa/06`** — frontend finalize: delete old `*-frontend/` dirs + AWS deploy
+   wiring (single bucket/CloudFront + SPA fallback + 301), then CR
+   `single-spa-implementation` → `main`. (See step 6 above.)
+2. **DG-Putt backend prod cutover** — the RDS `flask db upgrade` + `dgputt`→
+   `putt_*` data migration + consolidated-backend deploy (see cutover block
+   above). Gate behind an RDS snapshot; run the data copy between putt events.
+3. **Pre-go-live data curation (decide with operator):**
+   - Curate `org_memberships` to intended per-app scope (the §13 migration made
+     every director a director of both dubs+tags — "directors of everything").
+   - **DG-Putt user reconciliation:** `admin`/`DRoc101` dedupe to existing
+     shared accounts (admin has putt via superuser; grant `DRoc101` putt); decide
+     migrate-or-drop for `Mr. Hilbert` / `Hal Kurz` (fresh passwords — scrypt
+     can't port). **OPEN QUESTION pending operator.**
+   - Optionally set `users.is_superuser` properly (currently owner-equiv only).
+4. **Deferred governance-frontend work (§13.8):** rebuild the DG-Putt (and the
+   DG-Dubs) Admin user-management tabs on the two-axis model; `/api/org/*`
+   endpoints; `org_app_subscriptions` entitlements. Putt Admin tab is currently
+   non-functional against the shared auth (documented in Admin.tsx banner).
+5. **Deferred visual QA passes** (non-blocking): Putt tournament create/manage,
+   bracket mid-tournament + live Socket.IO update, Admin tab; Dubs/Tags
+   full-width re-check.
 
 ## Known follow-ups (see design doc §11a and §13 for the full list)
 

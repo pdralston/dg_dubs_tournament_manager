@@ -1,0 +1,147 @@
+/* Minimal shell/placeholder styling for the scaffold. Per-app styles are added
+   (scoped under [data-app="..."]) when each app is ported in. */
+
+:root {
+  --dgr-bg: #14141f;
+  --dgr-panel: #1e1e2e;
+  --dgr-fg: #e7e7ee;
+  --dgr-muted: #9a9ab0;
+  --dgr-accent: #6c7ae0;
+  --dgr-border: #2c2c40;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--dgr-bg);
+  color: var(--dgr-fg);
+}
+
+a { color: var(--dgr-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Shell */
+.dgr-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--dgr-panel);
+  border-bottom: 1px solid var(--dgr-border);
+}
+.dgr-header-left { display: flex; align-items: center; gap: 0.5rem; }
+.dgr-brand { font-weight: 700; color: var(--dgr-fg); }
+.dgr-sep { color: var(--dgr-muted); }
+.dgr-org { color: var(--dgr-fg); }
+.dgr-appswitch { display: flex; gap: 0.25rem; margin-left: 1rem; }
+.dgr-app-tab {
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  color: var(--dgr-muted);
+}
+.dgr-app-tab.is-active { background: var(--dgr-accent); color: #fff; }
+.dgr-header-right { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
+.dgr-user { color: var(--dgr-muted); font-size: 0.9rem; }
+.dgr-btn {
+  background: transparent;
+  border: 1px solid var(--dgr-border);
+  color: var(--dgr-fg);
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* Full-bleed: mounted apps own their full canvas (own backgrounds/padding) and
+   sit flush under the org bar. The placeholder landing pages (.dgr-page) supply
+   their own margins, so they still breathe. */
+.dgr-content { padding: 0; }
+
+/* Pages */
+.dgr-page { max-width: 880px; margin: 2rem auto; padding: 0 1.25rem; }
+.dgr-lede { color: var(--dgr-muted); font-size: 1.1rem; }
+.dgr-crumbs { color: var(--dgr-muted); margin-bottom: 0.5rem; }
+.dgr-crumbs span { margin: 0 0.35rem; }
+.dgr-card-grid {
+  list-style: none; padding: 0; margin: 1rem 0;
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.dgr-card {
+  border: 1px solid var(--dgr-border);
+  border-radius: 10px;
+  background: var(--dgr-panel);
+}
+.dgr-card a { display: flex; flex-direction: column; gap: 0.25rem; padding: 1rem 1.1rem; color: var(--dgr-fg); }
+.dgr-card a:hover { text-decoration: none; border-radius: 10px; outline: 1px solid var(--dgr-accent); }
+.dgr-card-title { font-weight: 600; }
+.dgr-card-sub { color: var(--dgr-muted); font-size: 0.9rem; }
+.dgr-note { color: var(--dgr-muted); font-size: 0.85rem; margin-top: 2rem; }
+
+/* App host placeholder */
+.dgr-app-placeholder { padding: 1rem; }
+
+/* Shared login modal */
+.dgr-login-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.dgr-login-modal {
+  background: var(--dgr-panel);
+  border: 1px solid var(--dgr-border);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  width: min(92vw, 360px);
+}
+.dgr-login-modal h2 { margin-top: 0; }
+.dgr-form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
+.dgr-form-group label { color: var(--dgr-muted); font-size: 0.85rem; }
+.dgr-form-group input {
+  background: var(--dgr-bg);
+  border: 1px solid var(--dgr-border);
+  border-radius: 6px;
+  color: var(--dgr-fg);
+  padding: 0.5rem 0.6rem;
+}
+.dgr-error { color: #ff6b81; font-size: 0.85rem; margin-bottom: 0.75rem; }
+.dgr-modal-buttons { display: flex; justify-content: flex-end; gap: 0.5rem; }
+.dgr-modal-buttons button {
+  background: transparent;
+  border: 1px solid var(--dgr-border);
+  color: var(--dgr-fg);
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dgr-modal-buttons button[type="submit"] { background: var(--dgr-accent); border-color: var(--dgr-accent); color: #fff; }
+.dgr-modal-buttons button:disabled { opacity: 0.6; cursor: default; }
+
+/* Screen-reader-only utility (global; ported from the standalone apps'
+   index.css which the shell replaces). Visually hides an element while keeping
+   it available to assistive tech — used for accessible input labels whose
+   visual affordance is the placeholder. `.visually-hidden` is an alias. */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only:focus,
+.visually-hidden:focus,
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
