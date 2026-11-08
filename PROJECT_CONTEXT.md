@@ -160,18 +160,40 @@ path-prefixed separate builds).
    tournament create/manage, bracket view mid-tournament, Admin tab; and a
    Dubs/Tags full-width re-check — handle as follow-ups, not blockers.
 
-6. **START HERE NEXT SESSION — `spa/06`** (after `spa/05` merges). Two parts:
-   (a) **Code/cleanup in-repo:** delete the superseded `frontend/`,
-   `tags-frontend/`, `putt-frontend/` dirs; update README/docs to point at
-   `web/` as the sole frontend; decide dev-server ports (each app no longer has
-   its own server — `web/` is one dev server, so this is moot now). Commit as an
-   `spa/06` CR into `single-spa-implementation`.
-   (b) **AWS deploy wiring (needs operator + live-resource confirmation; do NOT
-   execute blind):** build `web/` → one S3 bucket (reuse `dg-rater-com`) behind
-   one CloudFront distro; add SPA-fallback (serve `web/`'s `index.html` for any
-   non-`/api`, non-`/socket.io` path); 301 `putt.dg-rater.com` →
-   `dg-rater.com/svdgc/putt`; retire the old per-app distributions after soak.
-   Then the **final CR `single-spa-implementation` → `main`**.
+6. **START HERE NEXT SESSION — `spa/06`** (on `single-spa-implementation`,
+   which now has all 3 apps merged — PR #76). Prep/recon done; nothing
+   implemented yet. Two parts:
+
+   **(a) In-repo finalize (safe, do first) — `spa/06` CR into the branch:**
+   - Delete the superseded dirs: `frontend/` (31 tracked files), `tags-frontend/`
+     (20), `putt-frontend/` (54). They're fully replaced by `web/src/apps/*`.
+   - Update refs to them: `README.md`, `docs/DG-Rater-2.0-Org-Governance-Design.md`,
+     `.ebignore`, `.gitignore`, and rewrite `DEPLOYMENT.md`'s "Frontend Changes"
+     section (currently `cd frontend` + CRA `REACT_APP_API_URL` build) to the
+     `web/` Vite build.
+   - Verify `web/` still builds after removals; verify backend EB bundle isn't
+     affected (`.ebignore` should still exclude all frontend dirs incl `web/`).
+
+   **(b) AWS deploy wiring — NEEDS OPERATOR (live resources, do NOT run blind).**
+   Good news from DEPLOYMENT.md: the pieces largely exist already —
+   - Frontend bucket `dg-rater-com` + CloudFront `E1X7Y3M3J92BY0` (alias
+     dg-rater.com) **already has SPA routing 403/404→/index.html**. So the
+     unified `web/` SPA can deploy straight onto it:
+     `cd web && VITE_API_URL=https://api.dg-rater.com npm run build &&
+      AWS_PROFILE=eb-deployer aws s3 sync build/ s3://dg-rater-com --delete`
+     then CloudFront invalidate `E1X7Y3M3J92BY0 /*`.
+   - Backend already serves `/api/{dubs,tags,putt}/*` + `/api/auth/*` + socket.io
+     at api.dg-rater.com — BUT the **DG-Putt backend cutover (step 2 below) must
+     land first**, else `/api/putt/*` 500s in prod (putt_* tables not yet on
+     prod RDS). So: backend cutover → deploy web/ → then Putt works end-to-end.
+   - 301 `putt.dg-rater.com` → `dg-rater.com/svdgc/putt` (CloudFront function or
+     S3 redirect); retire old putt distributions after soak.
+   - NOTE the URL scheme: the app currently defaults the landing to `/` and apps
+     to `/svdgc/<app>`. Existing prod dg-rater.com users land on DG-Dubs at root
+     today; confirm whether `/` should redirect to `/svdgc/dubs` or show the new
+     platform landing — **operator UX decision.**
+   Then the **final CR `single-spa-implementation` → `main`** (coordinate with
+   the backend cutover so main reflects deployed state).
 
 **Port-pattern lessons (apply to Putt):**
 - **Keep each app's own header/banner; strip ONLY its auth controls** (login/
