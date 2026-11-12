@@ -445,7 +445,7 @@ def remove_player_from_pending(tournament_id, player_id):
     if reg.bought_ace_pot:
         ace_entry = AcePot.query.filter_by(tournament_id=tournament_id).order_by(AcePot.ace_pot_id.desc()).first()
         if ace_entry:
-            ace_entry.amount -= 1.00  # subtract one buy-in
+            ace_entry.amount -= Decimal(1.00)  # subtract one buy-in
             if ace_entry.amount <= 0:
                 db.session.delete(ace_entry)
 
