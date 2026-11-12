@@ -224,19 +224,23 @@ def _advance_teams(match, tournament_id, winner_team_id, loser_team_id):
     if match.winner_advances_to_match_id and winner_team_id:
         next_match = Match.query.filter_by(tournament_id=tournament_id, match_id=match.winner_advances_to_match_id).first()
         if next_match:
-            if not next_match.team1_id:
+            # idempotent: don't re-place a team already in this match
+            if winner_team_id in (next_match.team1_id, next_match.team2_id):
+                pass
+            elif not next_match.team1_id:
                 next_match.team1_id = winner_team_id
                 advancement_results.append({'team_id': winner_team_id, 'type': 'winner', 'advanced_to_match_id': next_match.match_id})
             elif not next_match.team2_id:
                 next_match.team2_id = winner_team_id
                 advancement_results.append({'team_id': winner_team_id, 'type': 'winner', 'advanced_to_match_id': next_match.match_id})
-
             if next_match.team1_id and next_match.team2_id and next_match.match_status == 'Pending':
                 next_match.match_status = 'Scheduled'
 
     if match.loser_advances_to_match_id and loser_team_id:
         next_match = Match.query.filter_by(tournament_id=tournament_id, match_id=match.loser_advances_to_match_id).first()
         if next_match:
+            if loser_team_id in (next_match.team1_id, next_match.team2_id):
+                pass
             if not next_match.team1_id:
                 next_match.team1_id = loser_team_id
                 advancement_results.append({'team_id': loser_team_id, 'type': 'loser', 'advanced_to_match_id': next_match.match_id})
